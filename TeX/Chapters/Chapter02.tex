@@ -1,35 +1,54 @@
 % Chapter 2
 
-\chapter{Examples} % Chapter title
+\chapter{Preliminaries} % Chapter title
 
-\label{ch:examples} % For referencing the chapter elsewhere, use \autoref{ch:examples}
+\label{ch:Chapter2} % For referencing the chapter elsewhere, use \autoref{ch:Chapter2}
 
-%----------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------
 
-\lipsum[1]
+\section{Explain what we want to do}
 
-%----------------------------------------------------------------------------------------
+\lipsum[1-2]
 
-\section{A New Section}
+% -----------------------------------------------------------------------------------
 
-\lipsum[2]
+\section{Suffix Array}
 
+Provides fast patter search operations
 
-%------------------------------------------------
+\subsection{(?) maybe suffix tree}
 
-\subsection{Test for a Subsection}
+\lipsum[3-4]
 
-\graffito{Note: The content of this chapter is just some dummy text.}
-\lipsum[3-5]
+% -----------------------------------------------------------------------------------
 
-%------------------------------------------------
+\section{Burrows Wheels Transform}
 
-\subsection{Autem Timeam}
+\lipsum[5-6]
 
-\lipsum[6]
+\subsection{Suffix Array + BTW = FM-Index}
 
-%----------------------------------------------------------------------------------------
+\lipsum[7-8]
 
-\section{Another Section in This Chapter}
+% -----------------------------------------------------------------------------------
 
-\lipsum[7]
+\section{Binary Wavelet Trees}
+
+FM-Indexes use Backward Searches on the BWT to provide fast pattern matching, counting, and substring extraction
+operations. Backward Search requires rank operations, which are best implemented using a Wavelet Tree. A WT encodes a string as a hierarchy of bit vectors, which it uses to answer general rank queries using $\log \sigma$ binary rank queries.
+
+\subsection{A few pages about Wavelet trees}
+
+\lipsum[9-10]
+
+\subsection{WT and RRR}
+
+Binary rank queries can be answered in O(1) time when the bit vector is stored as a RRR sequence, which utilize a global table of pre-calculated ranks. The RRR data structure also offers compression of the Wavelet Tree.
+
+\subsection{(?) maybe a few words about multiary WT}
+
+\lipsum[1-2]
+
+% -----------------------------------------------------------------------------------
+
+\section{Subset Wavelet Trees ????}
