@@ -1,54 +1,84 @@
 % Chapter 2
 
-\chapter{Preliminaries} % Chapter title
+\chapter{Compression Concepts and Techniques} % Chapter title
 
 \label{ch:Chapter2} % For referencing the chapter elsewhere, use \autoref{ch:Chapter2}
 
-% -----------------------------------------------------------------------------------
+Write something about information theory, it's history and bla bla, just one paragraph. From \cite{han2002mathematics,ElementsofInformationTheory}
 
-\section{Explain what we want to do}
+\section{Shannon Entropy}
+\begin{itemize}
+    \item Some introduction to entropy and Cloude Shannon and Von Neumann, talk about \cite{Shannon1948}
+    \item Definition of entropy of a random variable, from this book \cite{han2002mathematics}
+    \item Definition of Worst Case Entropy \cite{navarro2016compact}
+    \item Definition of Shannon Entropy \cite{navarro2016compact}
+\end{itemize}
 
-\lipsum[1-2]
+\subsection{Properties}
+Take things from \cite{han2002mathematics} and talk about additivity and concavity of entropy.
 
-% -----------------------------------------------------------------------------------
+\subsection{Mutual Information}
+Take section 2.3 from \cite{han2002mathematics} and talk about mutual information.
 
-\section{Suffix Array}
+\subsection{Fano's inequality}
+\begin{itemize}
+    \item Statement of Fano's inequality \cite{ElementsofInformationTheory}
+    \item Proof of Fano's inequality \cite{ElementsofInformationTheory}
+\end{itemize}
 
-Provides fast patter search operations
+\section{Empirical Entropy}
+Introduction to empirical entropy, from \cite{han2002mathematics} in section 2.6 and in \cite{navarro2016compact} at section 2.3
+\subsection{Bit Sequences}
+\subsection{Sequences of Symbols}
 
-\subsection{(?) maybe suffix tree}
+\section{Higher Order Entropy}
+Section 2.4 from \cite{navarro2016compact}
 
-\lipsum[3-4]
+\section{Source and Coding}
+Make an introduction to the fact that there are different types of sources and coding techniques. From \cite{han2002mathematics} and \cite{ElementsofInformationTheory}.
 
-% -----------------------------------------------------------------------------------
+\subsection{Source Coding Theorem}
+From \cite{Shannon1948} and \cite{han2002mathematics}
 
-\section{Burrows Wheels Transform}
+\subsection{Direct Theorem for FF Coding}
 
-\lipsum[5-6]
 
-\subsection{Suffix Array + BTW = FM-Index}
+\subsection{Strong Converse Theorem for FF Coding}
+After the direct theorem, we need a criterion for seeking and implementi a code which performs as well as possible. Hence, it is quite possibile to recognize that there exits no better code than the code designed by the above theorem. This strong converse theorem is a criterion for the optimality of the code. From \cite{han2002mathematics}
 
-\lipsum[7-8]
+\section{Integer Coding}
 
-% -----------------------------------------------------------------------------------
+Introduction to integer coding, and some theorems on unary coding. Almost every thing from \cite{ferragina2023pearls} and \cite{han2002mathematics}
 
-\section{Binary Wavelet Trees}
+\subsection{Elias Codes: $\gamma$ and $\delta$}
+\begin{itemize}
+    \item Definition of Elias codes
+    \item Theorems on space occupancy
+\end{itemize}
 
-FM-Indexes use Backward Searches on the BWT to provide fast pattern matching, counting, and substring extraction
-operations. Backward Search requires rank operations, which are best implemented using a Wavelet Tree. A WT encodes a string as a hierarchy of bit vectors, which it uses to answer general rank queries using $\log \sigma$ binary rank queries.
+\subsection{Rice Code}
+Just a brief mention
+\subsection{Elias-Fano Code}
+All form \cite{ferragina2023pearls,sayood2002lossless}
+\begin{itemize}
+    \item Definition of Elias-Fano code and examples
+    \item Theorem on the space bound of Elias-Fano code
+    \item Introduction to \texttt{Access(i)} and \texttt{NextGEQ(x)}
+\end{itemize}
 
-\subsection{A few pages about Wavelet trees}
+\section{Statistical Coding}
 
-\lipsum[9-10]
+Introduction to statistical coding, from \cite{han2002mathematics} and \cite{ferragina2023pearls}
 
-\subsection{WT and RRR}
+\subsection{Huffman Coding}
 
-Binary rank queries can be answered in O(1) time when the bit vector is stored as a RRR sequence, which utilize a global table of pre-calculated ranks. The RRR data structure also offers compression of the Wavelet Tree.
+\subsection{Arithmetic Coding}
 
-\subsection{(?) maybe a few words about multiary WT}
+\section{Bitvectors}
 
-\lipsum[1-2]
+Introduction to bitvectors, from \cite{ferragina2023pearls} and \cite{navarro2016compact}
 
-% -----------------------------------------------------------------------------------
-
-\section{Subset Wavelet Trees ????}
+\subsection{Access}
+\subsection{Rank}
+\subsection{Select}
+\subsection{RRR: A Space-Efficient Rank/Select Structure}
