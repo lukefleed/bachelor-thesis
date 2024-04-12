@@ -4,19 +4,131 @@
 
 \label{ch:Chapter2} % For referencing the chapter elsewhere, use \autoref{ch:Chapter2}
 
-Write something about information theory, it's history and bla bla, just one paragraph. From \cite{han2002mathematics,ElementsofInformationTheory}
+TODO: Some introduction about the concept and idea of entropy, taken from \cite{Shannon1948,navarro2016compact,han2002mathematics}, Talk about worst case entropy from \cite{navarro2016compact}
 
-\section{Shannon Entropy}
-\begin{itemize}
-    \item Some introduction to entropy and Cloude Shannon and Von Neumann, talk about \cite{Shannon1948}
-    \item Definition of entropy of a random variable, from this book \cite{han2002mathematics}
-    \item Definition of Worst Case Entropy \cite{navarro2016compact}
-    \item Definition of Shannon Entropy \cite{navarro2016compact}
-\end{itemize}
+\section{Shannon Entropy} \label{sec:shannon_entropy}
+
+Let's introduce the concept of entropy as a measure of uncertainty of a random variable. A deeper explanation can be found in \cite{han2002mathematics,navarro2016compact,ElementsofInformationTheory}
+
+\begin{definition}[Entropy of a Random Variable]\label{def:entropy}
+    Let $X$ be a random variable taking values in a finite alphabet $\mathcal{X}$ with the probabilistic distribution $P_X(x)= \text{Pr}\{X=x\}~(x\in\mathcal{X})$. Then, the entropy of $X$ is defined as
+    \begin{equation}
+        H(X) = H(P_X) \myeq E_{P_x} \{-\log P_X(x)\} = -\sum_{x\in\mathcal{X}} P_X(x)\log P_X(x)
+    \end{equation}
+\end{definition}
+Where $E_P$ denotes the expectation with respect to the probability distribution $P$. The $\log$ is taken to the base 2 and the entropy is expressed in bits. It is then clear that the entropy of a discrete random variable will always be nonnegative\footnote{The entropy is null if and only if $X = c$, where $c$ is a costant with probability one}.
+
+\begin{example}[Toss of a fair coin]
+    Let $X$ be a random variable representing the outcome of a toss of a fair coin. The probability distribution of $X$ is $P_X(0) = P_X(1) = \frac{1}{2}$. The entropy of $X$ is
+    \begin{equation}
+        H(X) = -\frac{1}{2}\log\frac{1}{2} - \frac{1}{2}\log\frac{1}{2} = 1
+    \end{equation}
+    This means that the toss of a fair coin has an entropy of 1 bit.
+\end{example}
+
+\begin{remark}
+    Due to historical reasons, we are abusing the notation and using $H(X)$ to denote the entropy of the random variable $X$. It's important to note that this is not a function of the random variable: it's a functional of the distribution of $X$. It does not depend on the actual values taken by the random variable, but only on the probabilities of these values.
+\end{remark}
+The concept of entropy, introduced in definition \ref{def:entropy}, helps us quantify the randomness or uncertainty associated with a random variable. It essentially reflects the average amount of information needed to identify a specific value drawn from that variable. Intuitively, we can think of entropy as the average number of digits required to express a sampled value.
+
+However, for continuous random variables (variables with an infinite number of possible values), expressing a single value with perfect accuracy requires an infinite number of digits. This is because any finite number of digits will only represent a range of possible values, not a single precise value. As a result, when we apply the definition of entropy to a continuous variable by dividing its range into increasingly smaller intervals and taking the limit, the entropy diverges to infinity.
+
 
 \subsection{Properties}
-Take things from \cite{han2002mathematics} and talk about additivity and concavity of entropy.
+In the previous section \ref{sec:shannon_entropy}, we have introduced the entropy of a single random variable $X$. What if we have two random variables $X$ and $Y$? How can we measure the uncertainty of the pair $(X,Y)$? This is where the concept of joint entropy comes into play. The idea is to consider $(X,Y)$ as a single vector-valued random variable and compute its entropy. This is the joint entropy of $X$ and $Y$.
 
+\begin{definition}[Joint Entropy]\label{def:joint_entropy}
+    Let $(X,Y)$ be a pair of discrete random variables $(X,Y)$ with a joint distribution $P_{XY}(x,y) = \text{Pr}\{X=x,Y=y\}$. The joint entropy of $(X,Y)$ is defined as
+    \begin{equation}\label{eq:joint_entropy}
+        H(X,Y) = H(P_{XY}) = -\sum_{x\in\mathcal{X}}\sum_{y\in\mathcal{Y}} P_{XY}(x,y)\log P_{XY}(x,y)
+    \end{equation}
+\end{definition}
+Which we can be extended to the joint entropy of $n$ random variables $(X_1,X_2,\ldots,X_n)$ as $H(X_1,\ldots, X_n)$. \vspace*{0.4cm}
+
+\noindent We also define the conditional entropy of a random variable given another as the expected value of the entropies of the conditional distributions, averaged over the conditioning random variable. Given two random variables $X$ and $Y$, we can define $W(y|x)$, with $x \in \mathcal{X}$ and $y \in \mathcal{Y}$, as the conditional probability of $Y$ given $X$. The set $W$ of those conditional probabilities is called \emph{channel} with \emph{input alphabet} $\mathcal{X}$ and \emph{output alphabet} $\mathcal{Y}$.
+
+\begin{definition}[Conditional Entropy]\label{def:conditional_entropy}
+    Let $(X,Y)$ be a pair of discrete random variables with a joint distribution $P_{XY}(x,y) = \text{Pr}\{X=x,Y=y\}$. The conditional entropy of $Y$ given $X$ is defined as
+    \begin{align}
+        H(Y|X) &= H(W | P_X) \myeq \sum_x P_X(x)H(Y|x) \\
+        &= \sum_{x \in \mathcal{X}} P_X(x) \Big\{ -\sum_{y \in \mathcal{Y}} W(y|x) \log W(y|x) \Big\} \\
+        &= -\sum_{x\in\mathcal{X}}\sum_{y\in\mathcal{Y}} P_{XY}(x,y)\log W(y|x) \\
+        &= E_{P_{XY}} \{ -\log W(Y|X) \}
+    \end{align}
+\end{definition}
+Since entropy is always nonnegative, conditional entropy is likewise nonnegative; it has value zero if and only if $Y$ can be entirely determined from $X$ with certainty, meaning there exists a function $f(X)$ such that $Y = f(X)$ with probability one. \vspace*{0.4cm}
+
+\noindent The intuitive coherence of the definitions of joint entropy and conditional entropy becomes apparent when considering that the entropy of two random variables is equal to the entropy of one of them plus the conditional entropy of the other. This relationship is formally demonstrated in the following theorem.
+
+
+\begin{theorem}[Chain Rule]\label{thm:chain_rule}
+     Let $(X,Y)$ be a pair of discrete random variables with a joint distribution $P_{XY}(x,y)$. Then, the joint entropy of $(X,Y)$ can be expressed as \marginpar{This is also known as additivity of entropy.}
+    \begin{equation}
+        H(X,Y) = H(X) + H(Y|X)
+    \end{equation}
+\end{theorem}
+\begin{proof}
+    From the definition of conditional entropy (\ref{def:conditional_entropy}), we have
+    \begin{align*}
+        H(X,Y) &= -\sum_{x,y} P_{XY}(x,y) \log W(y|x) \\
+        &= -\sum_{x,y} P_{XY}(x,y) \log \frac{P_{XY}(x,y)}{P_X(x)} \\
+        &= -\sum_{x,y} P_{XY}(x,y) \log P_{XY}(x,y) + \sum_{x,y} P_{X}(x) \log P_X(x) \\
+        &= H(XY) + H(X)
+    \end{align*}
+    Where we used the relation
+    \begin{equation}
+        W(y|x) = \frac{P_{XY}(x,y)}{P_X(x)}
+    \end{equation}
+    When $P_X(x) \neq 0$.
+\end{proof}
+
+\begin{corollary}
+    \begin{equation}
+        H(X, Y|Z) = H(X|Z) + H(Y|X,Z)
+    \end{equation}
+\end{corollary}
+\begin{proof}
+    The proof is analogous to the proof of the chain rule.
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
 \subsection{Mutual Information}
 Take section 2.3 from \cite{han2002mathematics} and talk about mutual information.
 
@@ -26,12 +138,12 @@ Take section 2.3 from \cite{han2002mathematics} and talk about mutual informatio
     \item Proof of Fano's inequality \cite{ElementsofInformationTheory}
 \end{itemize}
 
+\clearpage
 \section{Empirical Entropy}
 Introduction to empirical entropy, from \cite{han2002mathematics} in section 2.6 and in \cite{navarro2016compact} at section 2.3
 \subsection{Bit Sequences}
 \subsection{Sequences of Symbols}
 
-\section{Higher Order Entropy}
 Section 2.4 from \cite{navarro2016compact}
 
 \section{Source and Coding}
@@ -73,6 +185,8 @@ Introduction to statistical coding, from \cite{han2002mathematics} and \cite{fer
 \subsection{Huffman Coding}
 
 \subsection{Arithmetic Coding}
+
+\section{Higher Order Entropy}
 
 \section{Bitvectors}
 

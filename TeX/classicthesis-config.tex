@@ -96,8 +96,25 @@ natbib=true % natbib compatibility mode (\citep and \citet still work)
 
 \PassOptionsToPackage{fleqn}{amsmath} % Math environments and more by the AMS
  \usepackage{amsmath}
+ \usepackage{amsthm}
+
+% Theorem, Definition, Lemma, Corollary, Proposition, Example, Remark
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
 
  %------------------------------------------------
+
+ \usepackage{mathtools}
+
+ \newcommand\myeq{\stackrel{\mathclap{\normalfont\mbox{\tiny{def}}}}{=}}
+
+%------------------------------------------------
+
 
 \PassOptionsToPackage{T1}{fontenc} % T2A for cyrillics
 \usepackage{fontenc}
@@ -253,7 +270,7 @@ pdfproducer={LaTeX with hyperref and classicthesis}
 
 %\usepackage[oldstylenums]{kpfonts} % oldstyle notextcomp
 %\usepackage[osf]{libertine}
-%\usepackage[light,condensed,math]{iwona}
+% \usepackage[light,condensed,math]{iwona}
 %\renewcommand{\sfdefault}{iwona}
 %\usepackage{lmodern} % <-- no osf support :-(
 %\usepackage{cfr-lm} %
