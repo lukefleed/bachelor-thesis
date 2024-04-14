@@ -1,0 +1,89 @@
+\section{Source and Code}
+
+We enrich the understanding of entropy by establishing its core role in setting the fundamental limit for information compression. This process involves condensing data by assigning shorter descriptions to more frequent outcomes and longer descriptions to less frequent ones. For example, Morse code uses a single dot to represent the most common symbol. Within this chapter, we ascertain the minimum average description length for a random variable. \cite{ElementsofInformationTheory}
+
+\subsection{Codes}
+
+A source characterized by a random process generates symbols (letters) from a specific alphabet at each time step. The objective is to transform this output sequence into a more concise representation. This data reduction technique, known as \emph{source coding} or \emph{data compression}, utilizes a code to represent the original symbols more efficiently. The device that performs this transformation is termed an \emph{encoder}, and the process itself is referred to as \emph{encoding}. \cite{han2002mathematics}
+
+\begin{definition}[Source Code]\label{def:code}
+    A source code for a random variable $X$ is a mapping from the set of possible outcomes of $X$, called $\mathcal{X}$, to $\mathcal{D}^*$, the set of all finite-length strings of symbols from a $\mathcal{D}$-ary alphabet. Let $C(X)$ denote the codeword assigned to $x$ and let $l(x)$ denote length of $C(x)$
+\end{definition}
+
+\begin{definition}[Expected length]\label{def:expected_length}
+    The expected length $L(C)$ of a source code $C$ for a random variable $X$ with probability mass function $P_X(x)$ is defined as
+    \begin{equation}
+        L(C) = \sum_{x\in\mathcal{X}} P_X(x)l(x)
+    \end{equation}
+    where $l(x)$ is the length of the codeword assigned to $x$.
+\end{definition}
+Let's assume from now for simplicity that the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, D-1\}$.
+
+\begin{example}
+    Let's consider a source code for a random variable $X$ with $\mathcal{X} = \{a, b, c, d\}$ and $P_X(a) = 0.5$, $P_X(b) = 0.25$, $P_X(c) = 0.125$ and $P_X(d) = 0.125$. The code is defined as
+    \begin{align*}
+        C(a) &= 0 \\
+        C(b) &= 10 \\
+        C(c) &= 110 \\
+        C(d) &= 111
+    \end{align*}
+    The entropy of $X$ is
+    \begin{equation*}
+        H(X) = 0.5\log 2 + 0.25\log 4 + 0.125\log 8 + 0.125\log 8 = 1.75 \text{ bits}
+    \end{equation*}
+    The expected length of this code is also $1.75$:
+    \begin{equation*}
+        L(C) = 0.5 \cdot 1 + 0.25 \cdot 2 + 0.125 \cdot 3 + 0.125 \cdot 3 = 1.75 \text{ bits}
+    \end{equation*}
+    In this example we have seen a code that is optimal in the sense that the expected length of the code is equal to the entropy of the random variable.
+\end{example}
+
+\begin{example}[Morse Code]\label{ex:morse_code}
+    TODO from \cite{ElementsofInformationTheory}
+\end{example}
+
+\begin{definition}[Nonsingular Code]\label{def:nonsingular_code}
+    TODO from \cite{ElementsofInformationTheory}
+\end{definition}
+
+\begin{definition}[Extension of a Code]\label{def:extension_code}
+    TODO from \cite{ElementsofInformationTheory}
+\end{definition}
+
+\begin{definition}[Unique Decodability]\label{def:unique_decodability}
+    TODO from \cite{ElementsofInformationTheory}
+\end{definition}
+
+\begin{definition}[Prefix Code]\label{def:prefix_code}
+    TODO from \cite{ElementsofInformationTheory}
+\end{definition}
+
+\subsection{Kraft's Inequality}
+
+Some introduction from \cite{ElementsofInformationTheory}
+
+\begin{theorem}[Kraft's Inequality]\label{thm:kraft_inequality}
+    TODO from \cite{ElementsofInformationTheory}
+\end{theorem}
+\begin{proof}
+    TODO from \cite{ElementsofInformationTheory}
+\end{proof}
+
+\subsection{Source Coding Theorem}
+
+Some introduction from \cite{ElementsofInformationTheory,Shannon1948,KolmogorovComplexity,han2002mathematics}
+
+\begin{theorem}[Source Coding Theorem]\label{thm:source_coding_theorem}
+    TODO from \cite{ElementsofInformationTheory,han2002mathematics}
+\end{theorem}
+\begin{proof}
+    TODO from \cite{ElementsofInformationTheory,han2002mathematics}
+\end{proof}
+
+
+
+
+
+
+
+\clearpage

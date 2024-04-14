@@ -1,0 +1,38 @@
+\section{Integer Coding}
+
+Most important references for this section: \cite{ferragina2023pearls,sayood2002lossless,navarro2016compact} \\
+
+\noindent TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing} \\
+
+\noindent The central concern tackled in this section revolves around formulating an efficient binary representation method for an indefinite sequence of integers. Our objective is to minimize bit usage while ensuring that the encoding remains prefix-free. In simpler terms, we aim to devise a binary format where the codes for individual integers can be concatenated without ambiguity, allowing the decoder to reliably identify the start and end of each integer's representation within the bit stream and thus restore it to its original uncompressed state.
+
+\subsection{Unary Code}
+TODO: Introduction to unary code, from \cite{ferragina2023pearls,sayood2002lossless}
+
+\begin{theorem}
+    The unary code of a positive integer $x$ takes $x$ bits, and thus it is optimal for the distribution $P(x)=2^{-x}$. \cite{ferragina2023pearls}
+\end{theorem}
+
+\begin{theorem}
+    Given a set of $S$ integers, of maximum value $M$, the fixed-length binary code represents each of them in $\lceil\log_2(M)\rceil$ bits and is optimal for the distribution $P(x)=1/M$. \cite{ferragina2023pearls}
+\end{theorem}
+
+\subsection{Elias Codes: $\gamma$ and $\delta$}
+TODO: Introduction and explanation of Elias codes, from \cite{ferragina2023pearls,Elias1975}
+
+\begin{theorem}
+    The $\gamma$ code of a positive integer $x$ takes $2\lceil\log_2(x+1)\rceil-1$ bits, and thus it is optimal for the distribution $P(x)=1/x^2$. This is within a factor of two from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code. \cite{ferragina2023pearls}
+\end{theorem}
+TODO: Talk a bit about the inefficiency of the $\gamma$ code \cite{ferragina2023pearls}
+
+\begin{theorem}
+    The $\delta$ code of a positive integer $x$ takes $1 + \log_2x + 2\log_2 \log_2 x$ bits, and thus it is optimal for the distribution $P(x)=1/x()\log x)^2$. This is within a factor of $1 + o(1)$ from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code. \cite{ferragina2023pearls}
+\end{theorem}
+
+
+
+\subsection{Rice Code}
+TODO: Just a brief mention on why we use it when values are concentrated around a certain range \cite{ferragina2023pearls,sayood2002lossless} and on how it works.
+
+\subsection{Elias-Fano Code}
+TBD if to include this section or not. If included, it should be a brief mention of the Elias-Fano code and its use in integer compression \cite{ferragina2023pearls}.
