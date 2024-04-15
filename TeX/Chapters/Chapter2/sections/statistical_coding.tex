@@ -1,11 +1,11 @@
 \clearpage
-\section{Statistical Coding}
+\section{Statistical Coding} \label{sec:statistical_coding}
 
 TODO: Introduction to statistical coding, from \cite{han2002mathematics} and \cite{ferragina2023pearls}
 
 \subsection{Huffman Coding}
 
-TODO: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact}. \\
+TODO: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
 
 
 \noindent Introduction of the type of source and the situation we are in.\\
@@ -16,12 +16,12 @@ TODO: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023p
 %     Let us consider a source $X$ subject to a probability distribution $Q$ on a source alphabet $\mathcal{X} = \{0, 1, \dots, J-1\}$ with $J = m(K-1) + 1$. We assume that the probabilities $Q(0), Q(1), \dots, Q(J-1)$ are ordered in non-increasing order. and denote by
 % \end{lemma}
 
-Talk about construction, encoding and decoding, canonical Huffman codes, and the optimality of Huffman codes.
+\noindent TODO: Talk about construction, encoding and decoding, canonical Huffman codes \cite{schwartz1964generating}, and the optimality of Huffman codes. \cite{ferragina2023pearls,sayood2002lossless}.\\
 
 \begin{example}
     TODO: Classic example of Huffman coding with for example $\mathcal{X} = \{a,b,c,d,e\}$ and $P(a)= 0.25$, $P(b)=0.25$, $P(c)=0.2$, $P(d)=0.15$, $P(e)=0.15$. Do a nice tree and show the encoding of each symbol.
 \end{example}
-
+\noindent There a are a few other theorems and lemmas that can be included in this section, TBD if to include them.\\
 \begin{theorem}
     Let $H$ be the entropy of a source emitting the symbols of an alphabet $\Sigma$, hence $H = \sum_{\sigma \in \Sigma} P(\sigma)\log_2\left(\frac{1}{P(\sigma)}\right)$. Then, the average length of the Huffman code is $L \leq H < L + 1$.
 \end{theorem}
@@ -31,3 +31,25 @@ Talk about construction, encoding and decoding, canonical Huffman codes, and the
 TODO and TBD: There are a lot of comments that can be done after this theorem. Still to decide what to include.
 
 \subsection{Arithmetic Coding}
+
+TODO: Do a brief introduction to Arithmetic Coding, explaining the idea behind it (Elias Code from 1960s) and the main differences with Huffman Coding. Section 12.2 from \cite{ferragina2023pearls}, section 4.2 fron \cite{han2002mathematics}, chapter 5 from \cite{sayood2002lossless}.
+
+\begin{example}
+    TODO: Begin with an example to underline this differences
+\end{example}
+
+\paragraph{Ecoding Process} TODO: Talk about the compression algorithm and make an example of encoding a sequence of symbols. Add a pseudo code of the algorithm.\\
+
+\paragraph{Decoding Process}
+TODO: Talk about the decompression algorithm and make an example of decoding a sequence of symbols. Add a pseudo code of the algorithm.\\
+
+\paragraph{Efficiency of Arithmetic Coding}
+\begin{theorem}
+    The number of bits emitted by arithmetic coding for a sequence $S$ of $n$ symbols is at most $2 + n\mathcal{H}$, where $\mathcal{H}$ is the empirical entropy of the sequence $S$.
+\end{theorem}
+\begin{proof}
+    TODO: from \cite{ferragina2023pearls}, page 228-229.
+\end{proof}
+\noindent NOTE: this theorem requires a lemma and corollary to be proven first.
+
+\paragraph{Furter Comments on Arithmetic Coding} TBD if to include this section. If so, it should show some other techniques such as range coding and prediction by partial matching.
