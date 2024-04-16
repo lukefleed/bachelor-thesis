@@ -1,0 +1,19 @@
+\clearpage
+\section{Wavelet Trees}
+First introduce the following problem: let's consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$. The problem is to support the following queries:
+
+\begin{itemize}
+    \item \texttt{Access(i)}: return the $i$-th element of $S$.
+    \item \texttt{Rank(c,i)}: return the number of occurrences of character $c$ in the prefix $S[1,i]$.
+    \item \texttt{Select(c,i)}: return the position of the $i$-th occurrence of character $c$ in $S$.
+\end{itemize}
+
+Explain the inconvenience of a solution that stores one bitvector per symbol (look from \citep{navarro2016compact} and \citep{ferragina2023pearls}).
+
+\subsection{Structure}
+
+Explain how a wavelet tree is built, from \citep{navarro2016compact} and \citep{GrossiWT2003}
+
+\subsection{Rank and Select}
+
+\subsection{Construction}
