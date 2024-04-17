@@ -5,7 +5,7 @@
     %     the symbol $T[x]$.
     % \end{itemize}
     % The classic approach to solve this problem is via an array of pointers A[1, n] to $\mathcal{D}$'s strings, implemented by means of their offsets in $T[1, m]$, thus using $\theta(n \log n)$ bits overall. So the operation \texttt{Access\_string(i)} boils down to returning $A[i]$, whereas \texttt{Which\_string(x)} boils down to finding the predecessor of $x$ in $A$. The first operation takes constant time, while the second one takes $O(\log n)$ time via binary search.
-\section{Compressed Bitvectors}
+\section{Bitvectors} \label{sec:bitvectors}
 Consider the following problem \cite{ferragina2023pearls}: imagine a dictionary $\mathcal{D}$ containing $n$ strings from an alphabet $\Sigma$. We can merge all strings in $\mathcal{D}$ into a single string $T[1,m]$, without any separators between them, where $m$ is the total length of the dictionary. The task is to handle the following queries:
     \begin{itemize}
     \item \texttt{Access\_string(i)}: retrieve the $i$-th string in $\mathcal{D}$.

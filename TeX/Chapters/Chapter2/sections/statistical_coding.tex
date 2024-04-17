@@ -5,10 +5,10 @@ TODO: Introduction to statistical coding, from \cite{han2002mathematics} and \ci
 
 \subsection{Huffman Coding}
 
-TODO: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
+Sources for this section: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
 
 
-\noindent Introduction of the type of source and the situation we are in.\\
+\noindent TODO: Introduction of the type of source and the situation we are in.\\
 
 % \noindent As a preliminary for giving the theorem that provides an algorithm for constructing optimum codes (the Huffman code), we give the following lemma, from the book \cite{han2002mathematics}
 
@@ -16,7 +16,7 @@ TODO: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023p
 %     Let us consider a source $X$ subject to a probability distribution $Q$ on a source alphabet $\mathcal{X} = \{0, 1, \dots, J-1\}$ with $J = m(K-1) + 1$. We assume that the probabilities $Q(0), Q(1), \dots, Q(J-1)$ are ordered in non-increasing order. and denote by
 % \end{lemma}
 
-\noindent TODO: Talk about construction, encoding and decoding, canonical Huffman codes \cite{schwartz1964generating}, and the optimality of Huffman codes. \cite{ferragina2023pearls,sayood2002lossless}.\\
+\noindent TODO: Talk about construction, encoding and decoding, canonical Huffman codes \cite{schwartz1964generating}, and the optimality of Huffman codes. \cite{ferragina2023pearls,sayood2002lossless}.
 
 \begin{example}
     TODO: Classic example of Huffman coding with for example $\mathcal{X} = \{a,b,c,d,e\}$ and $P(a)= 0.25$, $P(b)=0.25$, $P(c)=0.2$, $P(d)=0.15$, $P(e)=0.15$. Do a nice tree and show the encoding of each symbol.
@@ -38,12 +38,13 @@ TODO: Do a brief introduction to Arithmetic Coding, explaining the idea behind i
     TODO: Begin with an example to underline this differences
 \end{example}
 
-\paragraph{Ecoding Process} TODO: Talk about the compression algorithm and make an example of encoding a sequence of symbols. Add a pseudo code of the algorithm.\\
+\subsubsection*{Decoding Process}
+TODO: Talk about the compression algorithm and make an example of encoding a sequence of symbols. Add a pseudo code of the algorithm.\\
 
-\paragraph{Decoding Process}
+\subsubsection*{Decoding Process}
 TODO: Talk about the decompression algorithm and make an example of decoding a sequence of symbols. Add a pseudo code of the algorithm.\\
 
-\paragraph{Efficiency of Arithmetic Coding}
+\subsubsection*{Efficiency of Arithmetic Coding}
 \begin{theorem}
     The number of bits emitted by arithmetic coding for a sequence $S$ of $n$ symbols is at most $2 + n\mathcal{H}$, where $\mathcal{H}$ is the empirical entropy of the sequence $S$.
 \end{theorem}

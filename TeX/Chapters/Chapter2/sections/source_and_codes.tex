@@ -1,10 +1,12 @@
-\section{Source and Code}
+\section{Source and Code} \label{sec:source_and_codes}
 
-We enrich the understanding of entropy by establishing its core role in setting the fundamental limit for information compression. This process involves condensing data by assigning shorter descriptions to more frequent outcomes and longer descriptions to less frequent ones. For example, Morse code uses a single dot to represent the most common symbol. Within this chapter, we ascertain the minimum average description length for a random variable. \cite{ElementsofInformationTheory}
+TODO: Some introduction about the source and coding, maybe with some very simple example like the morse code that uses a single dot to represent the most common symbol.
+
+% We enrich the understanding of entropy by establishing its core role in setting the fundamental limit for information compression. This process involves condensing data by assigning shorter descriptions to more frequent outcomes and longer descriptions to less frequent ones. For example, Morse code uses a single dot to represent the most common symbol. Within this chapter, we ascertain the minimum average description length for a random variable. \cite{ElementsofInformationTheory}
 
 \subsection{Codes}
 
-A source characterized by a random process generates symbols (letters) from a specific alphabet at each time step. The objective is to transform this output sequence into a more concise representation. This data reduction technique, known as \emph{source coding} or \emph{data compression}, utilizes a code to represent the original symbols more efficiently. The device that performs this transformation is termed an \emph{encoder}, and the process itself is referred to as \emph{encoding}. \cite{han2002mathematics}
+A source characterized by a random process generates symbols from a specific alphabet at each time step. The objective is to transform this output sequence into a more concise representation. This data reduction technique, known as \emph{source coding} or \emph{data compression}, utilizes a code to represent the original symbols more efficiently. The device that performs this transformation is termed an \emph{encoder}, and the process itself is referred to as \emph{encoding}. \cite{han2002mathematics}
 
 \begin{definition}[Source Code]\label{def:code}
     A source code for a random variable $X$ is a mapping from the set of possible outcomes of $X$, called $\mathcal{X}$, to $\mathcal{D}^*$, the set of all finite-length strings of symbols from a $\mathcal{D}$-ary alphabet. Let $C(X)$ denote the codeword assigned to $x$ and let $l(x)$ denote length of $C(x)$
@@ -17,7 +19,8 @@ A source characterized by a random process generates symbols (letters) from a sp
     \end{equation}
     where $l(x)$ is the length of the codeword assigned to $x$.
 \end{definition}
-Let's assume from now for simplicity that the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, D-1\}$.
+
+\noindent Let's assume from now for simplicity that the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, D-1\}$.
 
 \begin{example}
     Let's consider a source code for a random variable $X$ with $\mathcal{X} = \{a, b, c, d\}$ and $P_X(a) = 0.5$, $P_X(b) = 0.25$, $P_X(c) = 0.125$ and $P_X(d) = 0.125$. The code is defined as
@@ -57,6 +60,8 @@ Let's assume from now for simplicity that the $\mathcal{D}$-ary alphabet is $\ma
 \begin{definition}[Prefix Code]\label{def:prefix_code}
     TODO from \cite{ElementsofInformationTheory}
 \end{definition}
+
+TODO: Add a paragraph about the fact that  Shannon entropy provides a lower bound for the average length of a uniquely decodable code. (For example for \cite{KolmogorovComplexity} 7.1.2)
 
 \subsection{Kraft's Inequality}
 
