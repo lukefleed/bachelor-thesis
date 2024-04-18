@@ -2,7 +2,7 @@ name: Github Action for LaTeX and Website Update
 on:
   push:
     branches:
-      - main # Change this to the branch you want to trigger the action on
+      - main
 
 jobs:
   build_latex:

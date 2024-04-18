@@ -1,14 +1,35 @@
 % Chapter X
 
-\chapter{Subset Wavelet Trees} % Chapter title
+\chapter{Subset Wavelet Trees}
+\label{ch:Chapter4}
 
-\label{ch:Chapter4} % For referencing the chapter elsewhere, use \autoref{ch:Chapter4}
+\section{Introduction: Degenerate Strings}
+Brief introduction to degenerate strings \cite{fischer1974string, alzamel2018degenerate}
 
-\section{Degenerate Strings}
-Brief introduction to degenerate strings
-\subsection{Subset-Rank and Subset-Select}
+\section{Structure of the Subset Wavelet Tree}
+TODO: Describe the structure of the subset wavelet tree, from \cite{SubsetWT}
 
-% \section{Construction of the Subset Wavelet Tree}
+\section{Subset-Rank and Subset-Select}
+TODO: Describe the problem of subset-rank and subset-select, from \cite{SubsetWT}. Add pseudocode for the algorithms.
 
-
-% \printbibliography
+\section{TBD what to do from here}
+In \cite{SubsetWT} they descrivbe 4 methods that supports rank and rank-pairs queries on small alphabet sequences. The methods are
+\begin{itemize}
+    \item Wavelet Trees
+        \begin{itemize}
+            \item Wavelet Trees with un-compressed bitvectors
+            \item Wavelet Trees with compressed bitvectors (RRR \cite{RRR2002}
+        \end{itemize}
+    \item Scanning Rank (SubsetWT)
+    \item Sequence Splitting (SubsetWT)
+    \item Generalized RRR (SubsetWT)
+\end{itemize}
+TBD: Do I have to talk about them? They developed this methods to support fast membership queries on de Bruijn graphs (Do I care in this thesis?). Further more, the danish in \cite{bille2023rank} say that:
+\begin{quote}
+    we show that any structure supporting either subset-rank or subset-select must use at least $N \log \sigma - o(N \log \sigma)$ bits in the worst case (Theorem 2). By plugging a standard rank-select data structure into Theorem 1 we, in many cases, match this bound to within lower order terms, while simultaneously matching the query time of the fastest known rank-select data structures (see below). Note that any lower bound for rank-select queries also holds for subset rank-select queries since any string is also a degenerate string. All our results hold on a word RAM with logarithmic word-size. Finally, we provide implementations of the reductions and compare them to the implementations of the Subset Wavelet Tree provided in \cite{SubsetWT}, and the implementations of the reductions provided in \cite{alanko2023small}. Our most compact structure matches the space of their most compact structure while answering queries twice as fast. We also provide a structure using vector processing features that matches the space of the most compact structure while improving query time by a factor four to seven, remaining competitive with the fast structures for queries.
+\end{quote}
+Of course it remains the open problem stated in \cite{SubsetWT}:
+\begin{quote}
+    The main open problem we leave is to find a tighter analysis of the space required by subset wavelet trees when entropy compression is applied to their node sequences. In particular, can the size of the resulting structure be related in some way to the entropy of the subset sequence
+\end{quote}
+So a part of this chapter will focus on trying to answer this question. It's TBD how to structure all this and what to keep and what to leave out.

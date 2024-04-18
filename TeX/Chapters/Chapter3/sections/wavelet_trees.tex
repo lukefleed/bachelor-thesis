@@ -1,10 +1,14 @@
 \clearpage
 \section{Wavelet Trees}
-% TODO: An introduction to wavelet trees, just one paragraph. (\cite{WTForALL,WTFromTheoryToPractice,TheMyriadVirtuesWT} give a good introduction to wavelet trees)
+TODO: Improve this introduction, just a draft. \vspace{0.4cm}
 
-The wavelet tree was introduced in 2003 by Grossi, Gupta, and Vitter \cite{GrossiWT2003}, it serves as a space-efficient data structure for sequence representation and query handling. Its name reflects its similarity to wavelet packet decomposition, where the sequence's "high" and "low" symbol values are separated and recursively subdivided. \\
+% \noindent The wavelet tree was introduced in 2003 by Grossi, Gupta, and Vitter \cite{GrossiWT2003}. It is are a self-indexing rank and select data structure, i.e., it can answer rank and select queries, while still allowing to access the text. This makes them a powerful tool for compressed full-text indices such as the FM-index \cite{ferragina2000opportunistic}, where they are used to answer rank queries during the backward search. \vspace{0.4cm}
 
-\noindent Interestingly, upon closer examination, one can recognize that the wavelet tree is a slight extension of an older (1988) data structure by Chazelle \cite{Chazelle1988}, commonly used in Computational Geometry. This structure represents points on a two-dimensional grid, undergoing a reshuffling process to sort them by one coordinate and then by the other. Kärkkäinen (1999) \cite{karkkainen1999repetition} was the first to apply this structure to text indexing, although the concept and usage differed from Grossi et al.'s proposal four years later. \\
+\noindent Wavelet trees, introduced in 2003 by Grossi, Gupta, and Vitter \cite{GrossiWT2003,} are a self indexing data structure: meaning they can answer rank and select queries, while still allowing to access the text. This combination makes them particularly useful for compressed full-text indexes like the FM-index \cite{ferragina2000opportunistic}. In such indexes, wavelet trees are employed to efficiently answer rank queries during the search process. \vspace{0.4cm}
+
+% Its name reflects its similarity to wavelet packet decomposition, where the sequence's "high" and "low" symbol values are separated and recursively subdivided. \vspace{0.4cm}
+
+\noindent \emph{TBD if to add:} Upon closer examination, one can recognize that the wavelet tree is a slight extension of an older (1988) data structure by Chazelle \cite{Chazelle1988}, commonly used in Computational Geometry. This structure represents points on a two-dimensional grid, undergoing a reshuffling process to sort them by one coordinate and then by the other. Kärkkäinen (1999) \cite{karkkainen1999repetition} was the first to apply this structure to text indexing, although the concept and usage differed from Grossi et al.'s proposal four years later. \vspace{0.4cm}
 
 \noindent Wavelet Trees can be seen in different ways: (i) as sequence representation, (ii) as a permutation of elements, and (iii) as grid point representation. Since 2003, these perspectives and their interconnections have proven valuable across diverse problem domains, extending beyond text indexing and computational geometry, where the structure originated \cite{WTForALL,WTFromTheoryToPractice,TheMyriadVirtuesWT}.
 
@@ -17,7 +21,7 @@ Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S
     \item \texttt{Select(c,i)}: return the position of the $i$-th occurrence of character $c$ in $S$.
 \end{itemize}
 However, dealing with sequences is much more complex than dealing with bitvectors (as we have seen in \autoref{sec:bitvectors})
-\noindent TODO: further expand this concept: show an attemp to solve this problem with a naive approach, and see its shortcomings. The problem will be space occupancy, since if we use the solution for bitvectors, then the total space occupancy will be $n\sigma + o(n\sigma)$ bits, which is way too much. \cite{navarro2016compact} \\
+\noindent TODO: further expand this concept: show an attemp to solve this problem with a naive approach, and see its shortcomings. The problem will be space occupancy, since if we use the solution for bitvectors, then the total space occupancy will be $n\sigma + o(n\sigma)$ bits, which is way too much. \cite{navarro2016compact} \vspace{0.4cm}
 
 \noindent From now on, let $S[1,n]$ = $s_1s_2\dots s_n$ be a sequence of length $n$ over an alphabet $\Sigma$ that for simplicity we write as $\Sigma = \{1,\dots,\sigma\}$. In this way, the string can be represented using $n \lceil \log \sigma \rceil = n \log \sigma + o(n)$ bits in plain form.
 
@@ -34,7 +38,7 @@ In the beginning of this section we showed that storing one bitvector per symbol
 \end{remark}
 
 \subsubsection*{Tracking symbols}
-We have seen how the wavelet tree serves as a representation for a string $S$, but more than that it is a succinct data structure for the string. Thus, it takes space asymptotically close to the plain representation of the string and allows us to access the $i$-th symbol of the string in $O(\log \sigma)$ time. In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the string $S$ using a wavelet tree $T$, this operation is called \texttt{Access}. \\
+We have seen how the wavelet tree serves as a representation for a string $S$, but more than that it is a succinct data structure for the string. Thus, it takes space asymptotically close to the plain representation of the string and allows us to access the $i$-th symbol of the string in $O(\log \sigma)$ time. In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the string $S$ using a wavelet tree $T$, this operation is called \texttt{Access}. \vspace{0.4cm}
 
 \begin{algorithm}[h!]
     \caption{Answering \texttt{Access} queries on a wavelet tree}\label{alg:access_wt}
@@ -63,11 +67,11 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
     TODO and TBD: add a figure with the wavelet tree and the process of finding the $i$-th symbol of the string.
 \end{example}
 
-\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}..\\
+\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}..\vspace{0.4cm}
 
-\noindent TODO: add the select algorithm and explain the process of finding the position of a symbol in the string. The references are Navarro's \cite{WTForALL,navarro2016compact} \\
+\noindent TODO: add the select algorithm and explain the process of finding the position of a symbol in the string. The references are Navarro's \cite{WTForALL,navarro2016compact} \vspace{0.4cm}
 
-\noindent TODO: Show how to generalize the rank and select operations to the wavelet tree. So with a query $rank_c(S,i)$ , instead of moving from the root toward the leaf corresponding to $S[i]$, we move toward the leaf of $c$. The idea is similar for select. \cite{navarro2016compact} 6.2.2 \\
+\noindent TODO: Show how to generalize the rank and select operations to the wavelet tree. So with a query $rank_c(S,i)$ , instead of moving from the root toward the leaf corresponding to $S[i]$, we move toward the leaf of $c$. The idea is similar for select. \cite{navarro2016compact} 6.2.2 \vspace{0.4cm}
 
 \noindent TODO: Add some pratical consideration about using constant-time $rank$ and $select$ on the bitvectors. \cite{navarro2016compact} 6.2
 
