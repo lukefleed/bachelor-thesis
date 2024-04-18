@@ -30,7 +30,7 @@ jobs:
         with:
           repository: lukefleed/website
           path: website
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
       - name: Copy PDF to Website
         run: cp github_deploy/main.pdf website/public/thesis/main.pdf
       - name: Commit and Push Changes
