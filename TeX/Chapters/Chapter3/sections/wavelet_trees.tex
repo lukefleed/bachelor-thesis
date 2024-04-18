@@ -9,7 +9,7 @@ The wavelet tree was introduced in 2003 by Grossi, Gupta, and Vitter \cite{Gross
 \noindent Wavelet Trees can be seen in different ways: (i) as sequence representation, (ii) as a permutation of elements, and (iii) as grid point representation. Since 2003, these perspectives and their interconnections have proven valuable across diverse problem domains, extending beyond text indexing and computational geometry, where the structure originated \cite{WTForALL,WTFromTheoryToPractice,TheMyriadVirtuesWT}.
 
 \subsection*{An introduction to the problem}
-First introduce the following problem: let's consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$\footnote{The size of the alphabet varies depending on the application. For example, in DNA sequences, the alphabet is $\Sigma = \{A,C,G,T\}$ (in \autoref{ch:Chapter4} we will focus more on this specific case), while in other case it could be of millions of characters, such as in natural language processing.}. The problem is to support the following queries:
+Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$\footnote{The size of the alphabet varies depending on the application. For example, in DNA sequences, the alphabet is $\Sigma = \{A,C,G,T\}$ (in \autoref{ch:Chapter4} we will focus more on this specific case), while in other case it could be of millions of characters, such as in natural language processing.}. The problem is to support the following queries:
 
 \begin{itemize}
     \item \texttt{Access(i)}: return the $i$-th element of $S$.
@@ -23,18 +23,18 @@ However, dealing with sequences is much more complex than dealing with bitvector
 
 \subsection{Structure}
 
-In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ and over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ and over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL}
+In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL}
 
 \begin{example}
     TODO: Add an example of a wavelet tree for a sequence with small alphabet.
 \end{example}
 
 \begin{remark} \label{rem:space_occupancy_wavelet_tree}
-    This wavelet tree has $\sigma$ leaves and $\sigma-1$ internal nodes, and the height of the tree is $ \lceil \log \sigma \rceil$. The space occupancy of each level it's exactly $n$ bits, while we have at most $n$ bits for the last level. The total number of bits stored by the wavelet tree in then upper bounded by $n \lceil \log \sigma \rceil$ bits. \cite{WTForALL}. This however is not sufficient, if we want to also store the topology of the tree, we need to add $O(\sigma \log n)$ bits.
+    The wavelet tree described has $\sigma$ leaves and $\sigma-1$ internal nodes, and the height of the tree is $ \lceil \log \sigma \rceil$. The space occupancy of each level it's exactly $n$ bits, while we have at most $n$ bits for the last level. The total number of bits stored by the wavelet tree in then upper bounded by $n \lceil \log \sigma \rceil$ bits. \cite{WTForALL}. This however is not sufficient, if we want to also store the topology of the tree, we need to add extra $O(\sigma \log n)$ bits.
 \end{remark}
 
 \subsubsection*{Tracking symbols}
-We have seen how the wavelet tree serves as a representation for a string $S$, but moreover it is a succinct data structure for the string. Thus, it takes space asymptotically close to the plain representation of the string and allows us to access the $i$-th symbol of the string in $O(\log \sigma)$ time. In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the string $S$ using a wavelet tree $T$, this operation is called \texttt{Access}. \\
+We have seen how the wavelet tree serves as a representation for a string $S$, but more than that it is a succinct data structure for the string. Thus, it takes space asymptotically close to the plain representation of the string and allows us to access the $i$-th symbol of the string in $O(\log \sigma)$ time. In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the string $S$ using a wavelet tree $T$, this operation is called \texttt{Access}. \\
 
 \begin{algorithm}[h!]
     \caption{Answering \texttt{Access} queries on a wavelet tree}\label{alg:access_wt}
@@ -63,7 +63,7 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
     TODO and TBD: add a figure with the wavelet tree and the process of finding the $i$-th symbol of the string.
 \end{example}
 
-\noindent As we may want to retrive the $i$-th symbol of the string, we may also want to carry out the inverse operation, that is, given a symbol a position at a leaf node, we want to find the position of the symbol in the string. This operation is called \texttt{Select} and is shown in algorithm \ref{alg:select_wt}.\\
+\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}..\\
 
 \noindent TODO: add the select algorithm and explain the process of finding the position of a symbol in the string. The references are Navarro's \cite{WTForALL,navarro2016compact} \\
 

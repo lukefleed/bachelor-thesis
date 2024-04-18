@@ -11,16 +11,16 @@ Consider the following problem \cite{ferragina2023pearls}: imagine a dictionary 
     \item \texttt{Access\_string(i)}: retrieve the $i$-th string in $\mathcal{D}$.
     \item \texttt{Which\_string(x)}: find the starting position of the string in $T$, including the character $T[x]$.
 \end{itemize}
-The conventional solution involves employing an array of pointers $A[1, n]$ to the strings in $\mathcal{D}$, represented by their offsets in $T[1, m]$, requiring $\theta(n \log n)$ bits. Consequently, \texttt{Access\_string(i)} simply returns $A[i]$, while \texttt{Which\_string(x)} involves locating the predecessor of $x$ in $A$. The first operation is instantaneous, whereas the second one necessitates $O(\log n)$ time using binary search. \vspace{0.4cm}
+The conventional solution involves employing an array of pointers $A[1, n]$ to the strings in $\mathcal{D}$, represented by their offsets in $T[1, m]$, requiring $\Theta(n \log n)$ bits. Consequently, \texttt{Access\_string(i)} simply returns $A[i]$, while \texttt{Which\_string(x)} involves locating the predecessor of $x$ in $A$. The first operation is instantaneous, whereas the second one necessitates $O(\log n)$ time using binary search. \vspace{0.4cm}
 
 \noindent We can address the problem by employing a compressed representation of the offsets in $A$ via a binary array $B[1,m]$ of $m$ bits, where $B[i] = 1$ if and only if $i$ is the starting position of a string in $T$. In this case then $\texttt{Access\_string(i)}$ searches for the $i$-th $1$ in $B$, while $\texttt{Which\_string(x)}$ counts the number of $1$s in the prefix $B[1,x]$. \vspace{0.4cm}
 
 \noindent In modern literature this two operations are well known as \textit{rank} and \textit{select} queries, respectively.
-\begin{definition}[Rank and Select Operations]\label{def:rankselect}
-    Given $B[1,n]$ a binary array of $n$ bits, denoted as bitvector, we define the following operations:
+\begin{definition}[Rank and Select]\label{def:rankselect}
+    Given $B[1,n]$ a binary array of $n$ bits (a bitvector), we define the following operations:
     \begin{itemize}
         \item The \textbf{rank} of an index $i$ in $B$ relative to a bit $b$ is the number of occurrences of $b$ in the prefix $B[1,i]$. We denote it as $rank_1(i) = \sum_{j=1}^{i} B[j]$. Similarly we can compute $rank_0(i) = i - rank_1(i)$ in constant time.
-        \item The \textbf{select} of the $i$-th occurrence of a bit $b$ in $B$ is the index of the $i$-th occurrence of $b$ in $B$. We denote it as $select_b(i)$. Opposite to rank, we cannot derive select of $0$ from select of $1$ in constant time.
+        \item The \textbf{select} of the $i$-th occurrence of a bit $b$ in $B$ is the index of the $i$-th occurrence of $b$ in $B$. We denote it as $select_b(i)$. Opposite to rank, we can't derive select of $0$ from select of $1$ in constant time.
     \end{itemize}
 \end{definition}
 \begin{example}
@@ -29,7 +29,7 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
 % \noindent In the following sections, our aim is to compress bitvectors to $n \mathcal{H}_k(B) + o(n)$ bits, where $\mathcal{H}_k(B)$ denotes the $k$-th order empirical entropy of $B$. The pivotal strategy for achieving compression lies in encoding bit blocks as a single unit. Following this, we will construct structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations.
 \noindent In the following sections, our aim is to built structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations. \vspace{0.4cm}
 
-\noindent TBD: Do I talk also about how to compress the bitvector to $n \mathcal{H}_0(B) + o(n)$ bits with those extra $o(n)$ to support rank and select operations still in $O(1)$ time? There is also the compressed solution via Elias Fano, when the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. I supports $Select_1$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?
+\noindent TBD: Do I talk also about how to compress the bitvector to $n \mathcal{H}_0(B) + o(n)$ bits with those extra $o(n)$ to support rank and select operations still in $O(1)$ time? There is also the compressed solution via Elias Fano, when the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?
 
 \subsection{Rank}
 TODO:

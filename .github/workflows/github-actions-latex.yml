@@ -1,5 +1,9 @@
-name: Github Action for LaTeX
-on: [push]
+name: Github Action for LaTeX and Website Update
+on:
+  push:
+    branches:
+      - main # Change this to the branch you want to trigger the action on
+
 jobs:
   build_latex:
     runs-on: ubuntu-latest
@@ -14,10 +18,26 @@ jobs:
           root_file: main.tex
       - name: move
         run: mkdir -p github_deploy && mv TeX/main.pdf github_deploy/
-      - name: deploy on orphan branch
+      - name: Deploy on orphan branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./github_deploy
           publish_branch: build
           force_orphan: true
+      - name: Update Website Repository
+        uses: actions/checkout@v3
+        with:
+          repository: lukefleed/website
+          path: website
+          token: ${{ secrets.thesis }} # Replace PAT with your personal access token
+      - name: Copy PDF to Website
+        run: cp github_deploy/main.pdf website/public/thesis/main.pdf
+      - name: Commit and Push Changes
+        run: |
+          cd website
+          git config user.name "GitHub Actions"
+          git config user.email "<>"
+          git add public/thesis/main.pdf
+          git commit -m "Update thesis PDF"
+          git push
