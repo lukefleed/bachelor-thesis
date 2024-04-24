@@ -45,10 +45,10 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 \begin{definition}[Conditional Entropy]\label{def:conditional_entropy}
     Let $(X,Y)$ be a pair of discrete random variables with a joint distribution $P_{XY}(x,y) = \text{Pr}\{X=x,Y=y\}$. The conditional entropy of $Y$ given $X$ is defined as
     \begin{align}
-        H(Y|X) &= H(W | P_X) \myeq \sum_x P_X(x)H(Y|x) \\
-        &= \sum_{x \in \mathcal{X}} P_X(x) \Big\{ -\sum_{y \in \mathcal{Y}} W(y|x) \log W(y|x) \Big\} \\
-        &= -\sum_{x\in\mathcal{X}}\sum_{y\in\mathcal{Y}} P_{XY}(x,y)\log W(y|x) \\
-        &= E_{P_{XY}} \{ -\log W(Y|X) \}
+        H(Y|X) & = H(W | P_X) \myeq \sum_x P_X(x)H(Y|x)                                                       \\
+               & = \sum_{x \in \mathcal{X}} P_X(x) \Big\{ -\sum_{y \in \mathcal{Y}} W(y|x) \log W(y|x) \Big\} \\
+               & = -\sum_{x\in\mathcal{X}}\sum_{y\in\mathcal{Y}} P_{XY}(x,y)\log W(y|x)                       \\
+               & = E_{P_{XY}} \{ -\log W(Y|X) \}
     \end{align}
 \end{definition}
 
@@ -57,7 +57,7 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 \noindent The connection between joint entropy and conditional is more evident when considering that the entropy of two random variables equals the entropy of one of them plus the conditional entropy of the other. This connection is formally proven in the following theorem.
 
 \begin{theorem}[Chain Rule]\label{thm:chain_rule}
-        Let $(X,Y)$\marginpar{This is also known as additivity of entropy.} be a pair of discrete random variables with a joint distribution $P_{XY}(x,y)$. Then, the joint entropy of $(X,Y)$ can be expressed as
+    Let $(X,Y)$\marginpar{This is also known as additivity of entropy.} be a pair of discrete random variables with a joint distribution $P_{XY}(x,y)$. Then, the joint entropy of $(X,Y)$ can be expressed as
     \begin{equation}
         H(X,Y) = H(X) + H(Y|X)
     \end{equation}
@@ -65,10 +65,10 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 \begin{proof}
     From the definition of conditional entropy (\ref{def:conditional_entropy}), we have
     \begin{align*}
-        H(X,Y) &= -\sum_{x,y} P_{XY}(x,y) \log W(y|x) \\
-        &= -\sum_{x,y} P_{XY}(x,y) \log \frac{P_{XY}(x,y)}{P_X(x)} \\
-        &= -\sum_{x,y} P_{XY}(x,y) \log P_{XY}(x,y) + \sum_{x,y} P_{X}(x) \log P_X(x) \\
-        &= H(XY) + H(X)
+        H(X,Y) & = -\sum_{x,y} P_{XY}(x,y) \log W(y|x)                                        \\
+               & = -\sum_{x,y} P_{XY}(x,y) \log \frac{P_{XY}(x,y)}{P_X(x)}                    \\
+               & = -\sum_{x,y} P_{XY}(x,y) \log P_{XY}(x,y) + \sum_{x,y} P_{X}(x) \log P_X(x) \\
+               & = H(XY) + H(X)
     \end{align*}
     Where we used the relation
     \begin{equation}
@@ -88,8 +88,8 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 
 \begin{corollary}
     \begin{align}
-        H(X_1, X_2, \ldots, X_n) &= H(X_1) + H(X_2|X_1) + H(X_3|X_1, X_2) \nonumber \\
-        &+ \ldots + H(X_n|X_1, X_2, \ldots, X_{n-1})
+        H(X_1, X_2, \ldots, X_n) & = H(X_1) + H(X_2|X_1) + H(X_3|X_1, X_2) \nonumber \\
+                                 & + \ldots + H(X_n|X_1, X_2, \ldots, X_{n-1})
     \end{align}
 \end{corollary}
 \begin{proof}
@@ -107,32 +107,44 @@ Given two random variables $X$ and $Y$, the mutual information between them quan
 \end{definition}
 \noindent Using the chain rule (\ref{thm:chain_rule}), we can rewrite it as
 \begin{align}
-    I(X;Y) &= H(X) - H(X|Y) \nonumber \\
-    &= H(X) + H(Y) - H(X,Y) \\
-    &= -\sum_x P_X(x)\log P_X(x) - \sum_y P_Y(y)\log P_Y(y) \nonumber \\
-    & \quad + \sum_{x,y} P_{XY}(x,y)\log P_{XY}(x,y) \\
-    &= \sum_{x,y} P_{XY}(x,y)\log \frac{P_{XY}(x,y)}{P_X(x)P_Y(y)} \\
-    &= E_{P_{XY}} \left\{ \log \frac{P_{XY}(x,y)}{P_X(x)P_Y(y)} \right\}
+    I(X;Y) & = H(X) - H(X|Y) \nonumber                                           \\
+           & = H(X) + H(Y) - H(X,Y)                                              \\
+           & = -\sum_x P_X(x)\log P_X(x) - \sum_y P_Y(y)\log P_Y(y) \nonumber    \\
+           & \quad + \sum_{x,y} P_{XY}(x,y)\log P_{XY}(x,y)                      \\
+           & = \sum_{x,y} P_{XY}(x,y)\log \frac{P_{XY}(x,y)}{P_X(x)P_Y(y)}       \\
+           & = E_{P_{XY}} \left\{ \log \frac{P_{XY}(x,y)}{P_X(x)P_Y(y)} \right\}
 \end{align}
 It follows immediately that the mutual information is symmetric, $I(X;Y) = I(Y;X)$.
 
-% \begin{tikzpicture}
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+        % Define the circles
+        \def\radius{2cm}
+        \def\dist{2cm}
+        \coordinate (center1) at (0,0);
+        \coordinate (center2) at (\dist,0);
 
-%     % Define the circles
-%     \def\radius{2cm}
-%     \def\dist{3.5cm}
-%     \coordinate (center1) at (0,0);
-%     \coordinate (center2) at (\dist,0);
+        % Draw circles
+        \draw (center1) circle [radius=\radius];
+        \draw (center2) circle [radius=\radius];
 
-%     % Draw circles
-%     \draw (center1) circle [radius=\radius] node [above] {$H(Y)$};
-%     \draw (center2) circle [radius=\radius] node [above] {$H(X)$};
+        % Color intersection
+        \begin{scope}
+            \clip (center1) circle (\radius);
+            \fill[lightgray] (center2) circle (\radius);
+        \end{scope}
 
-%     % Label intersection
-%     \coordinate (intersection) at (\dist/2,0);
-%     \node at (intersection) [below] {$I(X;Y)$};
+        % Label intersection
+        \coordinate (intersection) at (\dist/2,0);
+        \node at (intersection) [below, above=0.1cm] {$I(X;Y)$};
 
-% \end{tikzpicture}
+        % Move labels outside
+        \node at (center1) [above=1cm, left=2cm] {$H(Y)$};
+        \node at (center2) [above=1cm, right=2cm] {$H(X)$};
+    \end{tikzpicture}
+    \caption{Mutual information between two random variables $X$ and $Y$.}
+\end{figure}
 
 
 \subsection{Fano's inequality}
@@ -156,9 +168,9 @@ Information theory serves as a cornerstone for understanding fundamental limits 
     \end{equation}
     We can then write
     \begin{align} \label{eq:entropy_decomposition}
-        H(X|Y) &= H(X|Y) + H(Z|XY) = H(XZ|Y) \nonumber \\
-        &= H(X|YZ) + H(Z|Y) \nonumber \\
-        &\leq H(X|YZ) + H(Z)
+        H(X|Y) & = H(X|Y) + H(Z|XY) = H(XZ|Y) \nonumber \\
+               & = H(X|YZ) + H(Z|Y) \nonumber           \\
+               & \leq H(X|YZ) + H(Z)
     \end{align}
     The last inequality follows from the fact that conditioning reduces entropy. We can then write
     \begin{equation} \label{eq:entropy_decomposition2}
