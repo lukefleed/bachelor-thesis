@@ -73,10 +73,10 @@ A source characterized by a random process generates symbols from a specific alp
 \noindent Thus, any encoded string in a uniquely decodable code has only one possibile source string that could have generated it.
 
 \begin{definition}[Prefix Code]\label{def:prefix_code}
-    A \marginpar{Some times called instantaneous code} code is a prefix code if no codeword is a prefix of any other codeword.
+    A \marginpar{Also called instantaneous code} code is a prefix code if no codeword is a prefix of any other codeword.
 \end{definition}
 
-\noindent Imagine receiving a string of coded symbols. An \emph{instantaneous code} allows us to decipher each symbol as soon as we reach the end of its corresponding codeword. We don't need to wait and see what comes next. Because the code itself tells us where each codeword ends, it's like the code "punctuates itself" with invisible commas separating the symbols.  This let us decode the entire message by simply reading the string and adding commas between the codewords without needing to see any further symbols. Consider the example \ref{ex:source_code} seen a the beginning of this section, where the binary string \texttt{01011111010} is decoded as \texttt{0,10,111,110,10} because the code used naturally separates the symbols. \cite{ElementsofInformationTheory}. Figure \ref{fig:codes} shows the relationship between different types of codes.
+\noindent Imagine receiving a string of coded symbols. An \emph{instantaneous code} allows us to decode each symbol as soon as we reach the end of its corresponding codeword. We don't need to wait and see what comes next. Because the code itself tells us where each codeword ends, it's like the code "punctuates itself" with invisible commas separating the symbols.  This let us decode the entire message by simply reading the string and adding commas between the codewords without needing to see any further symbols. Consider the example \ref{ex:source_code} seen a the beginning of this section, where the binary string \texttt{01011111010} is decoded as \texttt{0,10,111,110,10} because the code used naturally separates the symbols. \cite{ElementsofInformationTheory}. Figure \ref{fig:codes} shows the relationship between different types of codes.
 
 % \begin{remark}[On the lower bound provided by Shannon Entropy]
 %     Shannon entropy, defined in \ref{def:entropy}, gives us a lower bound for the average length of a uniquely decodable code. Given a letter with frequency $p_i$, it carries $-\log p_i$  bits of information.
