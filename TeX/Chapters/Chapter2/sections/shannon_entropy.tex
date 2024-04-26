@@ -97,7 +97,7 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 \end{proof}
 
 \subsection{Mutual Information}
-Given two random variables $X$ and $Y$, the mutual information between them quantifies the reduction in uncertainty about one variable due to the knowledge of the other. It is defined as the difference between the entropy and the conditional entropy
+Given two random variables $X$ and $Y$, the mutual information between them quantifies the reduction in uncertainty about one variable due to the knowledge of the other. It is defined as the difference between the entropy and the conditional entropy. Figure \ref{fig:mutual_information} illustrates the concept of mutual information between two random variables.
 
 \begin{definition}[Mutual Information]\label{def:mutual_information}
     Let $(X,Y)$ be a pair of discrete random variables with a joint distribution $P_{XY}(x,y)$. The mutual information between $X$ and $Y$ is defined as
@@ -143,9 +143,8 @@ It follows immediately that the mutual information is symmetric, $I(X;Y) = I(Y;X
         \node at (center1) [above=1cm, left=2cm] {$H(Y)$};
         \node at (center2) [above=1cm, right=2cm] {$H(X)$};
     \end{tikzpicture}
-    \caption{Mutual information between two random variables $X$ and $Y$.}
+    \caption{Mutual information between two random variables $X$ and $Y$.\label{fig:mutual_information}}
 \end{figure}
-
 
 \subsection{Fano's inequality}
 
