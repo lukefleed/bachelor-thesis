@@ -8,15 +8,15 @@ Most important references for this section: \cite{ferragina2023pearls,sayood2002
 \noindent The central concern in this section revolves around formulating an efficient binary representation method for an indefinite sequence of integers. Our objective is to minimize bit usage while ensuring that the encoding remains prefix-free. In simpler terms, we aim to devise a binary format where the codes for individual integers can be concatenated without ambiguity, allowing the decoder to reliably identify the start and end of each integer's representation within the bit stream and thus restore it to its original uncompressed state.
 
 \subsection{Unary Code}
-TODO: Introduction to unary code, from \cite{ferragina2023pearls,sayood2002lossless}
+We begin by examining the unary code, a straightforward encoding method that represents a positive integer $x \geq 1$\footnote{This is not a strict condition, but we will assume it for clarity} using $x$ bits. It represents $x$ as a sequence of $x-1$ zeros followed by a single one. The correctness of this encoding is straightforward to verify: the decoder can identify the end of the integer by detecting the first one in the sequence, and the number of zeros preceding it determines the value of $x$. \vspace{0.4cm}
+
+\noindent This coding method requires $x$ bits to represent the integer $x$, which is way more than the $\lceil\log_2(x)\rceil$ bits needed by a fixed-length binary code. In fact, it is very efficient for small values of $x$ but becomes increasingly inefficient as $x$ grows. This is a direct consequence of \autoref{thm:source_coding_theorem}, which states that the ideal code length $L(c)$ for a symbol $c$ is $-\log_2 P(c)$, where $P(c)$ is the probability of symbol $c$. In the case of the unary code, where we are considering positive integers, the ideal code for $x$ would be $-\log_2 P(x) = -\log_2 2^{-x} = x$ bits. The following theorem formalizes this observation. \cite{ferragina2023pearls}
 
 \begin{theorem}
-    The unary code of a positive integer $x$ takes $x$ bits, and thus it is optimal for the distribution $P(x)=2^{-x}$. \cite{ferragina2023pearls}
+    The unary code of a positive integer $x$ takes $x$ bits, and thus it is optimal for the distribution $P(x)=2^{-x}$.
 \end{theorem}
 
-\begin{theorem}
-    Given a set of $S$ integers, of maximum value $M$, the fixed-length binary code represents each of them in $\lceil\log_2(M)\rceil$ bits and is optimal for the distribution $P(x)=1/M$. \cite{ferragina2023pearls}
-\end{theorem}
+\noindent It is important to note that implementing a unary code requires a lot of bit shifts and bitwise operations, which are computationally expensive on modern processors. This makes the unary code impractical for large values of $x$
 
 \subsection{Elias Codes: $\gamma$ and $\delta$}
 TODO: Introduction and explanation of Elias codes, from \cite{ferragina2023pearls,Elias1975}
