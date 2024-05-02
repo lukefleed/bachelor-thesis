@@ -18,22 +18,36 @@ We begin by examining the unary code, a straightforward encoding method that rep
 
 \noindent It is important to note that implementing a unary code requires a lot of bit shifts and bitwise operations, which are computationally expensive on modern processors. This makes the unary code impractical for large values of $x$
 
-\subsection{Elias Codes: $\gamma$ and $\delta$}
-TODO: Introduction and explanation of Elias codes, from \cite{ferragina2023pearls,Elias1975}
+% ------------------------------------ Elias Codes ------------------------------------
+
+\subsection{Elias Codes}
+First introduced by Levenstein in the 1960s and later refined by Elias \cite{Elias1975} in the 1970s, the $\gamma$ and $\delta$ codes are two of the most popular \emph{universal codes} for integers. The term \emph{universal code} refers to the characteristic of these codes to have fixed-length of $O(\log x)$ for any integer $x$. Compared to the binary code that requires $\lceil\log_2(x+1)\rceil$ bits, the $\gamma$ and $\delta$ codes are just a constant factor away from it, while having the advantage of being prefix-free.
+
+\paragraph{Gamma Code} The $\gamma$ code represents a positive integer $x$ is divided into two parts: given $|B(x)|$ as the number of bits needed to represent $x$ in binary, the first part is a sequence of $|B(x)| - 1$ zeros followed by the binary representation of $x$. The $\gamma$ code of $x$ is then the concatenation of these two parts, delimited by the first one bit. The decoding process is therefore very simple: the decoder reads the bits until it finds the first one, and the number of zeros preceding it determines the length of the binary representation of $x$. From Shannon's condition of ideal codes (\autoref{thm:source_coding_theorem}), we can see that the $\gamma$ code is optimal for the distribution $P(x)\approx 1/x^2$. \cite{ferragina2023pearls}
+\vspace{0.4cm}
 
 \begin{theorem}
-    The $\gamma$ code of a positive integer $x$ takes $2\lceil\log_2(x+1)\rceil-1$ bits, and thus it is optimal for the distribution $P(x)=1/x^2$. This is within a factor of two from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code. \cite{ferragina2023pearls}
+    The $\gamma$ code of a positive integer $x$ takes $2\lceil\log_2(x+1)\rceil-1$ bits, and thus it is optimal for the distribution $P(x)=1/x^2$. This is within a factor of two from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code.
 \end{theorem}
-TODO: Talk a bit about the inefficiency of the $\gamma$ code \cite{ferragina2023pearls}
+
+\noindent The $\gamma$ code is inefficient due to the large number of zeros that need to be stored in the prefix, that becomes increasingly large as $x$ grows. The $\delta$ code, introduced by Elias in 1975, addresses this issue by using a more efficient prefix.
+
+\paragraph{Delta code} The $\delta$ code is a variation of the $\gamma$ code that uses a more efficient prefix. It represents a positive integer $x$ by first encoding the binary length of $x$ using the $\gamma$ code (we can write it as $\gamma(|B(x)|)$) and then appending the binary representation of $x$ itself. The $\delta$ code is thus the concatenation of these two parts that do not share any bits. The decoding process is similar to the $\gamma$ code: the decoder reads the bits until it finds the first one, and the number of zeros preceding it determines the length of the binary representation of $x$, then we fetch the next $|B(x)|$ bits to get the binary representation of $x$. This code takes $|\gamma(|B(x)|)| + |B(x)|$ = 2$\lceil\log_2(|B(x)| + 1) \rceil - 1 + |B(x)| \approx 2 \log \log x + 1 + \log x$ bits, which is $1 + o(1)$ factor away from the bit length of the fixed-length binary code. \cite{ferragina2023pearls}
 
 \begin{theorem}
-    The $\delta$ code of a positive integer $x$ takes $1 + \log_2x + 2\log_2 \log_2 x$ bits, and thus it is optimal for the distribution $P(x)=1/x()\log x)^2$. This is within a factor of $1 + o(1)$ from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code. \cite{ferragina2023pearls}
+    The $\delta$ code of $x \geq 0$ takes $1 + \log_2x + 2\log_2 \log_2 x$ bits, and thus it is optimal for the distribution $P(x)\approx1/x(\log x)^2$. This is within a factor of $1 + o(1)$ from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code. \cite{ferragina2023pearls}
 \end{theorem}
 
-
+\noindent As for the Unary Code, implementing these codes requires a lot of bit shifts during the decoding process, making them impractical for large values of $x$.
 
 \subsection{Rice Code}
-TODO: Just a brief mention on why we use it when values are concentrated around a certain range \cite{ferragina2023pearls,sayood2002lossless} and on how it works.
+
+Rice codes \cite{rice1979some} are a family of codes parameterized by a positive integer $k$. Their representation is the concatenation of $(1+x/2^k)$ as a unary code and the binary representation of the integer ($x \mod 2^k$). Rice codes are very efficient when the values iof $x$ are close to $2^k$. When dealing with large values of $x$, the efficiency of the $\gamma$ and $\delta$ codes decreases, and Rice codes become a better alternative providing fast compression and decompression. \vspace{0.4cm}
+
+\noindent The fist part takes $1 + \lceil\log_2(x/2^k)\rceil$ bits, and the second part takes $k$ bits (since it's in the range $[0,2^k)$). Thus, the first part is encoded in variable-length unary code, and the second part is encoded in fixed-length binary code. The closer the values of $x$ are to $2^k$, the shorter the first part becomes, making the decoding process faster.
+
+
+
 
 \subsection{Elias-Fano Code}
 TBD if to include this section or not. If included, it should be a brief mention of the Elias-Fano code and its use in integer compression \cite{ferragina2023pearls}.
