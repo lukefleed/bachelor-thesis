@@ -1,34 +1,44 @@
 \clearpage
 \section{Statistical Coding} \label{sec:statistical_coding}
 
-TODO: Introduction to statistical coding, from \cite{han2002mathematics} and \cite{ferragina2023pearls}
+This section explores a technique called \emph{statistical coding}: a method for compressing a sequence of symbols (\emph{texts}) drawn from a finite alphabet $\Sigma$. The idea is to divide the process in two key stages: modeling and coding. During the modeling phase, statistical characteristics of the input sequence are analyzed to construct a model. In the coding phase, this model is utilized to generate codewords for the symbols of $\Sigma$, which are then employed to compress the input sequence. We will focus on two popular statistical coding methods: Huffman coding and Arithmetic coding.
 
 \subsection{Huffman Coding}
 
-Sources for this section: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
+Compared to the methods seen in \autoref{sec:integer_coding}, Huffman Codes (introduced by Huffman in his landmark paper \cite{Huffman1952} in the 1950s) offer a broader applicability as they do not require any specific assumptions about the probability distribution, only that all probabilities are non-zero. This versatility makes them suitable for all distributions, including those where there is no clear relationship between symbol number and probability, such as in text data. \vspace{0.4cm}
 
+\noindent For example, in text, characters typically range from "\emph{a}" to "\emph{z}" and are often mapped to a contiguous range, such as $0$ to $25$ or $97$ to $122$ in ASCII. However, there is no direct correlation between a symbol's number and its frequency rank. \vspace{0.4cm}
 
-\noindent TODO: Introduction of the type of source and the situation we are in.\\
+% Sources for this section: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
 
-% \noindent As a preliminary for giving the theorem that provides an algorithm for constructing optimum codes (the Huffman code), we give the following lemma, from the book \cite{han2002mathematics}
+\noindent TODO: Talk about construction, encoding and decoding, canonical Huffman codes \cite{schwartz1964generating}, and the optimality of Huffman codes. \cite{ferragina2023pearls,sayood2002lossless}. \\
 
-% \begin{lemma}
-%     Let us consider a source $X$ subject to a probability distribution $Q$ on a source alphabet $\mathcal{X} = \{0, 1, \dots, J-1\}$ with $J = m(K-1) + 1$. We assume that the probabilities $Q(0), Q(1), \dots, Q(J-1)$ are ordered in non-increasing order. and denote by
-% \end{lemma}
+% \noindent The Huffman coding procedure produces an optimal prefix code; however, this doesn't imply that produces an optimal encoding. It's optimal in the sense that no prefix code can have a smaller average length.
 
-\noindent TODO: Talk about construction, encoding and decoding, canonical Huffman codes \cite{schwartz1964generating}, and the optimality of Huffman codes. \cite{ferragina2023pearls,sayood2002lossless}.
+\paragraph*{Construction of Huffman Codes} The construction of Huffman codes is a greedy algorithm based on the idea of building a binary tree, where each leaf corresponds to a symbol in the alphabet $\Sigma$. The tree is built in a bottom-up fashion, starting with the symbols as leaves (we define their \emph{size} as the number of occurrences) and iteratively merging the two nodes with the smallest probabilities until a single node is left. The code for each symbol is then obtained by traversing the tree from the root to the leaf, assigning a $0$ for each left branch and a $1$ for each right branch (or vice-versa). The resulting code is the path from the root to the leaf. More details can be found in \cite{ferragina2023pearls,sayood2002lossless,han2002mathematics,ElementsofInformationTheory} \vspace{0.4cm}
 
 \begin{example}
     TODO: Classic example of Huffman coding with for example $\mathcal{X} = \{a,b,c,d,e\}$ and $P(a)= 0.25$, $P(b)=0.25$, $P(c)=0.2$, $P(d)=0.15$, $P(e)=0.15$. Do a nice tree and show the encoding of each symbol.
 \end{example}
-\noindent There a are a few other theorems and lemmas that can be included in this section, TBD if to include them.\\
+
+\noindent Let $L_C = \Sigma_{\sigma \in \Sigma} L(\sigma) \cdot P[\sigma]$ be the average length of the codewords produced by a prefix-free code $C$, that encodes every symbol $\sigma \in \Sigma$ with a codeword of length $L(\sigma)$. The Huffman coding produces optimal prefix codes (not in the sense that produces an optimal encoding, but in the sense that no prefix code can have a smaller average length). This is formalized in the following theorem.
+
+\begin{theorem}[Optimality of Huffman Codes] \label{thm:huffman_optimality}
+    Let $C$ be an Huffman Code and $L_C$ is the shortest possible average length among all prefix-free codes $C'$. That is, $L_C \leq L_{C'}$
+\end{theorem}
+
+\noindent This can also be interpreted as the \emph{the minimality of the average depth} of the Huffman tree. A proof can be found in most information theory books \cite{ferragina2023pearls,sayood2002lossless,han2002mathematics,ElementsofInformationTheory}. \vspace{0.4cm}
+
+\noindent In the worst case, an Huffman Code can have a length of $|\Sigma|-1$ bits, which is the same as the number of internal nodes in the tree. However, its length is limited also by $\lfloor \log_\varPhi \frac{1}{p_{\min}} \rfloor$, where $p_{\min}$ is the smallest probability in the set and $\varPhi$ is the golden ratio. \cite{navarro2016compact}. Thus, if the probabilities come from the observed frequencies of the symbols in the text, let's say $n$ symbols, then $p_{\min} \geq \frac{1}{n}$ and the maximum length of the code is $\log_\varPhi n $. In particular, the encoding process is linear in the size of the input text \footnote{In the RAM model, $O(\log n)$ bits can be manipulated in $O(1)$, so the this is true also in practice}.
+
+The decoding process uses the Huffman Tree. It starts by reading consecutive bits from the stream and traversing the tree from the root towards a leaf based on the read bits. Upon reaching a leaf, we output the symbol it represents and then reset back to the root of the tree. Consequently, the overall decoding duration scales proportionally with the length of the compressed sequence in bits, denoted as $O(n(H(Pr) + 1))$. Since the codes are of length $O(log n)$, it follows that any symbol can be decoded within $O(log n)$ time.
+
 \begin{theorem}
-    Let $H$ be the entropy of a source emitting the symbols of an alphabet $\Sigma$, hence $H = \sum_{\sigma \in \Sigma} P(\sigma)\log_2\left(\frac{1}{P(\sigma)}\right)$. Then, the average length of the Huffman code is $L \leq H < L + 1$.
+    Let $H$ be the entropy of a source emitting the symbols of an alphabet $\Sigma$, hence $H = \sum_{\sigma \in \Sigma} P(\sigma)\log_2\left(\frac{1}{P(\sigma)}\right)$. Then, the average length of the Huffman code is bounded by $H < L_H < H + 1$, where $L_H$ is the average length of the Huffman code.
 \end{theorem}
 \begin{proof}
-    TODO: from \cite{ferragina2023pearls}, page 215.
+    The first inequality comes from Shannon's source coding theorem (\autoref{thm:source_coding_theorem}). Let's define $l_\sigma = \lceil -\log_2 P(\sigma) \rceil$ as the length of the code for symbol $\sigma$, which is the smallest integer such upper bounding Shannon's optimal codeword length. We can easily derive that $\sum_{\sigma \in \Sigma} 2^{-l_\sigma} \leq 1$. Thus, recalling Kraft's inequality (\autoref{thm:kraft_inequality}), we have that exists a binary tree with $|\Sigma|$ leaves and depths $l_\sigma$ for each leaf. This tree is a prefix code, and its average codeword length is $L_C = \sum_{\sigma \in \Sigma} P(\sigma) \cdot l_\sigma$. By optimality of the Huffman code (\ref{thm:huffman_optimality}), we have that $L_H \leq L_C$; thus from the definition of entropy $H$ and from the inequality $l_\sigma < 1 + \log_2\left(\frac{1}{P(\sigma)}\right)$, we have that $H < L_H < H + 1$.
 \end{proof}
-TODO and TBD: There are a lot of comments that can be done after this theorem. Still to decide what to include.
 
 \subsection{Arithmetic Coding}
 
