@@ -48,21 +48,14 @@ Introduced by Elias in the 1960s and then refined by Rissanen and Pasco in the 1
 
 
 \subsubsection*{Encoding Process}
-Let $S[1,n]$ be a sequence of symbols drawn from an alphabet $\Sigma$ and $P(\sigma)$ be the probability of symbol $\sigma \in \Sigma$. The encoding process of arithmetic coding is described in algorithm \ref{alg:arithmetic_coding_encoding}. The algorithm is iterative: at each step $i$, it computes the sub-interval with one interval per symbol in the sequence and with the length of the interval proportional to the probability of the symbol. Then we update the current interval with the one corresponding to the next symbol in the sequence and repeat the process until the end of the sequence. At the end of the process, we choose any fraction with a denominator that is a power of $2$ in the interval $[l_n, l_n + s_n)$ as the output of the algorithm. The encoding of the original sequence is given by the numerator of the fraction represent with $k$ bits, where $k$ is the smallest integer such that $2^k > s_n$.
+Let $S[1,n]$ be a sequence of symbols drawn from an alphabet $\Sigma$ and $P(\sigma)$ be the probability of symbol $\sigma \in \Sigma$. The encoding process of arithmetic coding is described in algorithm \ref{alg:}
 
-\caption{Arithmetic Coding Encoding}\label{alg:arithmetic_coding_encoding}
-\begin{algorithmic}
-    \Require $S[1,n]$, $P(\sigma)$ for each $\sigma \in \Sigma$
-    \Ensure A sub-interval $[l,l+s)$ of $[0,1)$
-    \State Compute the cumulative probabilities $C(\sigma) = \sum_{\sigma' \in \Sigma: \sigma' < \sigma} P(\sigma')$
-    \State $s_0 = 1, l_0 = 0, i = 1$
-    \While {$i \leq n$}
-    \State $s_i = s_{i-1} \cdot P(S[i])$
-    \State $l_i = l_{i-1} + s_{i-1} \cdot C(S[i])$
-    \State $i = i + 1$
-    \EndWhile
-    \State \Return $[l_n, l_n + s_n)$
-\end{algorithmic}
+\begin{algorithm}
+    \begin{algorithmic}
+        \Require $S[1,n]$, $P(\sigma)$ for each $\sigma \in \Sigma$
+        \Ensure A sub-interval $[l,l+s)$ of $[0,1)$
+        \State Compute the cumulative probabilities $C(\sigma) = \sum_{\sigma' \in \Sigma: \sigma' \leq \sigma} P(\sigma')$
+    \end{algorithmic}
 \end{algorithm}
 
 
@@ -74,8 +67,6 @@ Let $S[1,n]$ be a sequence of symbols drawn from an alphabet $\Sigma$ and $P(\si
 
 
 
-
-\newpage
 \subsubsection*{Efficiency of Arithmetic Coding}
 \begin{theorem}
     The number of bits emitted by arithmetic coding for a sequence $S$ of $n$ symbols is at most $2 + n\mathcal{H}$, where $\mathcal{H}$ is the empirical entropy of the sequence $S$.
