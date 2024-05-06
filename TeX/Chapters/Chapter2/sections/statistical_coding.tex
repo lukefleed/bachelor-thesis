@@ -11,8 +11,6 @@ Compared to the methods seen in \autoref{sec:integer_coding}, Huffman Codes (int
 
 % Sources for this section: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
 
-\noindent TODO: Talk about construction, encoding and decoding, canonical Huffman codes \cite{schwartz1964generating}, and the optimality of Huffman codes. \cite{ferragina2023pearls,sayood2002lossless}. \\
-
 % \noindent The Huffman coding procedure produces an optimal prefix code; however, this doesn't imply that produces an optimal encoding. It's optimal in the sense that no prefix code can have a smaller average length.
 
 \paragraph*{Construction of Huffman Codes} The construction of Huffman codes is a greedy algorithm based on the idea of building a binary tree, where each leaf corresponds to a symbol in the alphabet $\Sigma$. The tree is built in a bottom-up fashion, starting with the symbols as leaves (we define their \emph{size} as the number of occurrences) and iteratively merging the two nodes with the smallest probabilities until a single node is left. The code for each symbol is then obtained by traversing the tree from the root to the leaf, assigning a $0$ for each left branch and a $1$ for each right branch (or vice-versa). The resulting code is the path from the root to the leaf. More details can be found in \cite{ferragina2023pearls,sayood2002lossless,han2002mathematics,ElementsofInformationTheory} \vspace{0.4cm}
@@ -40,19 +38,34 @@ The decoding process uses the Huffman Tree. It starts by reading consecutive bit
     The first inequality comes from Shannon's source coding theorem (\autoref{thm:source_coding_theorem}). Let's define $l_\sigma = \lceil -\log_2 P(\sigma) \rceil$ as the length of the code for symbol $\sigma$, which is the smallest integer such upper bounding Shannon's optimal codeword length. We can easily derive that $\sum_{\sigma \in \Sigma} 2^{-l_\sigma} \leq 1$. Thus, recalling Kraft's inequality (\autoref{thm:kraft_inequality}), we have that exists a binary tree with $|\Sigma|$ leaves and depths $l_\sigma$ for each leaf. This tree is a prefix code, and its average codeword length is $L_C = \sum_{\sigma \in \Sigma} P(\sigma) \cdot l_\sigma$. By optimality of the Huffman code (\ref{thm:huffman_optimality}), we have that $L_H \leq L_C$; thus from the definition of entropy $H$ and from the inequality $l_\sigma < 1 + \log_2\left(\frac{1}{P(\sigma)}\right)$, we have that $H < L_H < H + 1$.
 \end{proof}
 
+TBD: Do I talk about canonical Huffman codes? Do I talk more about the optimality of Huffman codes?
+
 \subsection{Arithmetic Coding}
 
-TODO: Do a brief introduction to Arithmetic Coding, explaining the idea behind it (Elias Code from 1960s) and the main differences with Huffman Coding. Section 12.2 from \cite{ferragina2023pearls}, section 4.2 fron \cite{han2002mathematics}, chapter 5 from \cite{sayood2002lossless}.
+Introduced by Elias in the 1960s and then refined by Rissanen and Pasco in the 1970s \cite{pasco1976source}. Arithmetic coding is a more general technique than Huffman coding, as it can achieve a better compression ratio (it can code symbols arbitrary close to 0-th order entropy) by encoding a sequence of symbols as a single number in the interval $[0,1)$. This number is then converted into a binary representation. \vspace{0.4cm}
 
-\begin{example}
-    TODO: Begin with an example to underline this differences
-\end{example}
+\noindent Consider any prefix coder, like Huffman coding. If we apply Huffman coding to a sequence of symbols, it must use \emph{at least one bit} (or more generally, an integer number of bits) per symbol, that is more then ten times the entropy of the source. This makes any prefix coder far from the $0$-th order entropy of the source. From the definition of Huffman Coding we can easily derive that it can be optimal only if $-\log p$ is a natural number, thus if and only if $p = 2^{-k}$ for some $k \in \mathbb{N}$. Arithmetic coding relaxes the request to define a prefix-free code for each symbol, and instead defines a strategy in which every bit of the output can be used to represent more than one symbol. \vspace{0.4cm}
 
-\subsubsection*{Decoding Process}
-TODO: Talk about the compression algorithm and make an example of encoding a sequence of symbols. Add a pseudo code of the algorithm.\\
 
-\subsubsection*{Decoding Process}
-TODO: Talk about the decompression algorithm and make an example of decoding a sequence of symbols. Add a pseudo code of the algorithm.\\
+\subsubsection*{Encoding Process}
+Let $S[1,n]$ be a sequence of symbols drawn from an alphabet $\Sigma$ and $P(\sigma)$ be the probability of symbol $\sigma \in \Sigma$. The encoding process of arithmetic coding is described in algorithm \ref{alg:}
+
+\begin{algorithm}
+    \begin{algorithmic}
+        \Require $S[1,n]$, $P(\sigma)$ for each $\sigma \in \Sigma$
+        \Ensure A sub-interval $[l,l+s)$ of $[0,1)$
+        \State Compute the cumulative probabilities $C(\sigma) = \sum_{\sigma' \in \Sigma: \sigma' \leq \sigma} P(\sigma')$
+    \end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+
+
+
+
 
 \subsubsection*{Efficiency of Arithmetic Coding}
 \begin{theorem}

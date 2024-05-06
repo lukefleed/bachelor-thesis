@@ -1,8 +1,6 @@
 \clearpage
 \section{Integer Coding} \label{sec:integer_coding}
 
-Most important references for this section: \cite{ferragina2023pearls,sayood2002lossless,navarro2016compact} \\
-
 \noindent TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing} \\
 
 \noindent The central concern in this section revolves around formulating an efficient binary representation method for an indefinite sequence of integers. Our objective is to minimize bit usage while ensuring that the encoding remains prefix-free. In simpler terms, we aim to devise a binary format where the codes for individual integers can be concatenated without ambiguity, allowing the decoder to reliably identify the start and end of each integer's representation within the bit stream and thus restore it to its original uncompressed state.
