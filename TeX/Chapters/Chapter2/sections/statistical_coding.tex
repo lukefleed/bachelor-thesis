@@ -97,7 +97,7 @@ It's easy to derive that if we choose the probabilities of the symbols to be the
     s_n = \prod_{i=1}^n p_{S[i]}  = \frac{n_{S[1]} \cdot n_{S[2]} \cdots n_{S[n]}}{n^n} = \prod_{s \in \Sigma} \left (\frac{n_s}{n} \right)^{n_s}
 \end{equation}
 
-What is interesting about this formula, is that the size of the final interval, is independent from the order of the symbols in the sequence, but only from the number of times each symbol appears in the sequence. This means that the output is invariant to permutations of the input sequence. We can now state the following theorem. Thus any interval of size $\gamma$ contains a dyadic number with the power of the denominator equal to $-log \gamma + 1$, thus the number of bits needed by the encoder is at most
+\noindent What makes this formula intriguing is its independence from the sequence's symbol order. Instead, it's solely determined by the frequency of each symbol in the sequence. Consequently, the output remains unchanged regardless of any permutations in the input sequence. We can now observe that any interval of size $\gamma$ accommodates a dyadic number where the denominator's power equals $-log \gamma + 1$. Hence, the encoder requires no more than this number of bits.
 
 \begin{equation}
     1 - \log \prod_{s \in \Sigma} \left (\frac{n_s}{n} \right)^{n_s} = 1 + \sum_{s \in \Sigma} n_s \log \frac{n}{n_s}
@@ -110,3 +110,7 @@ What is interesting about this formula, is that the size of the final interval, 
 \end{theorem}
 
 TBD: Do I add the proof?
+
+\begin{remark}
+    In practical implementations, probabilities are often rounded to a small value to avoid dealing with arbitrary precision floating-point numbers. The arithmetic coder is periodically reset, writing bits to the output stream when the interval becomes sufficiently small and rescaling it by the corresponding power of two. This enables the use of arithmetic coding with integer arithmetic. However, even with a small interval, fully determining the next bits to be written isn't always possible. For further details on practical implementation, refer to \cite{moffat1998arithmetic}
+\end{remark}
