@@ -1,17 +1,22 @@
 % Let's start by addressing the following problem: consider a dictionary $\mathcal{D}$ of $n$ strings drawn from an alphabet $\Sigma$. We can represent the whole dictionary as a single string $T[1,m]$\footnote{Without any separator between strings} by concatenating all the strings in $\mathcal{D}$, where $m$ is the total length of the dictionary. The problem is to support the following queries:
 % \begin{itemize}
-    %     \item \texttt{Access\_string(i)}: return the $i$-th string in $\mathcal{D}$.
-    %     \item \texttt{Which\_string(x)}: retrieve the starting position of the string in $T$ including
-    %     the symbol $T[x]$.
-    % \end{itemize}
-    % The classic approach to solve this problem is via an array of pointers A[1, n] to $\mathcal{D}$'s strings, implemented by means of their offsets in $T[1, m]$, thus using $\theta(n \log n)$ bits overall. So the operation \texttt{Access\_string(i)} boils down to returning $A[i]$, whereas \texttt{Which\_string(x)} boils down to finding the predecessor of $x$ in $A$. The first operation takes constant time, while the second one takes $O(\log n)$ time via binary search.
+%     \item \texttt{Access\_string(i)}: return the $i$-th string in $\mathcal{D}$.
+%     \item \texttt{Which\_string(x)}: retrieve the starting position of the string in $T$ including
+%     the symbol $T[x]$.
+% \end{itemize}
+% The classic approach to solve this problem is via an array of pointers A[1, n] to $\mathcal{D}$'s strings, implemented by means of their offsets in $T[1, m]$, thus using $\theta(n \log n)$ bits overall. So the operation \texttt{Access\_string(i)} boils down to returning $A[i]$, whereas \texttt{Which\_string(x)} boils down to finding the predecessor of $x$ in $A$. The first operation takes constant time, while the second one takes $O(\log n)$ time via binary search.
+
+In the previous chapter, we introduced various methods for compressing data. Now we introduce the concept of compressed data structures: data structures that store data in a compressed form, allowing for efficient access to the data. This will lead to the introduction of the so called \emph{pointer-less programming}, where we ditch the traditional pointers and instead use compressed data structures built upon binary arrays that allow for efficient access to the data. In this chapter, we will introduce the concept of bitvectors, and show how they can be compressed to support rank and select queries in constant time. We will then introduce wavelet trees, a data structure that generalizes the concept of bitvectors to support rank and select queries on arbitrary alphabets. \\
+
+TODO: Change this introduction, I don't like it
+
 \section{Bitvectors} \label{sec:bitvectors}
 Consider the following problem \cite{ferragina2023pearls}: imagine a dictionary $\mathcal{D}$ containing $n$ strings from an alphabet $\Sigma$. We can merge all strings in $\mathcal{D}$ into a single string $T[1,m]$, without any separators between them, where $m$ is the total length of the dictionary. The task is to handle the following queries:
-    \begin{itemize}
-    \item \texttt{Access\_string(i)}: retrieve the $i$-th string in $\mathcal{D}$.
+\begin{itemize}
+    \item \texttt{Read(i)}: retrieve the $i$-th string in $\mathcal{D}$.
     \item \texttt{Which\_string(x)}: find the starting position of the string in $T$, including the character $T[x]$.
 \end{itemize}
-The conventional solution involves employing an array of pointers $A[1, n]$ to the strings in $\mathcal{D}$, represented by their offsets in $T[1, m]$, requiring $\Theta(n \log n)$ bits. Consequently, \texttt{Access\_string(i)} simply returns $A[i]$, while \texttt{Which\_string(x)} involves locating the predecessor of $x$ in $A$. The first operation is instantaneous, whereas the second one necessitates $O(\log n)$ time using binary search. \vspace{0.4cm}
+The conventional solution involves employing an array of pointers $A[1, n]$ to the strings in $\mathcal{D}$, represented by their offsets in $T[1, m]$, requiring $\Theta(n \log n)$ bits. Consequently, \texttt{Read(i)} simply returns $A[i]$, while \texttt{Which\_string(x)} involves locating the predecessor of $x$ in $A$. The first operation is instantaneous, whereas the second one necessitates $O(\log n)$ time using binary search. \vspace{0.4cm}
 
 \noindent We can address the problem by employing a compressed representation of the offsets in $A$ via a binary array $B[1,m]$ of $m$ bits, where $B[i] = 1$ if and only if $i$ is the starting position of a string in $T$. In this case then $\texttt{Access\_string(i)}$ searches for the $i$-th $1$ in $B$, while $\texttt{Which\_string(x)}$ counts the number of $1$s in the prefix $B[1,x]$. \vspace{0.4cm}
 
@@ -27,17 +32,96 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
     TODO: Maybe add a simple example of a bitvector and show how to compute rank and select.
 \end{example}
 % \noindent In the following sections, our aim is to compress bitvectors to $n \mathcal{H}_k(B) + o(n)$ bits, where $\mathcal{H}_k(B)$ denotes the $k$-th order empirical entropy of $B$. The pivotal strategy for achieving compression lies in encoding bit blocks as a single unit. Following this, we will construct structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations.
-\noindent In the following sections, our aim is to built structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations. \vspace{0.4cm}
+\noindent As stated before, bitvectors are the fundamental piece in the implementation of compressed data structures. Therefore, an efficient implementation is crucial. In the following sections, our aim is to built structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations. We will see that will often encounter skewed distributions of $0$s and $1$s in $B$, and we will exploit this property to achieve higher order compression.
+
+\begin{remark}
+    If we try to compress bitvectors with the techniques seen in \autoref{ch:Chapter2}, we would need to encode each bit individually, requiring at least
+\end{remark}
 
 \noindent TBD: Do I talk also about how to compress the bitvector to $n \mathcal{H}_0(B) + o(n)$ bits with those extra $o(n)$ to support rank and select operations still in $O(1)$ time? There is also the compressed solution via Elias Fano, when the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?
 
 \subsection{Rank}
-TODO:
-\begin{itemize}
-    \item Explain the tree level succinct data structure supporting the rank operation as in RRR \cite{RRR2002}
-    \item Proof of the space occupancy in bits of the structure. \cite{ferragina2023pearls}
-    \item Explain how to answer rank queries upon this data structure \cite{ferragina2023pearls,navarro2016compact}
-\end{itemize}
+
+In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using $n + o(n)$ bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block. \vspace{0.4cm}
+
+\noindent More precisely, the structure is composed of three levels: in the first one we (logically) split $B[1, n]$ into blocks of size $Z$ each, where at the beginning of each superblock we store the number of bits set to $1$ in the corresponding block, i.e the output of the query $rank_1(i)$ for $i$ being the starting position of the block. In the second level, we split the superblocks into blocks of size $z$ bits each\footnote{For simplicty, we assume that $z$ divides $Z$} with the same meta-information stored at the beginning of each block. Finally the third level is a lookup table that indexed by the small blocks and queried positions. In other words, for each possible small block and each possible position within that block, the lookup table stores the result of the $rank_1$ operation. This pre-computed information allows for constant time retrieval of the $rank_1$ operation results, as the result can be directly looked up in the table instead of having to be computed each time. This is the key to the efficiency of the data structure. In this way, the $i-th$ block, of size $Z$, can be accessed as
+\[
+    B[i \cdot Z + 1, (i+1) \cdot Z]
+\]
+while the small block $j$ of size $z$ in the $i-th$ superblock is
+\[
+    B[i \cdot Z + j \cdot z + 1, i \cdot Z + (j+1) \cdot z] \qquad \forall j \in [0, Z/z), \forall i \in [0, n/Z)
+\]
+We will denote with $r_i$ the number of bits set to $1$ in the $i-th$ block, and with $r_{i,j}$ the number of bits set to $1$ in the $j-th$ small block of the $i-th$ superblock. Figure \ref{fig:RRR} shows a visual representation of the RRR data structure.
+
+\begin{figure}[h]
+    \begin{flushright}
+        \begin{tikzpicture}[scale=0.5] % Adjust the scale as needed
+            \foreach \x/\bit in {0/\footnotesize{\dots}, 1/0, 2/1, 3/0, 4/1, 5/0, 6/1, 7/0, 8/1, 9/0, 10/1, 11/0, 12/1, 13/0, 14/1, 15/0, 16/1, 17/0, 18/1, 19/\footnotesize{\dots}} {
+                    \ifnum\x<1
+                        \draw (\x,0) rectangle (\x+1,1) node[midway] {\bit};
+                    \else
+                        \ifnum\x<10
+                            \draw[fill=lightgray] (\x,0) rectangle (\x+1,1) node[midway] {\bit};
+                        \else
+                            \draw (\x,0) rectangle (\x+1,1) node[midway] {\bit};
+                        \fi
+                    \fi
+                }
+            % Add dashed lines
+            \draw[dashed] (1,-1) -- (1,2);
+            \draw[dashed] (10,-1) -- (10,2);
+            \draw[dashed] (19,-1) -- (19,2);
+
+            % add double arrow
+            \draw[<->] (1,-0.5) -- (10,-0.5) node[midway, below] {\footnotesize{$Z=9$}};
+            \draw[<->] (10,-0.5) -- (19,-0.5) node[midway, below] {\footnotesize{$Z=9$}};
+
+            % Add label over the blocks 2, 10
+            \node[above] at (1.5,1) {\footnotesize{$r_i$}};
+            \node[above] at (11,1) {\footnotesize{$r_{i+1}$}};
+
+            % Add one line that starts from the bottom angle of block 1, and goes down inclined
+            \draw[-] (1,0) -- (-4,-3);
+            \draw[-] (10,0) -- (15,-3);
+
+            \foreach \x/\bit in {0/0, 1/1, 2/0, 3/1, 4/0, 5/1, 6/0, 7/1, 8/0} {
+                    \draw (\x*2-3.5,-5) rectangle (\x*2-1.5,-4) node[midway] {\bit};
+                }
+
+            % Add dashed lines
+            \draw[dashed] (-3.5,-6) -- (-3.5,-3);
+            \draw[dashed] (2.5,-6) -- (2.5,-3);
+            \draw[dashed] (8.5,-6) -- (8.5,-3);
+            \draw[dashed] (14.5,-6) -- (14.5,-3);
+
+            % add double arrow
+            \draw[<->] (-3.5,-5.5) -- (2.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
+            \draw[<->] (2.5,-5.5) -- (8.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
+            \draw[<->] (8.5,-5.5) -- (14.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
+
+            % Add label over the blocks 2, 10
+            \node[above] at (-2.2,-4) {\footnotesize{$r_{i,0} = 0$}};
+            \node[above] at (3.8,-4) {\footnotesize{$r_{i,1} = 1$}};
+            \node[above] at (9.8,-4) {\footnotesize{$r_{i,2} = 3$}};
+
+            % Under the first block, add a block of the same size with 0 inside. Under the 4th block, add a block of the same size with 2 inside. Under the 7th block, add a block of the same size with 3 inside. Under the 10th block, add a block of the same size with 5 inside.
+
+            \foreach \x/\bit in {-4.5/0, 1.5/2, 7.5/3, 13.5/5} {
+                    \draw (\x,-8) rectangle (\x+2,-7) node[midway] {\bit};
+                }
+
+        \end{tikzpicture}
+    \end{flushright}
+    \caption{The RRR Rank data structure}
+\end{figure}
+
+% TODO:
+% \begin{itemize}
+%     \item Explain the tree level succinct data structure supporting the rank operation as in RRR \cite{RRR2002}
+%     \item Proof of the space occupancy in bits of the structure. \cite{ferragina2023pearls}
+%     \item Explain how to answer rank queries upon this data structure \cite{ferragina2023pearls,navarro2016compact}
+% \end{itemize}
 \begin{theorem}
     The space occupancy of the Rank data structure is $o(m)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, m]$. The Rank algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
 \end{theorem}
