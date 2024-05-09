@@ -52,7 +52,7 @@ while the small block $j$ of size $z$ in the $i-th$ superblock is
 \[
     B[i \cdot Z + j \cdot z + 1, i \cdot Z + (j+1) \cdot z] \qquad \forall j \in [0, Z/z), \forall i \in [0, n/Z)
 \]
-We will denote with $r_i$ the number of bits set to $1$ in the $i-th$ block, and with $r_{i,j}$ the number of bits set to $1$ in the $j-th$ small block of the $i-th$ superblock. Figure \ref{fig:RRR} shows a visual representation of the RRR data structure.
+We will denote with $r_i$ and call it \emph{absolute rank} the number of bits set to $1$ in the $i-th$ block, and with $r_{i,j}$ (\emph{relative rank}) the number of bits set to $1$ in the $j-th$ small block of the $i-th$ superblock. Figure \ref{fig:RRR} shows a visual representation of the RRR data structure.
 
 \begin{figure}[h]
     \begin{flushright}
@@ -105,26 +105,52 @@ We will denote with $r_i$ the number of bits set to $1$ in the $i-th$ block, and
             \node[above] at (3.8,-4) {\footnotesize{$r_{i,1} = 1$}};
             \node[above] at (9.8,-4) {\footnotesize{$r_{i,2} = 3$}};
 
-            % Under the first block, add a block of the same size with 0 inside. Under the 4th block, add a block of the same size with 2 inside. Under the 7th block, add a block of the same size with 3 inside. Under the 10th block, add a block of the same size with 5 inside.
 
             \foreach \x/\bit in {-4.5/0, 1.5/2, 7.5/3, 13.5/5} {
                     \draw (\x,-8) rectangle (\x+2,-7) node[midway] {\bit};
                 }
-
         \end{tikzpicture}
     \end{flushright}
-    \caption{The RRR Rank data structure}
+    \caption{The RRR Rank data structure, showing the three levels of the structure. The first level is composed of blocks of size $Z$, the second level of blocks of size $z$, and the third level is a lookup table.} \label{fig:RRR}
 \end{figure}
 
-% TODO:
-% \begin{itemize}
-%     \item Explain the tree level succinct data structure supporting the rank operation as in RRR \cite{RRR2002}
-%     \item Proof of the space occupancy in bits of the structure. \cite{ferragina2023pearls}
-%     \item Explain how to answer rank queries upon this data structure \cite{ferragina2023pearls,navarro2016compact}
-% \end{itemize}
-\begin{theorem}
-    The space occupancy of the Rank data structure is $o(m)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, m]$. The Rank algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
+\noindent Algorithm \ref{alg:rank} shows the Rank algorithm, which takes as input the binary array $B$ and an index $i$, and returns the rank of the bit at index $i$ in $B$. For the sake of simplicity, we will some C++ methods from the standard library: in particular, we will use the method \texttt{std::popcount}\footnote{https://en.cppreference.com/w/cpp/numeric/popcount} that returns the number of bits set to $1$ in a given integer.
+
+\begin{algorithm}
+    \begin{algorithmic}[1]
+        \Function{Rank}{$B,i$}
+        \State TODO
+        \EndFunction
+    \end{algorithmic}
+    \caption{Rank Algorithm} \label{alg:rank}
+\end{algorithm}
+
+\begin{theorem} \label{th:rank}
+    The space occupancy of the Rank data structure is $o(n)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, n]$. The Rank algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
 \end{theorem}
+\begin{proof}
+    The space occupancy of all the big blocks can be computed by multiplying the number of big blocks by the number of bits needed to store the \emph{absolute rank} of each block. Thus, the space occupancy of the big blocks is $O(\frac{n}{Z} \log m)$ bits, since each block can store at most $m$ bits. The same reasoning can be applied to the small blocks, which occupy $O(\frac{n}{z} \log Z)$ bits, since each block can store at most $Z$ bits. So the space complexity is
+    \begin{equation}
+        O\left(\frac{n}{Z} \log m + \frac{n}{z} \log Z\right)
+    \end{equation}
+    Let's set $Z = (\log n)^2$ and $z = 1/2 \log n$, then the space complexity becomes
+    \begin{align}
+         & = O\left(\frac{n}{(\log n)^2} \log m + \frac{n}{\frac{1}{2} \log n} \log (\log n)^2\right) \\
+         & = O\left(\frac{n}{\log^2n} \log m + \frac{n}{\log n} \log \log n\right)                    \\
+         & = O\left(\frac{n \log \log n}{\log n} \right)= o(n)
+    \end{align}
+\end{proof}
+
+\noindent The current explanation of this data structure only clarifies how to respond to rank queries for indices located at the end of a block (or superblock). This can be achieved efficiently, taking constant time, either by directly accessing the value in the lookup table or by calculating the cumulative rank of preceding blocks along with the relative rank within the current block. \vspace{0.4cm}
+
+\noindent However, we also need to address the case where the index $i$ is located in the middle of a block. If we consider the algorithm in \ref{alg:rank}, the \texttt{popcount} operation is not constant, it actually requires $O(\log n)$ time. It actually grows log-logarithmically with the size of the small blocks.
+
+\begin{remark}
+    If $z$ (the size of the small blocks) can be stored in a single memory word, the \texttt{popcount} operation can be executed efficiently using bit manipulation operations like \texttt{std::popcount} in C++. This approach ensures constant time execution, especially when $z$ occupies only a few memory words, allowing for the utilization of SIMD (single instruction, multiple data) operations for faster performance. \cite{ferragina2023pearls}
+\end{remark}
+
+\noindent To address this issue, we can pre-process in a table all the results of the \texttt{popcount} operation for all possible blocks of size $O(\log n)/2$, and then use this table to answer rank queries in constant time. Storing this table requires $O(\sqrt{n} \log \log n)$ bits, which is asymptotically sublinear in the size of the binary array $B[1, n]$ and allows the \texttt{popcount} operation in a block of $O(\log n)$ bits in constant time. Thus, if we consider the word length as $\log n$ and still maintain the $o(n)$ space occupancy stated in \ref{th:rank}  \vspace{0.4cm}
+
 TBD: Do I talk about \cite{grossi2009haste}?
 \begin{example}
     TODO: numeric small example to show how to answer rank queries.
