@@ -6,9 +6,8 @@
 % \end{itemize}
 % The classic approach to solve this problem is via an array of pointers A[1, n] to $\mathcal{D}$'s strings, implemented by means of their offsets in $T[1, m]$, thus using $\theta(n \log n)$ bits overall. So the operation \texttt{Access\_string(i)} boils down to returning $A[i]$, whereas \texttt{Which\_string(x)} boils down to finding the predecessor of $x$ in $A$. The first operation takes constant time, while the second one takes $O(\log n)$ time via binary search.
 
-In the previous chapter, we introduced various methods for compressing data. Now we introduce the concept of compressed data structures: data structures that store data in a compressed form, allowing for efficient access to the data. This will lead to the introduction of the so called \emph{pointer-less programming}, where we ditch the traditional pointers and instead use compressed data structures built upon binary arrays that allow for efficient access to the data. In this chapter, we will introduce the concept of bitvectors, and show how they can be compressed to support rank and select queries in constant time. We will then introduce wavelet trees, a data structure that generalizes the concept of bitvectors to support rank and select queries on arbitrary alphabets. \\
+\todo[fancyline]{Change this introduction, I don't like it}In the previous chapter, we introduced various methods for compressing data. Now we introduce the concept of compressed data structures: data structures that store data in a compressed form, allowing for efficient access to the data. This will lead to the introduction of the so called \emph{pointer-less programming}, where we ditch the traditional pointers and instead use compressed data structures built upon binary arrays that allow for efficient access to the data. In this chapter, we will introduce the concept of bitvectors, and show how they can be compressed to support rank and select queries in constant time. We will then introduce wavelet trees, a data structure that generalizes the concept of bitvectors to support rank and select queries on arbitrary alphabets.
 
-TODO: Change this introduction, I don't like it
 
 \section{Bitvectors} \label{sec:bitvectors}
 Consider the following problem \cite{ferragina2023pearls}: imagine a dictionary $\mathcal{D}$ containing $n$ strings from an alphabet $\Sigma$. We can merge all strings in $\mathcal{D}$ into a single string $T[1,m]$, without any separators between them, where $m$ is the total length of the dictionary. The task is to handle the following queries:
@@ -28,17 +27,19 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
         \item The \textbf{select} of the $i$-th occurrence of a bit $b$ in $B$ is the index of the $i$-th occurrence of $b$ in $B$. We denote it as $select_b(i)$. Opposite to rank, we can't derive select of $0$ from select of $1$ in constant time.
     \end{itemize}
 \end{definition}
-\begin{example}
-    TODO: Maybe add a simple example of a bitvector and show how to compute rank and select.
+
+\begin{example}[Rank and Select on a plain bitvector]
+
 \end{example}
-% \noindent In the following sections, our aim is to compress bitvectors to $n \mathcal{H}_k(B) + o(n)$ bits, where $\mathcal{H}_k(B)$ denotes the $k$-th order empirical entropy of $B$. The pivotal strategy for achieving compression lies in encoding bit blocks as a single unit. Following this, we will construct structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations.
+\missingfigure[]{Example of a bitvector $B[1, 20]$ with the rank and select operations.} \vspace{0.4cm}
+
 \noindent As stated before, bitvectors are the fundamental piece in the implementation of compressed data structures. Therefore, an efficient implementation is crucial. In the following sections, our aim is to built structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations. We will see that will often encounter skewed distributions of $0$s and $1$s in $B$, and we will exploit this property to achieve higher order compression.
 
 \begin{remark}
-    If we try to compress bitvectors with the techniques seen in \autoref{ch:Chapter2}, we would need to encode each bit individually, requiring at least
+    If we try to compress bitvectors with the techniques seen in \autoref{ch:Chapter2}, we would need to encode each bit individually, requiring at least $n$ bits.
 \end{remark}
 
-\noindent TBD: Do I talk also about how to compress the bitvector to $n \mathcal{H}_0(B) + o(n)$ bits with those extra $o(n)$ to support rank and select operations still in $O(1)$ time? There is also the compressed solution via Elias Fano, when the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?
+\todo[inline, color=blue!30]{Do I talk also about how to compress via Elias Fano? When the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?}
 
 \subsection{Rank}
 
@@ -151,10 +152,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
 
 \noindent To address this issue, we can pre-process in a table all the results of the \texttt{popcount} operation for all possible blocks of size $O(\log n)/2$, and then use this table to answer rank queries in constant time. Storing this table requires $O(\sqrt{n} \log \log n)$ bits, which is asymptotically sublinear in the size of the binary array $B[1, n]$ and allows the \texttt{popcount} operation in a block of $O(\log n)$ bits in constant time. Thus, if we consider the word length as $\log n$ and still maintain the $o(n)$ space occupancy stated in \ref{th:rank}  \vspace{0.4cm}
 
-TBD: Do I talk about \cite{grossi2009haste}?
-\begin{example}
-    TODO: numeric small example to show how to answer rank queries.
-\end{example}
+\todo[inline, color=blue!30]{Do I talk about \cite{grossi2009haste}?}
 
 \subsection{Select}
 TODO:
