@@ -43,7 +43,7 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
 
 \subsection{Rank}
 
-In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using $n + o(n)$ bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block. \vspace{0.4cm}
+In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using \todo{or  just $o(n)$?} $n + o(n)$  bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block. \vspace{0.4cm}
 
 \noindent More precisely, the structure is composed of three levels: in the first one we (logically) split $B[1, n]$ into blocks of size $Z$ each, where at the beginning of each superblock we store the number of bits set to $1$ in the corresponding block, i.e the output of the query $rank_1(i)$ for $i$ being the starting position of the block. In the second level, we split the superblocks into blocks of size $z$ bits each\footnote{For simplicty, we assume that $z$ divides $Z$} with the same meta-information stored at the beginning of each block. Finally the third level is a lookup table that indexed by the small blocks and queried positions. In other words, for each possible small block and each possible position within that block, the lookup table stores the result of the $rank_1$ operation. This pre-computed information allows for constant time retrieval of the $rank_1$ operation results, as the result can be directly looked up in the table instead of having to be computed each time. This is the key to the efficiency of the data structure. In this way, the $i-th$ block, of size $Z$, can be accessed as
 \[
@@ -115,7 +115,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
     \caption{The RRR Rank data structure, showing the three levels of the structure. The first level is composed of blocks of size $Z$, the second level of blocks of size $z$, and the third level is a lookup table.} \label{fig:RRR}
 \end{figure}
 
-\noindent Algorithm \ref{alg:rank} shows the Rank algorithm, which takes as input the binary array $B$ and an index $i$, and returns the rank of the bit at index $i$ in $B$. For the sake of simplicity, we will some C++ methods from the standard library: in particular, we will use the method \texttt{std::popcount}\footnote{https://en.cppreference.com/w/cpp/numeric/popcount} that returns the number of bits set to $1$ in a given integer.
+\noindent Algorithm \ref{alg:rank} shows the Rank algorithm, which takes as input the binary array $B$ and an index $i$, and returns the rank of the bit at index $i$ in $B$. For the sake of simplicity, we will use some C++ methods from the standard library: in particular, we will use the method \texttt{std::popcount}\footnote{https://en.cppreference.com/w/cpp/numeric/popcount} that returns the number of bits set to $1$ in a given integer.
 
 \begin{algorithm}
     \begin{algorithmic}[1]
@@ -144,7 +144,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
 
 \noindent The current explanation of this data structure only clarifies how to respond to rank queries for indices located at the end of a block (or superblock). This can be achieved efficiently, taking constant time, either by directly accessing the value in the lookup table or by calculating the cumulative rank of preceding blocks along with the relative rank within the current block. \vspace{0.4cm}
 
-\noindent However, we also need to address the case where the index $i$ is located in the middle of a block. If we consider the algorithm in \ref{alg:rank}, the \texttt{popcount} operation is not constant, it actually requires $O(\log n)$ time. It actually grows log-logarithmically with the size of the small blocks.
+\noindent However, we also need to address the case where the index $i$ is located in the middle of a block. If we consider the algorithm in \ref{alg:rank}, the \texttt{popcount} operation is not constant, it requires $O(\log n)$ time.\footnote{It actually grows log-logarithmically with the size of the small blocks}
 
 \begin{remark}
     If $z$ (the size of the small blocks) can be stored in a single memory word, the \texttt{popcount} operation can be executed efficiently using bit manipulation operations like \texttt{std::popcount} in C++. This approach ensures constant time execution, especially when $z$ occupies only a few memory words, allowing for the utilization of SIMD (single instruction, multiple data) operations for faster performance. \cite{ferragina2023pearls}
@@ -154,17 +154,15 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
 
 \todo[inline, color=blue!30]{Do I talk about \cite{grossi2009haste}?}
 
+\begin{remark}[Pratical Considerations]\todo[fancyline]{Improve this, I think there are errors}
+    Optimizing memory access can significantly boost performance: thus aligning block and superblock lengths to word or byte boundaries is crucial. For instance, setting the superblock length ($Z$) to $256$ allows storing the second level as an array of $\lceil n/z \rceil$ bytes, resulting in a total space usage of $1.375 \cdot n$ for both $z = 32$ and $z = 64$. To further minimize space overhead, introducing another level with super-superblocks of length $2^{16}$ can bring down the total space usage to below $1.313 \cdot n$ for $z = 32$ and $1.189 \cdot n$ for $z = 64$. To reduce cache misses, interleaving the secondo and the third level ensures that the accessed entries from both arrays fit in the same cache line, enhancing performance. For example, with $z = 64$, choosing $n/Z = 8$ allows storing two w-bit words per superblock, minimizing space usage to $1.250 \cdot n$. \cite{navarro2016compact}
+\end{remark}
+
 \subsection{Select}
-TODO:
-\begin{itemize}
-    \item Explain how to the implementation of the Select operation mainly follows the three-level design of the Rank data structure, with the algorithmic twist that here the binary array $B$ is not split into big and small blocks of fixed length, but the splitting is driven by the number of bits set to $1$. \cite{ferragina2023pearls,navarro2016compact}
-    \item Talk about the space occupancy in bits of the structure. \cite{ferragina2023pearls,navarro2016compact}
-\end{itemize}
+% The Select operation is the inverse of the Rank operation: given a bit $b$ and an index $i$, it returns the position of the $i$-th occurrence of $b$ in $B$. We can notice that $rank$ is a nondecreasing function, so we can use binary search to find the position of the $i$-th occurrence of $b$ in $B$. The Select operation can be implemented in $O(\log n)$ time, but we can achieve constant time by using the same hierarchical structure as the Rank operation. \vspace{0.4cm}
 
-\begin{theorem}
-    The space occupancy of the $Select_1$ data structure is $o(m)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, m]$. The $Select_1$ algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode. The same time and space bounds hold for the $Select_0$ algorithm. \cite{ferragina2023pearls}
-\end{theorem}
+% \begin{theorem}
+%     The space occupancy of the $Select_1$ data structure is $o(m)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, m]$. The $Select_1$ algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode. The same time and space bounds hold for the $Select_0$ algorithm. \cite{ferragina2023pearls}
+% \end{theorem}
 
-
-% \subsection{An Efficient Rank Structure: RRR}
-% In this section we will see a static bit sequence data structure that answer rank queries in $O(1)$ time, thus providing implicit compression. This structures is known RRR and was introduced by Raman, Raman and Rao in 2002 \cite{RRR2002} with the purpose
+\todo[inline,color=blue!30]{Do I talk about select in detail? Or I can just say that mainly follows the three-level design of the Rank data structure, with the algorithmic twist that here the binary array B is not split into big and small blocks of fixed length, but the splitting is driven by the number of bits set to 1?}
