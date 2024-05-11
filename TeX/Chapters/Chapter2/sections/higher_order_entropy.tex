@@ -1,9 +1,10 @@
 \clearpage
 \section{Higher Order Entropy} \label{sec:higher_order_entropy}
 
-TODO: A bit of introduction
+\todo[inline]{TODO: A bit of introduction}
+
 \begin{definition}[Redundacy] \label{def:redundancy}
-    TODO: Give a formal definition of redundacy: informally is a measure of the distance between the source's entropy and the compression ration, and can thereby be seen as a measure of how fast the algorithm reaches the entropy of the source.
+    \todo[inline]{TODO: Give a formal definition of redundacy: informally is a measure of the distance between the source's entropy and the compression ration, and can thereby be seen as a measure of how fast the algorithm reaches the entropy of the source.}
 \end{definition}
 
 % All these measures are very interesting, but unrealistic because it's quite unusual, if not impossibile, to know the entropy of the soCompression applications employ a wide variety of techniques and have quite different degrees of complexity, but share some common processeurce that generate the stringe we are going to compress. In order to circumvent this problem, a different empirical approach has been taken by introducing the notion of \emph{k-th order empirical entropy} of a string $S$, denoted by $\mathcal{H}_k(S)$. In \ref{sec:statistical_coding} we have discussed the case where $k=0$, which depends on the frequency of the symbols in the string. Here, we wish with $\mathcal{H}_k(S)$ to empower the entropy definition by considering the frequencies ok $k$-grams in the string $S$, thus taking into account subsequences of symbols of length $k$, hence the \emph{compositional structure} of $S$
@@ -47,4 +48,5 @@ where $S_\omega$ is a string formed by collecting the symbol that follows each o
 
 \noindent The \emph{Lempel-Ziv} algorithm (LZ78) serves as an example of a coarsely optimal compression technique, as outlined by Plotnik et al. in \cite{plotnik1992upper}. This algorithm relies on the idea of dictionary-based compression. However, as highlighted by Manzini and Kora\v{r}aju \cite{kosaraju2000compression}, the notion of coarse optimality doesn't necessarily guarantee the effectiveness of an algorithm. Even when the entropy of the string is extremely low, the algorithm might still perform inadequately due to the presence of the supplementary term $f_k(|S|)$.
 
-\paragraph{Further Comments on LZ77 and LZ78} TBD if to include this section, but I think it's not relevant for the thesis. If included, it should discuss very briefly the LZ77 and LZ78 algorithms, and the differences between them. \cite{ferragina2023pearls}. And then prove two lemmas: one about the compression ration achieved by LZ78 and the other about LZ77 not being coarsely optimal. \cite{ferragina2023pearls}, end of chapter 13.
+\newpage
+\paragraph{Further Comments on LZ77 and LZ78} \todo[inline, color=blue!30]{TBD if to include this section, but I think it's not relevant for the thesis. If included, it should discuss very briefly the LZ77 and LZ78 algorithms, and the differences between them. \cite{ferragina2023pearls}. And then prove two lemmas: one about the compression ration achieved by LZ78 and the other about LZ77 not being coarsely optimal. \cite{ferragina2023pearls}, end of chapter 13}

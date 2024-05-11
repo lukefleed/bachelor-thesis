@@ -1,7 +1,7 @@
 \clearpage
 \section{Integer Coding} \label{sec:integer_coding}
 
-\noindent TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing} \\
+\todo[inline]{TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing}} \vspace{0.4cm}
 
 \noindent The central concern in this section revolves around formulating an efficient binary representation method for an indefinite sequence of integers. Our objective is to minimize bit usage while ensuring that the encoding remains prefix-free. In simpler terms, we aim to devise a binary format where the codes for individual integers can be concatenated without ambiguity, allowing the decoder to reliably identify the start and end of each integer's representation within the bit stream and thus restore it to its original uncompressed state.
 
@@ -48,4 +48,5 @@ Rice codes \cite{rice1979some} are a family of codes parameterized by a positive
 
 
 \subsection{Elias-Fano Code}
-TBD if to include this section or not. If included, it should be a brief mention of the Elias-Fano code and its use in integer compression \cite{ferragina2023pearls}.
+
+\todo[inline,color=blue!30]{TBD if to include this section or not. If included, it should be a brief mention of the Elias-Fano code and its use in integer compression \cite{ferragina2023pearls}}.

@@ -10,7 +10,7 @@
 \noindent Wavelet Trees can be seen in different ways: (i) as sequence representation, (ii) as a permutation of elements, and (iii) as grid point representation. Since 2003, these perspectives and their interconnections have proven valuable across diverse problem domains, extending beyond text indexing and computational geometry, where the structure originated \cite{WTForALL,WTFromTheoryToPractice,TheMyriadVirtuesWT}.
 
 \subsection*{An introduction to the problem}
-Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$\footnote{The size of the alphabet varies depending on the application. For example, in DNA sequences, the alphabet is $\Sigma = \{A,C,G,T\}$ (in \autoref{ch:Chapter4} we will focus more on this specific case), while in other case it could be of millions of characters, such as in natural language processing.}. The problem is to support the following queries:
+Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$\footnote{The size of the alphabet varies depending on the application. For example, in DNA sequences, the alphabet is $\Sigma = \{A,C,G,T\}$ (in \autoref{ch:Chapter4} we will focus more on this specific case), while in other case it could be of millions of characters, such as in natural language processing.}. We are interested in the following operations on the sequence $S$:
 
 \begin{itemize}
     \item \texttt{Access(i)}: return the $i$-th element of $S$.
@@ -18,7 +18,7 @@ Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S
     \item \texttt{Select(c,i)}: return the position of the $i$-th occurrence of character $c$ in $S$.
 \end{itemize}
 However, dealing with sequences is much more complex than dealing with bitvectors (as we have seen in \autoref{sec:bitvectors})
-\noindent TODO: further expand this concept: show an attemp to solve this problem with a naive approach, and see its shortcomings. The problem will be space occupancy, since if we use the solution for bitvectors, then the total space occupancy will be $n\sigma + o(n\sigma)$ bits, which is way too much. \cite{navarro2016compact} \vspace{0.4cm}
+\todo[inline]{TODO: further expand this concept: show an attempt to solve this problem with a naive approach, and see its shortcomings. The problem will be space occupancy, since if we use the solution for bitvectors, then the total space occupancy will be $n\sigma + o(n\sigma)$ bits, which is way too much. \cite{navarro2016compact}} \vspace{0.4cm}
 
 \noindent From now on, let $S[1,n]$ = $s_1s_2\dots s_n$ be a sequence of length $n$ over an alphabet $\Sigma$ that for simplicity we write as $\Sigma = \{1,\dots,\sigma\}$. In this way, the string can be represented using $n \lceil \log \sigma \rceil = n \log \sigma + o(n)$ bits in plain form.
 

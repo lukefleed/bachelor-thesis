@@ -39,8 +39,6 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
     If we try to compress bitvectors with the techniques seen in \autoref{ch:Chapter2}, we would need to encode each bit individually, requiring at least $n$ bits.
 \end{remark}
 
-\todo[inline, color=blue!30]{Do I talk also about how to compress via Elias Fano? When the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?}
-
 \subsection{Rank}
 
 In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using \todo{or  just $o(n)$?} $n + o(n)$  bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block. \vspace{0.4cm}
@@ -117,7 +115,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
 
 \noindent Algorithm \ref{alg:rank} shows the Rank algorithm, which takes as input the binary array $B$ and an index $i$, and returns the rank of the bit at index $i$ in $B$. For the sake of simplicity, we will use some C++ methods from the standard library: in particular, we will use the method \texttt{std::popcount}\footnote{https://en.cppreference.com/w/cpp/numeric/popcount} that returns the number of bits set to $1$ in a given integer.
 
-\begin{algorithm}
+\begin{algorithm}[h]
     \begin{algorithmic}[1]
         \Function{Rank}{$B,i$}
         \State TODO
@@ -126,6 +124,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
     \caption{Rank Algorithm} \label{alg:rank}
 \end{algorithm}
 
+\newpage
 \begin{theorem} \label{th:rank}
     The space occupancy of the Rank data structure is $o(n)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, n]$. The Rank algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
 \end{theorem}
@@ -166,3 +165,6 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
 % \end{theorem}
 
 \todo[inline,color=blue!30]{Do I talk about select in detail? Or I can just say that mainly follows the three-level design of the Rank data structure, with the algorithmic twist that here the binary array B is not split into big and small blocks of fixed length, but the splitting is driven by the number of bits set to 1?}
+
+\subsection*{Do I talk about the elias fano version?}
+\todo[inline, color=blue!30]{Do I talk also about how to compress via Elias Fano? When the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?}

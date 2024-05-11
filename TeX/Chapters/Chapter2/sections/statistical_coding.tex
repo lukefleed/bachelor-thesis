@@ -38,7 +38,7 @@ The decoding process uses the Huffman Tree. It starts by reading consecutive bit
     The first inequality comes from Shannon's source coding theorem (\autoref{thm:source_coding_theorem}). Let's define $l_\sigma = \lceil -\log_2 P(\sigma) \rceil$ as the length of the code for symbol $\sigma$, which is the smallest integer such upper bounding Shannon's optimal codeword length. We can easily derive that $\sum_{\sigma \in \Sigma} 2^{-l_\sigma} \leq 1$. Thus, recalling Kraft's inequality (\autoref{thm:kraft_inequality}), we have that exists a binary tree with $|\Sigma|$ leaves and depths $l_\sigma$ for each leaf. This tree is a prefix code, and its average codeword length is $L_C = \sum_{\sigma \in \Sigma} P(\sigma) \cdot l_\sigma$. By optimality of the Huffman code (\ref{thm:huffman_optimality}), we have that $L_H \leq L_C$; thus from the definition of entropy $H$ and from the inequality $l_\sigma < 1 + \log_2\left(\frac{1}{P(\sigma)}\right)$, we have that $H < L_H < H + 1$.
 \end{proof}
 
-TBD: Do I talk about canonical Huffman codes? Do I talk more about the optimality of Huffman codes?
+\todo[color=blue!30,inline]{TBD: Do I talk about canonical Huffman codes? Do I talk more about the optimality of Huffman codes?}
 
 \subsection{Arithmetic Coding}
 
@@ -109,7 +109,7 @@ It's easy to derive that if we choose the probabilities of the symbols to be the
     The number of bits emitted by arithmetic coding for a sequence $S$ of $n$ symbols is at most $2 + n\mathcal{H}$, where $\mathcal{H}$ is the empirical entropy of the sequence $S$.
 \end{theorem}
 
-TBD: Do I add the proof?
+\todo[inline, color=blue!30]{TBD: Do I add the proof or can I just reference the books?}
 
 \begin{remark}
     In practical implementations, probabilities are often rounded to a small value to avoid dealing with arbitrary precision floating-point numbers. The arithmetic coder is periodically reset, writing bits to the output stream when the interval becomes sufficiently small and rescaling it by the corresponding power of two. This enables the use of arithmetic coding with integer arithmetic. However, even with a small interval, fully determining the next bits to be written isn't always possible. For further details on practical implementation, refer to \cite{moffat1998arithmetic}
