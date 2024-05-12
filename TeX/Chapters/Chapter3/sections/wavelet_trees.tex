@@ -11,27 +11,32 @@
 
 \subsection*{An introduction to the problem}
 Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$\footnote{The size of the alphabet varies depending on the application. For example, in DNA sequences, the alphabet is $\Sigma = \{A,C,G,T\}$ (in \autoref{ch:Chapter4} we will focus more on this specific case), while in other case it could be of millions of characters, such as in natural language processing.}. We are interested in the following operations on the sequence $S$:
-
 \begin{itemize}
     \item \texttt{Access(i)}: return the $i$-th element of $S$.
     \item \texttt{Rank(c,i)}: return the number of occurrences of character $c$ in the prefix $S[1,i]$.
     \item \texttt{Select(c,i)}: return the position of the $i$-th occurrence of character $c$ in $S$.
 \end{itemize}
-However, dealing with sequences is much more complex than dealing with bitvectors (as we have seen in \autoref{sec:bitvectors})
-\todo[inline]{TODO: further expand this concept: show an attempt to solve this problem with a naive approach, and see its shortcomings. The problem will be space occupancy, since if we use the solution for bitvectors, then the total space occupancy will be $n\sigma + o(n\sigma)$ bits, which is way too much. \cite{navarro2016compact}} \vspace{0.4cm}
-
-\noindent From now on, let $S[1,n]$ = $s_1s_2\dots s_n$ be a sequence of length $n$ over an alphabet $\Sigma$ that for simplicity we write as $\Sigma = \{1,\dots,\sigma\}$. In this way, the string can be represented using $n \lceil \log \sigma \rceil = n \log \sigma + o(n)$ bits in plain form.
+However, dealing with sequences is much more complex than dealing with bitvectors (as we have seen in \autoref{sec:bitvectors}). In \cite{navarro2016compact} shows how a naive approach to solve this problem would require $n\sigma + o(n\sigma)$ bits of space, which is not space-efficient. Consider $\sigma$ bitvectors of length $n$, one for each symbol in the alphabet such that the $i$-th bit of the $c$-th bitvector is 1 if $S[i] = c$ and 0 otherwise. Then answering a $rank$ and $select$ query would be done by this simple transformation
+\begin{align*}
+    rank_c(S,i)   & = rank_1(B_c,i)   \\
+    select_c(S,j) & = select_1(B_c,j)
+\end{align*}
+If we try to use the techniques from \autoref{sec:bitvectors} to compress the bitvectors, we would end up with a constant time complexity for the $rank$ and $select$ queries, but with the downside of a space occupancy of $n\sigma + o(n\sigma)$ bits. This is not space-efficient considering that the plain representation of the string requires $n\log \sigma + o(n)$ bits.\footnote{Even if we use a compressed representation of the bitvectors, the space occupancy would still have the dominant term $n\sigma$, that is at least $\Omega(n\sigma \log \log n / \log n)$ bits if we still want to support constant time $rank$ and $select$ queries.}
+\begin{remark}[Notation]
+    From now on, let $S[1,n]$ = $s_1s_2\dots s_n$ be a sequence of length $n$ over an alphabet $\Sigma$ that for simplicity we write as $\Sigma = \{1,\dots,\sigma\}$. In this way, the string can be represented using $n \lceil \log \sigma \rceil = n \log \sigma + o(n)$ bits in plain form.
+\end{remark}
 
 \subsection{Structure}
 
 In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL}
 
-\begin{example}
-    TODO: Add an example of a wavelet tree for a sequence with small alphabet.
+\begin{example}[Wavelet Tree]
+
 \end{example}
+\missingfigure{TODO: Add an example of a wavelet tree for a sequence with small alphabet}
 
 \begin{remark} \label{rem:space_occupancy_wavelet_tree}
-    The wavelet tree described has $\sigma$ leaves and $\sigma-1$ internal nodes, and the height of the tree is $ \lceil \log \sigma \rceil$. The space occupancy of each level it's exactly $n$ bits, while we have at most $n$ bits for the last level. The total number of bits stored by the wavelet tree in then upper bounded by $n \lceil \log \sigma \rceil$ bits. \cite{WTForALL}. This however is not sufficient, if we want to also store the topology of the tree, we need to add extra $O(\sigma \log n)$ bits.
+    The wavelet tree described has $\sigma$ leaves and $\sigma-1$ internal nodes, and the height of the tree is $ \lceil \log \sigma \rceil$. The space occupancy of each level it's exactly $n$ bits, while we have at most $n$ bits for the last level. The total number of bits stored by the wavelet tree in then upper bounded by $n \lceil \log \sigma \rceil$ bits. \cite{WTForALL}. However, if we also interested in storing the topology of the wavelet tree, then another $O(\sigma \log n)$, that can be critical for large alphabets. \cite{WTForALL}
 \end{remark}
 
 \subsubsection*{Tracking symbols}
@@ -42,6 +47,7 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
     \begin{algorithmic}
         \Require Sequence $S$ (as a wavelet tree $T$), position $i$
         \Ensure The $i$-th symbol of $S$, i.e the output of \texttt{Access(S,i)}
+        \State $v \gets T_{root}$ \Comment{start at the root node}
         \State $[a,b] \gets [1,\sigma]$
         \While{$a \neq b$}
         \If{$access(v.B,i) =0$} \Comment{$i$-th bit of the bitmap of $v$}
@@ -64,25 +70,127 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
     TODO and TBD: add a figure with the wavelet tree and the process of finding the $i$-th symbol of the string.
 \end{example}
 
-\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}..\vspace{0.4cm}
-
-\noindent TODO: add the select algorithm and explain the process of finding the position of a symbol in the string. The references are Navarro's \cite{WTForALL,navarro2016compact} \vspace{0.4cm}
-
-\noindent TODO: Show how to generalize the rank and select operations to the wavelet tree. So with a query $rank_c(S,i)$ , instead of moving from the root toward the leaf corresponding to $S[i]$, we move toward the leaf of $c$. The idea is similar for select. \cite{navarro2016compact} 6.2.2 \vspace{0.4cm}
-
-\noindent TODO: Add some pratical consideration about using constant-time $rank$ and $select$ on the bitvectors. \cite{navarro2016compact} 6.2
-
-\subsubsection*{TBD if to add: Reducing redundancy}
-TODO: In \ref{rem:space_occupancy_wavelet_tree} we mentioned that storing the topology of the wavelet tree requires $O(\sigma \log n)$ bits. This may be critical for large alphabets, and in this section we will show that this term can be removed by slightly altering the balanced wavelet tree shape. \cite{MAKINEN2007332,MAKINEN2006703}.
-
-\subsection{Construction}
-TODO: Explain how to build a wavelet tree in $O(n \log n)$ time (and also talk about space occupancy), the procedure is well described in \cite{navarro2016compact} 6.2.3.
+\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}. Assume we start at a given leaf node $v$ and want to find the position of the $j$-th occurrence of symbol $c$ in the string. We recursively move to the left or right child of the node $v$: if the leaf is the right child of its parent, then we need to find the $j$-th 1 in the bitmap of the parent node, and if the leaf is the left child of its parent, then we need to find the $j$-th 0 in the bitmap of the parent node. This is done by the $select_0$ and $select_1$ functions, respectively. We continue this process until we reach the root node, and then we return the position of the symbol in the string. As we have seen in \autoref{sec:bitvectors}, this two single operations can be solved in constant time using $n$ bits of $B$ and $o(n)$ bits of additional space. Thus, the time complexly to perform a \texttt{Select} query on a wavelet tree is $O(\log \sigma)$.
 
 \begin{algorithm}
+    \caption{Answering \texttt{Select} queries on a wavelet tree}\label{alg:select_wt}
+    \begin{algorithmic}
+        % add two functions to the algorithmic environment
+        \Function{$\text{select}_c$}{$S,j$}
+        % \Require Sequence $S$ (as a wavelet tree $T$), symbol $c$, position $j$
+        % \Ensure The position of the $j$-th occurrence of $c$ in $S$
+
+        \State \Return $\text{select}(T._{root},1, \sigma, c, j)$
+        \EndFunction
+
+        \vspace{0.4cm}
+
+        \Function{$\text{select}$}{$v,a,b,c,j$}
+        % \Comment $v$ is the current node, $[a,b]$ is the alphabet range, $c$ is the symbol, $j$ is the position
+        \If{$a = b$}
+        \State \Return $j$
+        \EndIf
+
+        \If {$c \leq \lfloor (a+b)/2 \rfloor$}
+        \State $j$ $\gets$ $\text{select}(v.left, a, \lfloor (a+b)/2 \rfloor, c, j)$
+        \Return $select_0(v.B,j)$
+
+        \Else
+        \State $j$ $\gets$ $\text{select}(v.right, \lfloor (a+b)/2 \rfloor +1, b, c, j)$
+        \State \Return $select_1(v.B,j)$
+        \EndIf
+
+        \EndFunction
+
+    \end{algorithmic}
+\end{algorithm}
+
+\noindent During the $select$ algorithm, we track upwards the path from the leaf to the root. The process for solving a $rank$ query is similar, but instead of moving from the leaf to the root, we move from the root to the leaf. Algorithm \ref{alg:access_wt} also gives us the number of occurrences of a symbol $S[i]$ in the prefix $S[1,i]$, i.e $rank_{S[i]}(S,i)$. We now want to generalize this operation to solve any rank query $rank_c(S,i)$, where $c$ is a symbol in the alphabet. This is done by the algorithm \ref{alg:rank_wt}. The time complexity to perform a \texttt{Rank} query on a wavelet tree is $O(\log \sigma)$, just as for the \texttt{Select} query and the \texttt{Access} query.
+
+
+\begin{algorithm}[h!]
+    \caption{Answering \texttt{Rank} queries on a wavelet tree}\label{alg:rank_wt}
+    \begin{algorithmic}
+        \Function{$\text{rank}_c$}{$S,i$}
+        \State $v \gets T_{root}$ \Comment{start at the root node}
+        \State $[a,b] \gets [1,\sigma]$
+        \While {$a \neq b$}
+        \If {$c \leq \lfloor (a+b)/2 \rfloor$}
+        \State $i \gets rank_0(v.B,i)$
+        \State $v \gets v.left$ \Comment{move to the left child of node $v$}
+        \State $b \gets \lfloor (a+b)/2 \rfloor$
+        \Else
+        \State $i \gets rank_1(v.B,i)$
+        \State $v \gets v.right$ \Comment{move to the right child of node $v$}
+        \State $a \gets \lfloor (a+b)/2 \rfloor +1$
+        \EndIf
+        \EndWhile
+        \State \Return $i$
+        \EndFunction
+    \end{algorithmic}
+
+\end{algorithm}
+
+% \noindent TODO: Add some pratical consideration about using constant-time $rank$ and $select$ on the bitvectors. \cite{navarro2016compact} 6.2
+
+\todo[inline, color=blue!30]{
+    TBD if to add: In \ref{rem:space_occupancy_wavelet_tree} we mentioned that storing the topology of the wavelet tree requires $O(\sigma \log n)$ bits. This may be critical for large alphabets, and in this section we will show that this term can be removed by slightly altering the balanced wavelet tree shape. \cite{MAKINEN2007332,MAKINEN2006703}. \vspace{0.4cm}
+
+    Look for section 2.3 of \cite{WTForALL}
+}
+
+\subsection{Construction}
+The process of building a wavelet tree is a recursive process that takes $O(n\log \sigma$) time by processing each node of the tree in linear time. The procedure is outlined in Algorithm \ref{alg:build_wt}. \vspace{0.4cm}
+
+\noindent The idea is the following: given a sequence $S[1,n]$ over an alphabet $[a,b]$, the wavelet tree is build by generating a bitmap $B_{[a,b]}$ for the root node, and then recursively partition the sequence into two subsequences $S_{left}$ and $S_{right}$, and build the wavelet tree for each of them. Excluding the sequence $S$ and the final wavelet tree $T$, the algorithm uses $n \log \sigma$ bits of space \footnote{While building the wavelet tree, we can store the sequence $S$ on disk to free memory.}. \vspace{0.4cm}
+
+\begin{algorithm}[ht!]
     \caption{Building a wavelet tree}\label{alg:build_wt}
     \begin{algorithmic}
         \Require Sequence $S[1,n]$ over alphabet $\Sigma = \{1,\dots,\sigma\}$
         \Ensure Wavelet tree $T$ for $S$
-        \State TODO: add the algorithm to build the wavelet tree
+        \vspace{0.4cm}
+
+        \Function{build\_wt}{$S,n$}
+        \State $T \gets build(S,n,1,\sigma)$
+        \State \Return $T$
+        \EndFunction
+
+        \vspace{0.4cm}
+        \Function {build}{$S,n,a,b$} \Comment Takes a string $S[1,n]$ over $[a,b]$
+        \If {$a = b$}
+        \State Free S
+        \State \Return null
+        \EndIf
+        \State $v \gets$ new node
+        \State $m \gets \lfloor (a+b)/2 \rfloor$
+        \State $z \gets 0$ \Comment{number of elements in $S$ that are $\leq m$}
+        \For {$i \gets 1$ to $n$}
+        \If {$S[i] \leq m$}
+        \State $z \gets z+1$
+        \EndIf
+        \EndFor
+
+        \State Allocate strings $S_{left}[1,z]$ and $S_{right}[1,n-z]$
+        \State Allocate bitmap $v.B[1,n]$
+        \State $z \gets 0$
+
+        \For {$i \gets 1$ to $n$}
+        \If {$S[i] \leq m$}
+        \State \texttt{bitclear}($v.B,i$) \Comment{set $i$-th bit of $v.B$ to 0}
+        \State $z \gets z+1$
+        \State $S_{left}[z] \gets S[i]$
+        \Else
+        \State \texttt{bitset}($v.B,i$) \Comment{set $i$-th bit of $v.B$ to 1}
+        \State $S_{right}[i-z] \gets S[i]$
+        \EndIf
+        \EndFor
+
+        \State Free S
+        \State $v.left \gets \texttt{build}(S_{left},z,a,m)$
+        \State $v.right \gets \texttt{build}(S_{right},n-z,m+1,b)$
+        \State Pre-process $v.B$ for $rank$ and $select$ queries
+        \State \Return $v$
+        \EndFunction
     \end{algorithmic}
 \end{algorithm}
