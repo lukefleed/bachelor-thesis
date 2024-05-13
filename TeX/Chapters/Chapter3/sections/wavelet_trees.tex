@@ -28,12 +28,64 @@ If we try to use the techniques from \autoref{sec:bitvectors} to compress the bi
 
 \subsection{Structure}
 
-In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL}
+In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL} \vspace{0.4cm}
 
+\noindent Building a wavelet tree is a recursive process that takes $O(n\log \sigma$) time by processing each node of the tree in linear time. The steps are outlined in Algorithm \ref{alg:build_wt}. Excluding the sequence $S$ and the final wavelet tree $T$, the algorithm uses $n \log \sigma$ bits of space \footnote{While building the wavelet tree, we can store the sequence $S$ on disk to free memory.}. \vspace{0.4cm}
 \begin{example}[Wavelet Tree]
-
+    TODO: Add an example of a wavelet tree for a sequence with small alphabet
 \end{example}
-\missingfigure{TODO: Add an example of a wavelet tree for a sequence with small alphabet}
+
+\begin{algorithm}[h!]
+    \caption{Building a wavelet tree}\label{alg:build_wt}
+    \begin{algorithmic}
+        \Require Sequence $S[1,n]$ over alphabet $\Sigma = \{1,\dots,\sigma\}$
+        \Ensure Wavelet tree $T$ for $S$
+        \vspace{0.4cm}
+
+        \Function{build\_wt}{$S,n$}
+        \State $T \gets build(S,n,1,\sigma)$
+        \State \Return $T$
+        \EndFunction
+
+        \vspace{0.4cm}
+        \Function {build}{$S,n,a,b$} \Comment{\small{Takes a string $S[1,n]$ over $[a,b]$}}
+        \If {$a = b$}
+        \State Free S
+        \State \Return null
+        \EndIf
+        \State $v \gets$ new node
+        \State $m \gets \lfloor (a+b)/2 \rfloor$
+        \State $z \gets 0$ \Comment{\small{number of elements in $S$ that are $\leq m$}}
+        \For {$i \gets 1$ to $n$}
+        \If {$S[i] \leq m$}
+        \State $z \gets z+1$
+        \EndIf
+        \EndFor
+
+        \State Allocate strings $S_{left}[1,z]$ and $S_{right}[1,n-z]$
+        \State Allocate bitmap $v.B[1,n]$
+        \State $z \gets 0$
+
+        \For {$i \gets 1$ to $n$}
+        \If {$S[i] \leq m$}
+        \State \texttt{bitclear}($v.B,i$) \Comment{\small{set $i$-th bit of $v.B$ to 0}}
+        \State $z \gets z+1$
+        \State $S_{left}[z] \gets S[i]$
+        \Else
+        \State \texttt{bitset}($v.B,i$) \Comment{\small{set $i$-th bit of $v.B$ to 1}}
+        \State $S_{right}[i-z] \gets S[i]$
+        \EndIf
+        \EndFor
+
+        \State Free S
+        \State $v.left \gets \texttt{build}(S_{left},z,a,m)$
+        \State $v.right \gets \texttt{build}(S_{right},n-z,m+1,b)$
+        \State Pre-process $v.B$ for $rank$ and $select$ queries
+        \State \Return $v$
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
 
 \begin{remark} \label{rem:space_occupancy_wavelet_tree}
     The wavelet tree described has $\sigma$ leaves and $\sigma-1$ internal nodes, and the height of the tree is $ \lceil \log \sigma \rceil$. The space occupancy of each level it's exactly $n$ bits, while we have at most $n$ bits for the last level. The total number of bits stored by the wavelet tree in then upper bounded by $n \lceil \log \sigma \rceil$ bits. \cite{WTForALL}. However, if we also interested in storing the topology of the wavelet tree, then another $O(\sigma \log n)$, that can be critical for large alphabets. \cite{WTForALL}
@@ -138,59 +190,3 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
 
     Look for section 2.3 of \cite{WTForALL}
 }
-
-\subsection{Construction}
-The process of building a wavelet tree is a recursive process that takes $O(n\log \sigma$) time by processing each node of the tree in linear time. The procedure is outlined in Algorithm \ref{alg:build_wt}. \vspace{0.4cm}
-
-\noindent The idea is the following: given a sequence $S[1,n]$ over an alphabet $[a,b]$, the wavelet tree is build by generating a bitmap $B_{[a,b]}$ for the root node, and then recursively partition the sequence into two subsequences $S_{left}$ and $S_{right}$, and build the wavelet tree for each of them. Excluding the sequence $S$ and the final wavelet tree $T$, the algorithm uses $n \log \sigma$ bits of space \footnote{While building the wavelet tree, we can store the sequence $S$ on disk to free memory.}. \vspace{0.4cm}
-
-\begin{algorithm}[ht!]
-    \caption{Building a wavelet tree}\label{alg:build_wt}
-    \begin{algorithmic}
-        \Require Sequence $S[1,n]$ over alphabet $\Sigma = \{1,\dots,\sigma\}$
-        \Ensure Wavelet tree $T$ for $S$
-        \vspace{0.4cm}
-
-        \Function{build\_wt}{$S,n$}
-        \State $T \gets build(S,n,1,\sigma)$
-        \State \Return $T$
-        \EndFunction
-
-        \vspace{0.4cm}
-        \Function {build}{$S,n,a,b$} \Comment{\small{Takes a string $S[1,n]$ over $[a,b]$}}
-        \If {$a = b$}
-        \State Free S
-        \State \Return null
-        \EndIf
-        \State $v \gets$ new node
-        \State $m \gets \lfloor (a+b)/2 \rfloor$
-        \State $z \gets 0$ \Comment{\small{number of elements in $S$ that are $\leq m$}}
-        \For {$i \gets 1$ to $n$}
-        \If {$S[i] \leq m$}
-        \State $z \gets z+1$
-        \EndIf
-        \EndFor
-
-        \State Allocate strings $S_{left}[1,z]$ and $S_{right}[1,n-z]$
-        \State Allocate bitmap $v.B[1,n]$
-        \State $z \gets 0$
-
-        \For {$i \gets 1$ to $n$}
-        \If {$S[i] \leq m$}
-        \State \texttt{bitclear}($v.B,i$) \Comment{\small{set $i$-th bit of $v.B$ to 0}}
-        \State $z \gets z+1$
-        \State $S_{left}[z] \gets S[i]$
-        \Else
-        \State \texttt{bitset}($v.B,i$) \Comment{\small{set $i$-th bit of $v.B$ to 1}}
-        \State $S_{right}[i-z] \gets S[i]$
-        \EndIf
-        \EndFor
-
-        \State Free S
-        \State $v.left \gets \texttt{build}(S_{left},z,a,m)$
-        \State $v.right \gets \texttt{build}(S_{right},n-z,m+1,b)$
-        \State Pre-process $v.B$ for $rank$ and $select$ queries
-        \State \Return $v$
-        \EndFunction
-    \end{algorithmic}
-\end{algorithm}
