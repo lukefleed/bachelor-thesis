@@ -43,24 +43,24 @@ In the beginning of this section we showed that storing one bitvector per symbol
 We have seen how the wavelet tree serves as a representation for a string $S$, but more than that it is a succinct data structure for the string. Thus, it takes space asymptotically close to the plain representation of the string and allows us to access the $i$-th symbol of the string in $O(\log \sigma)$ time. In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the string $S$ using a wavelet tree $T$, this operation is called \texttt{Access}. \vspace{0.4cm}
 
 \begin{algorithm}[h!]
-    \caption{Answering \texttt{Access} queries on a wavelet tree}\label{alg:access_wt}
+    \caption{\texttt{Access} queries on a wavelet tree}\label{alg:access_wt}
     \begin{algorithmic}
-        \Require Sequence $S$ (as a wavelet tree $T$), position $i$
-        \Ensure The $i$-th symbol of $S$, i.e the output of \texttt{Access(S,i)}
-        \State $v \gets T_{root}$ \Comment{start at the root node}
+        \Function {access}{$T,i$} \Comment{\small{$T$ is the sequence $S$ seen as a wavelet tree}}
+        \State $v \gets T_{root}$ \Comment{\small{start at the root node}}
         \State $[a,b] \gets [1,\sigma]$
         \While{$a \neq b$}
-        \If{$access(v.B,i) =0$} \Comment{$i$-th bit of the bitmap of $v$}
+        \If{$access(v.B,i) =0$} \Comment{\small{$i$-th bit of the bitmap of $v$}}
         \State $i \gets rank_0(v.B,i)$
-        \State $v \gets v.left$ \Comment{move to the left child of node $v$}
+        \State $v \gets v.left$ \Comment{\small{move to the left child of node $v$}}
         \State $b \gets \lfloor (a+b)/2 \rfloor$
         \Else
         \State $i \gets rank_1(v.B,i)$
-        \State $v \gets v.right$ \Comment{move to the right child of node $v$}
+        \State $v \gets v.right$ \Comment{\small{move to the right child of node $v$}}
         \State $a \gets \lfloor (a+b)/2 \rfloor +1$
         \EndIf
         \EndWhile
         \State \Return $a$
+        \EndFunction
     \end{algorithmic}
 \end{algorithm}
 
@@ -73,7 +73,7 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
 \noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}. Assume we start at a given leaf node $v$ and want to find the position of the $j$-th occurrence of symbol $c$ in the string. We recursively move to the left or right child of the node $v$: if the leaf is the right child of its parent, then we need to find the $j$-th 1 in the bitmap of the parent node, and if the leaf is the left child of its parent, then we need to find the $j$-th 0 in the bitmap of the parent node. This is done by the $select_0$ and $select_1$ functions, respectively. We continue this process until we reach the root node, and then we return the position of the symbol in the string. As we have seen in \autoref{sec:bitvectors}, this two single operations can be solved in constant time using $n$ bits of $B$ and $o(n)$ bits of additional space. Thus, the time complexly to perform a \texttt{Select} query on a wavelet tree is $O(\log \sigma)$.
 
 \begin{algorithm}
-    \caption{Answering \texttt{Select} queries on a wavelet tree}\label{alg:select_wt}
+    \caption{\texttt{Select} queries on a wavelet tree}\label{alg:select_wt}
     \begin{algorithmic}
         % add two functions to the algorithmic environment
         \Function{$\text{select}_c$}{$S,j$}
@@ -109,19 +109,19 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
 
 
 \begin{algorithm}[h!]
-    \caption{Answering \texttt{Rank} queries on a wavelet tree}\label{alg:rank_wt}
+    \caption{\texttt{Rank} queries on a wavelet tree}\label{alg:rank_wt}
     \begin{algorithmic}
         \Function{$\text{rank}_c$}{$S,i$}
-        \State $v \gets T_{root}$ \Comment{start at the root node}
+        \State $v \gets T_{root}$ \Comment{\small{start at the root node}}
         \State $[a,b] \gets [1,\sigma]$
         \While {$a \neq b$}
         \If {$c \leq \lfloor (a+b)/2 \rfloor$}
         \State $i \gets rank_0(v.B,i)$
-        \State $v \gets v.left$ \Comment{move to the left child of node $v$}
+        \State $v \gets v.left$ \Comment{\small{move to the left child of node $v$}}
         \State $b \gets \lfloor (a+b)/2 \rfloor$
         \Else
         \State $i \gets rank_1(v.B,i)$
-        \State $v \gets v.right$ \Comment{move to the right child of node $v$}
+        \State $v \gets v.right$ \Comment{\small{move to the right child of node $v$}}
         \State $a \gets \lfloor (a+b)/2 \rfloor +1$
         \EndIf
         \EndWhile
@@ -157,14 +157,14 @@ The process of building a wavelet tree is a recursive process that takes $O(n\lo
         \EndFunction
 
         \vspace{0.4cm}
-        \Function {build}{$S,n,a,b$} \Comment Takes a string $S[1,n]$ over $[a,b]$
+        \Function {build}{$S,n,a,b$} \Comment{\small{Takes a string $S[1,n]$ over $[a,b]$}}
         \If {$a = b$}
         \State Free S
         \State \Return null
         \EndIf
         \State $v \gets$ new node
         \State $m \gets \lfloor (a+b)/2 \rfloor$
-        \State $z \gets 0$ \Comment{number of elements in $S$ that are $\leq m$}
+        \State $z \gets 0$ \Comment{\small{number of elements in $S$ that are $\leq m$}}
         \For {$i \gets 1$ to $n$}
         \If {$S[i] \leq m$}
         \State $z \gets z+1$
@@ -177,11 +177,11 @@ The process of building a wavelet tree is a recursive process that takes $O(n\lo
 
         \For {$i \gets 1$ to $n$}
         \If {$S[i] \leq m$}
-        \State \texttt{bitclear}($v.B,i$) \Comment{set $i$-th bit of $v.B$ to 0}
+        \State \texttt{bitclear}($v.B,i$) \Comment{\small{set $i$-th bit of $v.B$ to 0}}
         \State $z \gets z+1$
         \State $S_{left}[z] \gets S[i]$
         \Else
-        \State \texttt{bitset}($v.B,i$) \Comment{set $i$-th bit of $v.B$ to 1}
+        \State \texttt{bitset}($v.B,i$) \Comment{\small{set $i$-th bit of $v.B$ to 1}}
         \State $S_{right}[i-z] \gets S[i]$
         \EndIf
         \EndFor
