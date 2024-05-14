@@ -118,11 +118,43 @@ We have seen how the wavelet tree serves as a representation for a string $S$, b
 
 \noindent In order to find $S[i]$, we first look at the bitmap associated with the root node of the wavelet tree, and depending on the value of the $i$-th bit of the bitmap, we move to the left or right child of the root node and continue recursively. However, the problem is to determine where our $i$ has been mapped to: if we move to the left child, then we need to find the $i$-th 0 in the bitmap of the left child, and if we move to the right child, then we need to find the $i$-th 1 in the bitmap of the right child. This is done by the $rank_0$ and $rank_1$ functions, respectively. We continue this process until we reach a leaf node, and then we return the value of the leaf node.
 
-\begin{example}
-    TODO and TBD: add a figure with the wavelet tree and the process of finding the $i$-th symbol of the string.
+\begin{example}[Access on a wavelet tree]
+    Consider the sentence
+    \begin{center}
+        \texttt{wookies\_wield\_wicked\_weapons\_with\_wisdom\$}
+    \end{center}
+    where spaces are replaced by underscores and the sentence ends with a special character. The alphabet for this example is
+    \[
+        \Sigma = \{\$, \_, a, c, d, e, h, i, k, l, m, n, o, p, s, t, w \}
+    \]
+    where we assume that in the lexicon the special character comes before the underscore. We now assign a bit to each symbol in the alphabet, where 0 is assigned to the first half of the alphabet and 1 to the second half.
+
+    \begin{tabular}{*{17}{c}}
+        \$                        & \_                        & a                         & c                         & d                         & e                         & h                         & i                         & k                         & l                         & m                         & n                         & o                         & p                         & s                         & t                         & w                         \\
+        \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} \\
+    \end{tabular} \vspace{0.4cm}
+
+    \noindent We can now build the wavelet tree for this sequence, assigning the bitmaps to each node. Figure \ref{fig:wavelet_tree_example} shows the wavelet tree for the sequence. \\
+
+    TODO
+
+
 \end{example}
 
-\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}. Assume we start at a given leaf node $v$ and want to find the position of the $j$-th occurrence of symbol $c$ in the string. We recursively move to the left or right child of the node $v$: if the leaf is the right child of its parent, then we need to find the $j$-th 1 in the bitmap of the parent node, and if the leaf is the left child of its parent, then we need to find the $j$-th 0 in the bitmap of the parent node. This is done by the $select_0$ and $select_1$ functions, respectively. We continue this process until we reach the root node, and then we return the position of the symbol in the string. As we have seen in \autoref{sec:bitvectors}, this two single operations can be solved in constant time using $n$ bits of $B$ and $o(n)$ bits of additional space. Thus, the time complexly to perform a \texttt{Select} query on a wavelet tree is $O(\log \sigma)$.
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+        \node[align=center] {\texttt{wookies\_wield\_wicked\_weapons\_with\_wisdom\$}\\\texttt{111100101001001001000100111101010010}}
+        child {node[align=center] {TODO\\TODO}}
+        child {node[align=center] {TODO\\TODO}
+                child {node[align=center] {TODO\\TODO}}
+                child {node[align=center] {TODO\\TODO}}
+            };
+    \end{tikzpicture}
+    \caption{Wavelet tree for the sequence \texttt{wookies\_wield\_\dots}} \label{fig:wavelet_tree_example}
+\end{figure}
+
+\noindent In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}. Assume we start at a given leaf node $v$ and want to find the position of the $j$-th occurrence of symbol $c$ in the string. We recursively move to the left or right child of the node $v$: if the leaf is the right child of its parent, then we need to find the $j$-th 1 in the bitmap of the parent node, and if the leaf is the left child of its parent, then we need to find the $j$-th 0 in the bitmap of the parent node. This is done by the $select_0$ and $select_1$ functions, respectively. We continue this process until we reach the root node, and then we return the position of the symbol in the string. As we have seen in \autoref{sec:bitvectors}, this two single operations can be solved in constant time using $n$ bits of $B$ and $o(n)$ bits of additional space. Thus, the time complexly to perform a \texttt{Select} query on a wavelet tree is $O(\log \sigma)$. \vspace{0.4cm}
 
 \begin{algorithm}
     \caption{\texttt{Select} queries on a wavelet tree}\label{alg:select_wt}
