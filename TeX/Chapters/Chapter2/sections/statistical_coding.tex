@@ -3,7 +3,7 @@
 
 This section explores a technique called \emph{statistical coding}: a method for compressing a sequence of symbols (\emph{texts}) drawn from a finite alphabet $\Sigma$. The idea is to divide the process in two key stages: modeling and coding. During the modeling phase, statistical characteristics of the input sequence are analyzed to construct a model. In the coding phase, this model is utilized to generate codewords for the symbols of $\Sigma$, which are then employed to compress the input sequence. We will focus on two popular statistical coding methods: Huffman coding and Arithmetic coding.
 
-\subsection{Huffman Coding}
+\subsection{Huffman Coding} \label{subsec:huffman_coding}
 
 Compared to the methods seen in \autoref{sec:integer_coding}, Huffman Codes (introduced by Huffman in his landmark paper \cite{Huffman1952} in the 1950s) offer a broader applicability as they do not require any specific assumptions about the probability distribution, only that all probabilities are non-zero. This versatility makes them suitable for all distributions, including those where there is no clear relationship between symbol number and probability, such as in text data. \vspace{0.4cm}
 
