@@ -227,9 +227,9 @@ bits\footnote{
 \noindent In \ref{alg:select} are outlined the steps of the $select_1$ (the $select_0$ works in the same way) algorithm, which takes as input the binary array $B$ and an index $i$, and returns the index of the $i$-th occurrence of a bit $b$ in $B$.
 \clearpage
 \begin{algorithm}[ht!]
-    \caption{Select\_1 Algorithm} \label{alg:select}
+    \caption{$Select_1$ Algorithm} \label{alg:select}
     \begin{algorithmic}
-        \Function{Select\_1}{$B, i$}
+        \Function{$Select_1$}{$B, i$}
         \State $ j = 1 + \lfloor \frac{i-1}{K} \rfloor$ \Comment{\small{index of big block}}
         \State $B_{j} \gets$ big block $j$
         \If{$B_{j}$ \emph{is sparse}}

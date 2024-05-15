@@ -20,7 +20,15 @@ Since working in practice with compressed bitvectors can be less efficient then 
 \begin{equation}
     \sum_{c \in \Sigma} f_c \log \frac{1}{f_c} \leq \log \sigma
 \end{equation}
-In \cite{grossi2004indexing} the authors also noted that using the Huffman-shaped wavelet tree, if the access to the leaves is done with frequency proportional to the frequency of the symbols\footnote{This happens for example if we access at random position in the string}, then the average access time is $O(1 + H_0(S))$. That is better than the $O(\log \sigma)$ time of the original balanced wavelet tree. A counter effect noted by the authors is that in the worst case, we could and up with a time complexity of $O(\log n)$, for example in the case of a very infrequent symbol. \vspace{0.4cm}
+A counter effect noted by the authors in \cite{grossi2004indexing} is that in the worst case, we could and up with a time complexity of $O(\log n)$, for example in the case of a very infrequent symbol.However, if we choose $i$ uniformly at random from $[1, n]$ then the average access\footnote{And also for $rank_c(S,j)$ or $select_c(S,j)$ with $c = S=[1]$} time is
+\begin{equation}
+    O(\frac{1}{n} \sum_c f_c |h(c)| = O(1 + H_0(S))
+\end{equation}
+That is better than the $O(\log \sigma)$ time of the original balanced wavelet tree.
+
+\begin{remark}
+    On a further note, if we bound the depth of the Huffman Tree, we can keep worst care access time to $O(\log \sigma)$, with extra $O(n/\sigma)$ bits of redundancy
+\end{remark}
 
 \noindent Another possibile approach following the same idea of a Huffman-shaped wavelet tree, proposed in \cite{makinen2004new}, is to use the frequencies with which the symbols appear in the string. If we use this frequencies to build the Huffman Tree, we can then attach to each node $v$ a bitvector $B_v$ in the same way that we would do for the balanced wavelet tree (\ref{alg:build_wt}). In this way, the bits of $B_v$ are the bits of of the path from the root to $v$ in the Huffman Tree, i.e the Huffman codes of the symbols. Let's see the space occupance of this structure. Consider a leaf corresponding to a symbol $c$, at depth $|h(c|)$ (where $h(c)$ is the bitwise Huffman code for $c$), representing $f_c$ symbols. Each of this occurrences leads to a bit in each bitvector that is in the path from the root to the leaf; that is $|h(c)|$ bits. Thus, the occurrences of $c$ lead to $f_c |h(c)|$ bits in total. If we add this values to all the leaves we obtain same number of bits outputted by the Huffman coding of the string, that is
 \begin{equation}
@@ -30,7 +38,8 @@ If we also want to add the space to support the rank and select queries and the 
 \begin{equation}
     n(H_0(S) + 1) + o(n(H_0(S) + 1)) + O(n \log \sigma)
 \end{equation}
-For the sake of completeness, we also mention that the shape of an Huffman tree is not the only one that can be used to compress the wavelet tree. In \cite{grossi2012wavelet} Grossi and Ottaviano gave the wavelet the shape of a trie, making it possible to handle a sequence of strings.
+For the sake of completeness, we also mention that the shape of an Huffman tree is not the only one that can be given to a wavelet tree. In \cite{grossi2012wavelet} Grossi and Ottaviano gave the wavelet the shape of a trie, making it possible to handle a sequence of strings.
 
 \subsection{Higher Order Entropy Coding}
-TODO: In 3.3 from \cite{WTForALL} there is a good explanation on how to compress the bitvectors using higher-order entropy coding. It references papers as \cite{grossi2004indexing}. There is also section 5 from \cite{TheMyriadVirtuesWT} that gives a more technical explanation
+
+\todo[inline, color=blue!20]{TODO and TBD: Ask Grossi how in depth to go with this section, Ferragina and Manzini in \cite{TheMyriadVirtuesWT} give a very technical explanation of the method. While in \cite{WTForALL} Navarro gives a more high-level explanation. Furthermore, all this methods relies on the BTW transform, which is not covered in this thesis, do I add a section on it?}
