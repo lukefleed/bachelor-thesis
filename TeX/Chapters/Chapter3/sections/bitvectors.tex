@@ -110,7 +110,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
                 }
         \end{tikzpicture}
     \end{flushright}
-    \caption{The RRR Rank data structure, showing the three levels of the structure. The first level is composed of blocks of size $Z$, the second level of blocks of size $z$, and the third level is a lookup table.} \label{fig:RRR}
+    \caption{The RRR Rank data structure. The first level is composed of blocks of size $Z$, the second level of blocks of size $z$, and the third level is an entry of the lookup table.} \label{fig:RRR}
 \end{figure}
 
 \noindent Let's focus on the third level: the lookup table. Along with the value of the absolute and relative ranks, we also store an offset that serves as an index\footnote{I we imagine that the blocks are sorted lexically, the offset is position of the block in that order} into the table. To be precise, this table is a table of tables: one for each possible value of $r_i$ and $r_{i,j}$. The table $T$ is then indexed by the values of $r_i$ and $r_{i,j}$. For every possibile value of $r_i$ and $r_{i,j}$, the sub-table stores an array of prefix sums. Thus, since we have $\binom{Z}{z}$ possible values for $r_i$ and $r_{i,j}$ (and consequently entries in the considered sub-table), the lookup table has a size of $\binom{Z}{z}\log Z$ bits. In Table \ref{tab:lookup} we show an example of a lookup table for the RRR data structure. \vspace{0.4cm}
@@ -136,7 +136,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
     \caption{Example of a lookup table $T$ for the RRR data structure. The table stores the result of the rank operation for all possible small blocks with $z = 3$. The cell $T[b, r_{i,j}]$ stores the result of the rank operation for the block $b$ inside the $i-th$ superblock and the $j-th$ small block.} \label{tab:lookup}
 \end{table}
 
-\noindent We can now state the following theorem:
+\noindent We can now state the following theorem \cite{ferragina2023pearls}:
 
 \begin{theorem} \label{th:rank}
     The space occupancy of the Rank data structure is $o(n)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, n]$. The Rank algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
