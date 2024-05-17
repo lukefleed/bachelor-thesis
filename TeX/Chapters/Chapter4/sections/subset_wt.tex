@@ -1,0 +1,110 @@
+\section{Subset Wavelet Trees}
+In order to support the subset-rank and subset-select queries on degenerate strings, Alanko et al. \cite{SubsetWT} introduced the \emph{Subset Wavelet Tree} (SWT). This data structure is built on top of the Wavelet Tree (WT) \cite{GrossiWT2003} (already covered in \autoref{sec:wavelet_trees}) and extends it to handle degenerate strings. In this section, we will first see how the SWT is constructed and then how it can be used to answer subset-rank and subset-select queries efficiently.
+
+\subsection{Structure}
+% Let's suppose that $\sigma = 2^n$ for some $n \in \mathbb{N}$ and recursively build a tree with $\sigma$ levels. Each node of the tree will correspond to a subset of the alphabet $\Sigma$. The root of the tree will represent the entire alphabet $\Sigma$ and each child of a node $v$ will represent a subset $A_v$ of the parent's alphabet. \vspace{0.4cm}
+
+% \noindent Let's see this recursive process more in detail. After the root node, the alphabets are defined recursively such that the left child of a node $v$ (with associated alphabet $A_v$) corresponds to the first half of the alphabet of $v$, and the right child to the second half. We introduce also $Q_v$ as the subsequence of subsets that contains at least one element from $A_v$\footnote{As a special case, $Q_v$ will include the empty subset if $A_v$ is the entire alphabet.}. \vspace{0.4cm}
+Imagine we have an alphabet with $\sigma = 2^n$ symbols, where n is a natural number. We can recursively construct a tree with $\sigma$ levels to represent all possible subsets of this alphabet. Each node in the tree corresponds to a unique subset. The root node represents the entire alphabet. Each child node of a node $v$ represents a subset, $A_v$, derived from its parent's alphabet. Let's delve deeper into this recursive process. For each node (except the root), we define its child nodes as follows:
+
+\begin{itemize}
+    \item The left child represents the first half of the parent's alphabet.
+    \item The right child represents the second half of the parent's alphabet.
+\end{itemize}
+
+\noindent We also introduce $Q_v$, a subsequence containing all subsets that include at least one element from $A_v$. Notably, when $A_v$ represents the entire alphabet, $Q_v$ also includes the empty set. In addition to representing subsets, each node $v$ in our tree holds two bit vectors, $L_v$ and $R_v$, with a length equal to the size of the corresponding subsequence $Q_v$.
+\begin{itemize}
+    \item $L_v[i] = 1$: This indicates that the $i$-th subset in $Qv$ contains at least one character from the \emph{first half} of the alphabet associated with node $v$ ($Av$).
+    \item $R_v[i] = 1$: This indicates that the $i$-th subset in $Q_v$ contains at least one character from the \emph{second half} of the alphabet associated with node $v$ ($A_v$).
+\end{itemize}
+We can leverage these bit vectors $L_v$ and $R_v$ to create a single string using the alphabet \{0, 1, 2, 3\}. The $i$-th character in this string is formed by a simple calculation:
+\begin{equation}
+    S_v[i] = 2 \cdot R_v[i] + L_v[i]
+\end{equation}
+This formula essentially packs the information from both bit vectors into a single digit. A value of $0$ indicates the subset doesn't contain elements from either half, $1$ signifies the first half only, $2$ signifies the second half only, and $3$ represents elements from both halves. \vspace{0.4cm}
+
+\subsection{Subset-Rank Queries}
+
+\noindent The bit vectors $L_v$ and $R_v$ enable efficient rank queries. To find the rank of a character $c$ at position $i$ in the original alphabet, we perform the following steps:
+\begin{enumerate}
+    \item \textsc{Traverse the Tree}: We navigate from the root node down to the leaf node where the associated alphabet $A_v$ is the single-element set containing only character $c$.
+    \item \textsc{Prefix Length Calculation}: During this traversal, for each visited node $v$, we calculate the length of the prefix within the current subsequence $Qv$. This prefix encompasses all subsets in the original data $(X_1,\dots, X_i)$ that include at least one character from $A_v$.
+    \item \textsc{Rank Queries on Bit Vectors}: Similar to traditional wavelet tree queries, we leverage rank queries on the $L_v$ and $R_v$ bit vectors to determine this prefix length.
+\end{enumerate}
+Algorithm \ref{alg:subset-rank} offers pseudocode for this approach.
+
+
+\subsection{Subset-Select Queries}
+
+To answer subset-select queries, we follow a similar process to subset-rank queries.
+
+\begin{enumerate}
+    \item \textsc{Traversal from Leaf to Root:} We begin at the leaf node where the associated alphabet $A_v$ is the single-element set containing only character $c$. We then traverse back towards the root node.
+    \item \textsc{Updating Position} ($i$): As we move through each node $v$ during traversal, we adjust the position $i$.
+    \item \textsc{Prefix Length with $c$ Characters}: We calculate the length of the prefix within the current subsequence $Qv$. This prefix encompasses all subsets in the original data $(X_1,\dots, X_i)$ that collectively contain exactly $i$ occurrences of character $c$.
+    \item \textsc{Select Queries on Bit Vectors}: Similar to operations in wavelet trees, we use select queries on the $L_v$ and $R_v$ bit vectors to determine this prefix length.
+\end{enumerate}
+
+\noindent Algorithm \ref{alg:subset-access} provides pseudocode for this approach. This method leverages the bit vectors to efficiently locate specific character occurrences without iterating through the entire dataset.
+
+\begin{algorithm}[h]
+    \caption{Subset-Rank Query}
+    \label{alg:subset-rank}
+    \begin{algorithmic}[1]
+        \Require $c$: character from $[1, \sigma]$, $i$: index
+        \Ensure The number of subsets $X_j$ such that $j \leq i$ and $c \in X_j$
+    \end{algorithmic}
+    \begin{algorithmic}
+        \Function{Subset-Rank}{$c, i$}
+        \State $v \gets \text{root}$
+        \State $[l, r] \gets [0, \sigma]$ \Comment{\small{Range of alphabet indices}}
+        \While{$l \neq r$}
+        \If{$c \leq \frac{l+r}{2}$}
+        \State $r \gets \left\lfloor \frac{l+r}{2} \right\rfloor$
+        \State $i \gets rank_1(L_v, i)$
+        \State $v \gets \text{left child of } v$
+        \Else
+        \State $l \gets \left\lceil \frac{l+r}{2} \right\rceil$
+        \State $i \gets rank_1(R_v, i)$
+        \State $v \gets \text{right child of } v$
+        \EndIf
+        \EndWhile
+        \State \Return $i$
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[h]
+    \caption{Subset-Select Query}
+    \label{alg:subset-access}
+    \begin{algorithmic}[1]
+        \Require $c$: character from $[1, \sigma]$, $i$: index
+        \Ensure The position of the $j$-th subset such that the $i$-th $c \in X_j$
+    \end{algorithmic}
+    \begin{algorithmic}
+        \Function{Subset-Select}{$c, i$}
+        \State $v \gets \text{leaf node with alphabet } A_v = \{c\}$
+        \While{$v \neq \text{root}$} \Comment{\small{Traverse from leaf to root}}
+        \State $u \gets \text{parent of } v$
+        \If{$v = \text{left child of } u$}
+        \State $i \gets select_1(L_v, i)$
+        \Else
+        \State $i \gets select_1(R_v, i)$
+        \EndIf
+        \State $v \gets u$
+        \EndWhile
+        \State \Return $i$
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+\subsection*{Space Complexity}
+The subset wavelet answer subset rank and select queries in logarithmic time $(O(\log \sigma))$, since at each level (there are $\log \sigma$ levels) we perform constant time operations. However, the actual number of bits used vary based on the data we are working with. For a general set sequence, it's typically $2n(\sigma - 1) + o(n\sigma)$ bits. \vspace{0.4cm}
+
+\noindent Visualizing the tree as a complete binary tree with $\sigma$ leaves (not explicitly stored) helps. If the sets are full, each internal node stores $2n$ bits\footnote{Since each set goes both to the left and to the right child at each level}, leading to a total space complexity of $(\sigma - 1)2n$ due to the number of internal nodes and their size. However, for balanced degenerate strings \ref{def:balanced_degenerate_string} (where most sets have one element), space usage improves. Since each set element corresponds to at most one symbol per level, the total sequence length is bounded by set sizes. This translates to a space complexity of $2n log \sigma$ bits across all $log \sigma$ tree levels. \vspace{0.4cm}
+
+\noindent We can sum this up in the following theorem
+
+\begin{theorem}[Space Complexity of Subset Wavelet Trees]
+    The subset wavelet tree of a balanced degenerate string takes $2n \log \sigma + o(n \log \sigma)$ bits of space and supports subset-rank and subset-select queries in $O(\log \sigma)$ time.
+\end{theorem}

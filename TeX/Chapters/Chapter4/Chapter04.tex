@@ -3,23 +3,14 @@
 \chapter{Subset Wavelet Trees}
 \label{ch:Chapter4}
 
-\section{Introduction: Degenerate Strings}
-% Brief introduction to degenerate strings \cite{fischer1974string, alzamel2018degenerate}
-Given a finite non-empty alphabet $\Sigma$ of letters, with $|\Sigma| = \sigma$, a string $X$ of length $N$ over $\Sigma$ is a sequence of $N$ letters from $\Sigma$. We denote with $\Sigma^*$ the sets of all the strings in $Sigma$, including the trivial one $\epsilon$ on length $0$. We can now introduce the concept of a degenerate string, introduced by Fischer and Paterson in 1974 \cite{fischer1974string} and has been used in various contexts since then \cite{alzamel2018degenerate}.
+\todo[inline]{TODO: Write an introduction about subset wavelet trees and the aim of this chapter (that is still unclear to me).}
 
-\begin{definition}[Degenerate String]\label{def:degenerate_string}
-    A \emph{degenerate string} is a sequence $X = X_1 X_2 \ldots X_n$, where each $X_i$ is an element of $\Sigma^*$. We call $n$ the \emph{length} of $X$ and $N = \sum_{i=1}^{n} |X_i|$ the \emph{size} of $X$.
-\end{definition}
+\input{Chapters/Chapter4/sections/degenerate_strings.tex}
+\input{Chapters/Chapter4/sections/subset_wt.tex}
 
 
 
-
-\section{Structure of the Subset Wavelet Tree}
-TODO: Describe the structure of the subset wavelet tree, from \cite{SubsetWT}
-
-\section{Subset-Rank and Subset-Select}
-TODO: Describe the problem of subset-rank and subset-select, from \cite{SubsetWT}. Add pseudocode for the algorithms.
-
+\clearpage
 \section{TBD what to do from here}
 In \cite{SubsetWT} they compare 5 methods that supports rank and rank-pairs queries on small alphabet sequences (they need it to answer those queries on the sequences stored at the nodes of the subset wavelet tree). The methods are
 \begin{itemize}
