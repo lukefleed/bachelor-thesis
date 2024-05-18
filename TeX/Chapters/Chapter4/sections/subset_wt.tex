@@ -1,7 +1,7 @@
-\section{Subset Wavelet Trees}
+\section{Subset Wavelet Trees} \label{sec:subset_wavelet_trees}
 In order to support the subset-rank and subset-select queries on degenerate strings, Alanko et al. \cite{SubsetWT} introduced the \emph{Subset Wavelet Tree} (SWT). This data structure is built on top of the Wavelet Tree (WT) \cite{GrossiWT2003} (already covered in \autoref{sec:wavelet_trees}) and extends it to handle degenerate strings. In this section, we will first see how the SWT is constructed and then how it can be used to answer subset-rank and subset-select queries efficiently.
 
-\subsection{Structure}
+\subsection{Structure} \label{sec:swt_structure}
 % Let's suppose that $\sigma = 2^n$ for some $n \in \mathbb{N}$ and recursively build a tree with $\sigma$ levels. Each node of the tree will correspond to a subset of the alphabet $\Sigma$. The root of the tree will represent the entire alphabet $\Sigma$ and each child of a node $v$ will represent a subset $A_v$ of the parent's alphabet. \vspace{0.4cm}
 
 % \noindent Let's see this recursive process more in detail. After the root node, the alphabets are defined recursively such that the left child of a node $v$ (with associated alphabet $A_v$) corresponds to the first half of the alphabet of $v$, and the right child to the second half. We introduce also $Q_v$ as the subsequence of subsets that contains at least one element from $A_v$\footnote{As a special case, $Q_v$ will include the empty subset if $A_v$ is the entire alphabet.}. \vspace{0.4cm}
@@ -23,7 +23,7 @@ We can leverage these bit vectors $L_v$ and $R_v$ to create a single string usin
 \end{equation}
 This formula essentially packs the information from both bit vectors into a single digit. A value of $0$ indicates the subset doesn't contain elements from either half, $1$ signifies the first half only, $2$ signifies the second half only, and $3$ represents elements from both halves. \vspace{0.4cm}
 
-\subsection{Subset-Rank Queries}
+\subsection{Subset-Rank Queries} \label{sec:subset_rank_queries}
 
 \noindent The bit vectors $L_v$ and $R_v$ enable efficient rank queries. To find the rank of a character $c$ at position $i$ in the original alphabet, we perform the following steps:
 \begin{enumerate}
@@ -34,7 +34,7 @@ This formula essentially packs the information from both bit vectors into a sing
 Algorithm \ref{alg:subset-rank} offers pseudocode for this approach.
 
 
-\subsection{Subset-Select Queries}
+\subsection{Subset-Select Queries} \label{sec:subset_select_queries}
 
 To answer subset-select queries, we follow a similar process to subset-rank queries.
 
@@ -105,6 +105,34 @@ The subset wavelet answer subset rank and select queries in logarithmic time $(O
 
 \noindent We can sum this up in the following theorem
 
-\begin{theorem}[Space Complexity of Subset Wavelet Trees]
+\begin{theorem}[Space Complexity of Subset Wavelet Trees] \label{thm:swt_space}
     The subset wavelet tree of a balanced degenerate string takes $2n \log \sigma + o(n \log \sigma)$ bits of space and supports subset-rank and subset-select queries in $O(\log \sigma)$ time.
 \end{theorem}
+
+\subsection*{Rank for Base-$3$ and Base-$4$ Alphabets}
+
+The subset wavelet tree (SWT) relies on efficiently answering regular rank queries on small alphabet sequences stored within its nodes. At the root node, the sequence uses a base-4 alphabet ($\Sigma = \{0, 1, 2, 3\}$), while all other nodes use a base-3 alphabet ($\Sigma = \{0, 1, 2\}$). \vspace{0.4cm}
+
+\noindent However, the SWT requires a more specific operation than a standard rank query. It needs the sum of two rank queries: $rank(i, \Sigma - 1)$ and either $rank(i, \Sigma[0])$ or $rank(i, \Sigma[1])$. We call these combined operations \emph{rank-pair queries}. Here's how we can express rank-pair queries for base-4
+
+\begin{align}
+    rankpair(i,1) & = rank(i,1) + rank(i,3) \\
+    rankpair(i,2) & = rank(i,2) + rank(i,3)
+\end{align}
+
+\noindent For base-3 alphabets, we can express rank-pair queries as follows:
+
+\begin{align}
+    rankpair(i,0) & = rank(i,0) + rank(i,2) \\
+    rankpair(i,1) & = rank(i,1) + rank(i,2)
+\end{align}
+
+\noindent In the following section we will see different methods that Alanko et al. \cite{SubsetWT} proposed to answer rank and rank-pair queries on base-3 and base-4 alphabets. They developed these structures with the a clear and very specific goal in mind: answer efficiently membership queries on Spectral Burrows Wheeler Transform (SBWT) sequences. Moreover, they focused on 3 particular genomics dataset and exploited their specific proprieties to develop the most efficient data structures for their needs. This datasets are commonly used for $k$-mer indexing in bioinformatics and are the following:
+
+\begin{enumerate}
+    \item \textbf{E. coli Pangenome:} This dataset consists of 3,682 E. coli genomes downloaded in 2020. It represents a subset of assemblies from NCBI's GenBank database\footnote{\url{ftp://ftp.ncbi.nlm.nih.gov/genomes/genbank/bacteria/assembly\_summary.txt}} filtered for "Escherichia coli" and downloaded before March 22nd, 2016. The complete dataset is available at\footnote{\url{zenodo.org/record/6577997}}.
+    \item \textbf{Human Gut Illumina Reads:} This dataset contains 17,336,887 short DNA sequences (reads) of length 502 base pairs obtained from a study on human gut microbiota\footnote{SRA identifier ERR5035349} investigating irritable bowel syndrome and bile acid malabsorption \cite{jeffery2020differences}.
+    \item \textbf{SARS-CoV-2 Genomes:} This dataset comprises 1,234,695 complete genomes of the SARS-CoV-2 virus, downloaded from NCBI datasets.
+\end{enumerate}
+
+\noindent The authors shows that when the Spectral Burrows Wheeler Transform (SBWT) is built on these datasets, the resulting degenerate strings present a very skewed distribution of the alphabet symbols, with the vast majority of the sets containing only one element.

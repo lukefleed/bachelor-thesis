@@ -1,8 +1,8 @@
 \clearpage
-\section{Compressed Wavelet Trees}
+\section{Compressed Wavelet Trees} \label{sec:compressed_WT}
 In order to make the wavelet tree more space efficient, we ask ourselves if we can compress this data structure. The answer is yes, and in this section we will see how a wavelet tree can be compressed to the zero-order entropy of the input string, while still being able to answer rank and select queries in $O(\log \sigma)$ time. The literature on this topic mainly focus one two different approaches: compressing the bitvectors and altering the shape of the wavelet tree itself.
 
-\subsection{Compressing the bitvectors}
+\subsection{Compressing the bitvectors} \label{subsec:compressing_bitvectors}
 In \cite{GrossiWT2003} Grossi et. al showed that if the bitvectors of each single node are compressed to their zero-order entropy, then their overall space occupance is $n H_0(S)$. So if we suppose that the bitmap associated to the root node has a skewed distribution of $0$s and $1$s, then the zero-order compressing it yields a space of
 \begin{equation}
     n_0 \log \frac{n}{n_0} + n_1 \log \frac{n}{n_1}

@@ -1,0 +1,52 @@
+\section{Rank Data Structures for Subset Wavelet Trees} \label{sec:rank_succint_datastructures}
+In \cite{SubsetWT} they compare 5 methods that supports rank and rank-pairs queries on small alphabet sequences (they need it to answer those queries on the sequences stored at the nodes of the subset wavelet tree).
+
+\subsection{Wavelet Trees}
+
+In their paper, Alanko et. al acknowledge the wavelet tree (\autoref{sec:wavelet_trees}) as the current go-to method for performing rank queries on sequences with non-binary alphabets. Wavelet trees will serve as a baseline for comparison with the other data structures they will evaluate. \vspace{0.4cm}
+
+\noindent We have seen in \autoref{sec:wavelet_trees} that we can implement the wavelet trees in different ways, different choices can influence the trade-off between space usage and query speed. The authors experimented with two options: standard bitvectors (faster but larger, \autoref{sec:wavelet_trees}) and RRR bitvectors (smaller but slower, as explained in \autoref{subsec:compressing_bitvectors}). \vspace{0.4cm}
+
+\noindent They specifically used implementations from the Succinct Data Structures Library (SDSL)\footnote{\url{https://github.com/simongog/sdsl-lite}} because they are known to be the fastest available WT implementations\footnote{The SDSL library does not provide an implementation for rank-pairs queries, but they are just the sum of two rank queries, so they can be easily implemented on top of the rank queries.}. \vspace{0.4cm}
+
+\todo[inline]{I have a lot of doubts about this: why don't use an huffman shaped wavelet tree? Why didn't they try to adapt the wavelet tree to this type of queries?} \vspace{0.4cm}
+
+\todo[inline]{There are multiple possible implementations of the WT in the SDSL (all immutable): Balanced wavelet (wt\_blcd), Balanced wavelet tree for integer alphabets (wt\_int), Wavelet matrix for integer alphabets (wm\_int), Huffman-shaped wavelet tree (wt\_huff), Hu-Tucker-shaped wavelet tree (wt\_hutu), Run-length compressed wavelet tree (wt\_rlmn), Fast select wavelet tree for integer alphabets (wt\_gmr). \vspace{0.4cm}
+
+    \noindent TODO: Check their code to see which one they used both for the standard and the RRR version.}
+
+\subsection{Scanning Rank}
+
+The data structure comprises three layers to efficiently store and query the sequence \(X\).
+
+\paragraph{Lowest Layer}
+This layer directly stores the sequence, packing 32 base-4 symbols per 64-bit word. This layer occupies approximately $64 \cdot \lceil n/32 \rceil$ bits of space, where \(n\) is the length of \(X\).
+
+\paragraph{Highest Layer}
+This layer divides \(X\) into superblocks of size \(s\) and maintains a table storing $rank(i,c)$ for each symbol $c \in \Sigma$ and each superblock starting at position \(i\). We can store these counts in a table of size $\sigma n / s$ words, so that we can access the count for any superblock $j$ at the column $j/s$ in constant time.
+
+
+\paragraph{Middle Layer}
+This layer further divides \(X\) into blocks of size \(b\), a divisor of \(s\). For each block starting at \(i\), precomputed counts of each symbol \(c\) are stored, specifically the occurrences of \(c\) in the range between the block's start and its enclosing superblock's start. With \(s=2^{32}\), these counts require 32 bits each. \vspace{0.4cm}
+
+\noindent A key optimization interleaves these counts with the actual sequence data within each block. In memory, a block consists of a 2-word header storing four (precomputed) counts, followed by \(b/64\) words containing the packed symbols. This interleaving let us store the lower and middle layers in a single array $A$ of $(2n/b + n/32)$ words (i.e., $64 \cdot (2n/b + n/32)$ bits) in memory. This ensures that the data structure is cache-friendly, as the entire structure can be loaded into memory in a single read operation. \vspace{0.4cm}
+
+\noindent To answer \(rank(i,c)\) queries with this structure, we follow these steps:
+\begin{enumerate}
+    \item Locate the block containing position \(i\).
+    \item Retrieve the count for \(c\) from its header.
+    \item Add this count to the corresponding count from the superblock table.
+    \item Scan the block's data section to count occurrences of \(c\) up to position \(i\).
+\end{enumerate}
+
+\todo[inline]{TODO: add pseudocode for the rank query.}
+
+\noindent This scanning typically involves examining whole words and possibly one partial word, which collectively contain the relevant part of the input sequence. Counting occurrences of bit patterns within these words is accelerated through bitwise operations. Notably, $rank-pair$ achieves a particularly fast implementation by using a single bitwise \texttt{AND}\footnote{\url{https://en.cppreference.com/w/cpp/language/operator_logical}} and a single \texttt{popcount}\footnote{\url{https://en.cppreference.com/w/cpp/numeric/popcount}} operation to count relevant symbol occurrences within a word.
+
+\subsection{Sequence Splitting}
+
+\lipsum[1]
+
+\subsection{Generalized RRR}
+
+\lipsum[1]
