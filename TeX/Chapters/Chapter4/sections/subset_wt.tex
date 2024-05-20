@@ -21,11 +21,9 @@ This formula essentially packs the information from both bit vectors into a sing
 \noindent The bit vectors $L_v$ and $R_v$ enable efficient rank queries. To find the rank of a character $c$ at position $i$ in the original alphabet, we perform the following steps:
 \begin{enumerate}
     \item \textbf{Traverse the Tree}: We navigate from the root node down to the leaf node where the associated alphabet $A_v$ is the single-element set containing only character $c$.
-    \item \textbf{Prefix Length Calculation}: During this traversal, for each visited node $v$, we calculate the length of the prefix within the current subsequence $Qv$. This prefix encompasses all subsets in the original data $(X_1,\dots, X_i)$ that include at least one character from $A_v$.
-    \item \textbf{Rank Queries on Bit Vectors}: Similar to traditional wavelet tree queries, we leverage rank queries on the $L_v$ and $R_v$ bit vectors to determine this prefix length.
+    \item \textbf{Prefix Length Calculation}: During this traversal, for each visited node $v$, we calculate the length of the prefix within the current subsequence $Qv$. This prefix encompasses all subsets in the original data $(X_1,\dots, X_i)$ that include at least one character from $A_v$. Similar to traditional wavelet tree queries, we leverage rank queries on the $L_v$ and $R_v$ bit vectors to determine this prefix length.
 \end{enumerate}
 Algorithm \ref{alg:subset-rank} offers pseudocode for this approach.
-
 
 \subsection{Subset-Select Queries} \label{sec:subset_select_queries}
 
@@ -34,8 +32,7 @@ To answer subset-select queries, we follow a similar process to subset-rank quer
 \begin{enumerate}
     \item \textbf{Traversal from Leaf to Root:} We begin at the leaf node where the associated alphabet $A_v$ is the single-element set containing only character $c$. We then traverse back towards the root node.
     \item \textbf{Updating Position} ($i$): As we move through each node $v$ during traversal, we adjust the position $i$.
-    \item \textbf{Prefix Length with $c$ Characters}: We calculate the length of the prefix within the current subsequence $Qv$. This prefix encompasses all subsets in the original data $(X_1,\dots, X_i)$ that collectively contain exactly $i$ occurrences of character $c$.
-    \item \textbf{Select Queries on Bit Vectors}: Similar to operations in wavelet trees, we use select queries on the $L_v$ and $R_v$ bit vectors to determine this prefix length.
+    \item \textbf{Prefix Length with $c$ Characters}: We calculate the length of the prefix within the current subsequence $Qv$. This prefix encompasses all subsets in the original data $(X_1,\dots, X_i)$ that collectively contain exactly $i$ occurrences of character $c$. As done before, we use select queries on the $L_v$ and $R_v$ bit vectors to determine this prefix length.
 \end{enumerate}
 
 \noindent Algorithm \ref{alg:subset-access} provides pseudocode for this approach. This method leverages the bit vectors to efficiently locate specific character occurrences without iterating through the entire dataset.
@@ -101,6 +98,8 @@ The subset wavelet answer subset rank and select queries in logarithmic time $(O
 \begin{theorem}[Space Complexity of Subset Wavelet Trees] \label{thm:swt_space}
     The subset wavelet tree of a balanced degenerate string takes $2n \log \sigma + o(n \log \sigma)$ bits of space and supports subset-rank and subset-select queries in $O(\log \sigma)$ time.
 \end{theorem}
+
+\todo[]{The $o(n \log \sigma)$ term in the space complexity is due to...? The space required to store the bitvectors?}
 
 \subsection*{Rank for Base-$3$ and Base-$4$ Alphabets}
 
