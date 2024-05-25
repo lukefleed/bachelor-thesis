@@ -2,3 +2,8 @@
 *.fastq linguist-vendored
 *.gfa linguist-vendored
 *.fna linguist-vendored
+*.ps linguist-vendored
+*.vcf linguist-vendored
+*.eps linguist-vendored
+*.sty  linguist-vendored
+*.bib linguist-vendored
