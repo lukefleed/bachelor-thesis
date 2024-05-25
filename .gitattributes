@@ -1,0 +1,4 @@
+*.ipynb linguist-vendored
+*.fastq linguist-vendored
+*.gfa linguist-vendored
+*.fna linguist-vendored
