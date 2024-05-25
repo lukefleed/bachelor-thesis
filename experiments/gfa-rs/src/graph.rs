@@ -1,9 +1,7 @@
 use std::{
-    cell::RefCell,
     collections::{HashMap, HashSet, VecDeque},
     fmt::Debug,
     hash::Hash,
-    rc::Rc,
 };
 
 #[derive(Debug)]
@@ -33,8 +31,6 @@ where
     }
 
     pub fn add_edge(&mut self, from: V, to: V) {
-        // O(1)
-        // Adding the nodes if they don't exist
         self.add_node(from.clone());
         self.add_node(to.clone());
 
@@ -65,7 +61,7 @@ where
     pub fn opposite(&self) -> AdjacencyGraph<&V> {
         let mut opposite = AdjacencyGraph::new();
 
-        // O(|E|)
+        // O(|E|) where E is the set of edges
         for (from, to) in self.edges() {
             opposite.add_edge(to, from);
         }
@@ -74,9 +70,7 @@ where
     }
 
     pub fn has_edge(&self, from: &V, to: &V) -> bool {
-        // O(1)
         if let Some(adjacencies) = self.get_adjacencies(from) {
-            // O(1)
             adjacencies.contains(&to.to_owned())
         } else {
             false
@@ -103,118 +97,65 @@ where
         })
     }
 
-    pub fn compute_ccs(&self) -> Vec<Vec<V>> {
-        let mut visited = HashSet::new();
-        let mut result = Vec::new();
+    pub fn remove_self_loops(&mut self) {
+        let mut to_remove = Vec::new();
 
-        let op = self.opposite();
+        for (from, tos) in self.adjacencies.iter_mut() {
+            if tos.contains(from) {
+                to_remove.push((from.clone(), from.clone()));
+            }
+        }
+
+        for (from, to) in to_remove {
+            self.adjacencies.get_mut(&from).unwrap().remove(&to);
+        }
+    }
+
+    pub fn has_cycle(&self) -> bool {
+        let mut visited = HashSet::new();
+        let mut stack = VecDeque::new();
+        let mut parent = HashMap::new();
 
         for node in self.nodes.iter() {
             if visited.contains(node) {
                 continue;
             }
 
-            let mut cc: HashSet<V> = HashSet::new();
-            let mut stack: Vec<&V> = vec![node];
+            stack.push_back(node);
 
-            while let Some(node) = stack.pop() {
-                if cc.contains(node) {
-                    continue;
+            while let Some(node) = stack.pop_back() {
+                println!("Visiting: {:?}", node);
+
+                if visited.contains(node) {
+                    // Print the cycle
+                    let mut cycle = Vec::new();
+                    let mut current = node;
+                    while !cycle.contains(current) {
+                        cycle.push(current.clone());
+                        current = parent[current];
+                    }
+                    cycle.reverse();
+                    println!("Cycle detected: {:?}", cycle);
+                    return true;
                 }
 
-                cc.insert(node.clone());
+                visited.insert(node.clone());
 
                 if let Some(adjacencies) = self.get_adjacencies(&node) {
                     for adj in adjacencies {
-                        stack.push(adj);
-                    }
-                }
-
-                if let Some(adjacencies) = op.get_adjacencies(&node) {
-                    for adj in adjacencies {
-                        stack.push(adj);
+                        parent.insert(adj, node);
+                        stack.push_back(adj);
                     }
                 }
             }
-
-            // println!("CC: {:?}", cc);
-
-            visited.extend(cc.iter().map(|x| x.to_owned()));
-            result.push(cc.iter().map(|x| x.to_owned()).collect());
         }
 
-        result
+        false
     }
 
-    pub fn compute_ccs_2(&self) -> Vec<Vec<V>> {
-        let mut cc: HashMap<V, Rc<RefCell<HashSet<V>>>> = HashMap::new();
-
-        for node in self.nodes.iter() {
-            if cc.contains_key(&node) {
-                continue;
-            }
-
-            println!("All CC: {:?}", cc);
-
-            let new_cc = Rc::new(RefCell::new(HashSet::new()));
-
-            let mut stack: Vec<&V> = vec![node];
-
-            while let Some(node) = stack.pop() {
-                println!("New CC: {:?}", new_cc.borrow());
-
-                if cc.contains_key(&node) {
-                    // merge the two connected components and go to the next node
-
-                    let old_cc: &Rc<RefCell<HashSet<V>>> = cc.get(&node).unwrap();
-
-                    println!(
-                        "Merging {:?} with {:?} due to link to {:?}",
-                        new_cc.borrow(),
-                        old_cc.borrow(),
-                        node
-                    );
-
-                    new_cc
-                        .borrow_mut()
-                        .extend(old_cc.borrow().iter().map(|x| x.to_owned()));
-
-                    break;
-                }
-
-                if new_cc.borrow().contains(&node) {
-                    continue;
-                }
-
-                new_cc.borrow_mut().insert(node.clone());
-
-                if let Some(adjacencies) = self.get_adjacencies(&node) {
-                    for adj in adjacencies {
-                        stack.push(adj);
-                    }
-                }
-            }
-
-            for n in new_cc.borrow().iter() {
-                cc.insert(n.to_owned(), new_cc.clone());
-            }
+    pub fn remove_edge(&mut self, from: &V, to: &V) {
+        if let Some(adjacencies) = self.adjacencies.get_mut(from) {
+            adjacencies.remove(to);
         }
-
-        // extract the unique connected components by pointers
-        let mut result = Vec::new();
-        let mut seen = HashSet::new();
-
-        for node in self.nodes.iter() {
-            if seen.contains(node) {
-                continue;
-            }
-
-            let cc = cc.get(node).unwrap();
-            seen.extend(cc.borrow().iter().map(|x| x.to_owned()));
-
-            result.push(cc.borrow().iter().map(|x| x.to_owned()).collect());
-        }
-
-        result
     }
 }

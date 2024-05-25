@@ -7,6 +7,7 @@ use graph::AdjacencyGraph;
 mod gfa;
 mod graph;
 mod parser;
+mod paths;
 
 #[derive(FromArgs, PartialEq, Debug)]
 /// Strumento CLI per il progetto di Algoritmi e Strutture Dati 2024
@@ -40,9 +41,10 @@ fn main() -> std::io::Result<()> {
 
             let mut sequence_map = HashMap::new();
             let mut graph: AdjacencyGraph<(String, Orientation)> = AdjacencyGraph::new();
+            let mut paths: HashMap<String, Vec<(String, Orientation)>> = HashMap::new();
 
             for entry in entries {
-                println!("{:?}", entry);
+                // println!("{:?}", entry);
 
                 match entry {
                     Entry::Segment { id, sequence } => {
@@ -55,6 +57,13 @@ fn main() -> std::io::Result<()> {
                         to_orient,
                     } => {
                         graph.add_edge((from.clone(), from_orient), (to.clone(), to_orient));
+                    }
+                    Entry::Path { name, segments } => {
+                        let mut path = Vec::new();
+                        for (segment, orient) in segments {
+                            path.push((segment, orient));
+                        }
+                        paths.insert(name, path);
                     }
                     _ => {}
                 }
@@ -74,10 +83,10 @@ fn main() -> std::io::Result<()> {
             //     );
             // }
 
-            let cc = graph.compute_ccs();
+            // let cc = graph.compute_ccs();
 
             // println!("CCs: {:?}", cc);
-            println!("Number of connected components: {}", cc.len());
+            // println!("Number of connected components: {}", cc.len());
         }
     }
 
