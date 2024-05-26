@@ -21,6 +21,7 @@ fn parse_orientation(s: &str) -> Orientation {
 /// H  VN:Z:1.0
 /// ```
 ///
+
 fn parse_header(line: &str) -> Entry {
     let columns: Vec<&str> = line.split(':').collect();
 
@@ -33,7 +34,8 @@ fn parse_header(line: &str) -> Entry {
 ///
 /// ```txt
 /// S  1  ACGT
-/// ```
+
+
 fn parse_segment(line: &str) -> Entry {
     let columns: Vec<&str> = line.split('\t').collect();
 

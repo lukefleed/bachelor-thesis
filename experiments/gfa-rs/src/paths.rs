@@ -1,5 +1,6 @@
 use crate::gfa::Orientation;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
 
 // Print the paths
 pub fn _print_paths(paths: &HashMap<String, Vec<(String, Orientation)>>) {
@@ -12,47 +13,30 @@ pub fn _print_paths(paths: &HashMap<String, Vec<(String, Orientation)>>) {
     }
 }
 
-// Check if the paths have a cycle
-pub fn paths_have_cycle(paths: &HashMap<String, Vec<(String, Orientation)>>) {
-    println!("Number of paths in the GFA: {}", paths.len());
-
-    paths.iter().for_each(|(name, path)| {
-        println!("Path name: {}", name);
-        println!("\tPath length: {}", path.len());
-
-        // check if the path has a cycle without converting it to a graph
-        let mut visited = HashMap::new();
-        let mut parent = HashMap::new();
-        let mut has_cycle = false;
-        let mut cycle_start = String::new();
-        let mut cycle_path = Vec::new();
-
-        for (segment, orientation) in path {
-            if visited.contains_key(segment) {
-                has_cycle = true;
-                cycle_start = segment.clone();
-                break;
-            }
-            visited.insert(segment.clone(), orientation.clone());
-            parent.insert(segment.clone(), (segment.clone(), orientation.clone()));
-        }
-
-        if has_cycle {
-            // reconstruct the cycle path
-            let mut current = cycle_start.clone();
-            while let Some((seg, _)) = parent.get(&current) {
-                cycle_path.push(seg.clone());
-                if &current == &cycle_start && cycle_path.len() > 1 {
+// loop through the path (segment, orientation) pairs, and keep track of the visited segments, if you find a segment that has already been visited, then there is a cycle. Print to terminal the subpath that starts and ends at the cycle (so with the same segment and orientation at the start and end)
+pub fn path_has_cycle(path: &Vec<(String, Orientation)>) -> bool {
+    let mut visited = HashSet::new(); // (segment, orientation) 
+    // loop using idex so we can get the subpath that forms the cycle
+    for i in 0..path.len() {
+        let (segment, orientation) = &path[i];
+        if visited.contains(&(segment.clone(), orientation.clone())) {
+            println!("Cycle detected at segment: {}, orientation: {:?}", segment, orientation);
+            let mut subpath = Vec::new(); // (segment, orientation)
+            subpath.push((segment.clone(), orientation.clone()));
+            for j in (0..i).rev() {
+                let (subsegment, suborientation) = &path[j];
+                if subsegment == segment && suborientation == orientation {
+                    subpath.push((subsegment.clone(), suborientation.clone()));
                     break;
+                } else {
+                    subpath.push((subsegment.clone(), suborientation.clone()));
                 }
-                current = seg.clone();
             }
-            println!("\tHas cycle: true");
-            println!("\tCycle path: {:?}", cycle_path);
+            println!("Subpath forming cycle: {:?}", subpath);
+            return true;
         } else {
-            println!("\tHas cycle: false");
+            visited.insert((segment.clone(), orientation.clone()));
         }
-
-        println!("\n");
-    });
+    }
+    false
 }
