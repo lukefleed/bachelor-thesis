@@ -69,29 +69,38 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            // check if the paths have cycles
-            for (name, path) in paths.iter() {
-                println!("\nPath name: {}", name);
-
-                if paths::path_has_cycle(path) {
-                    println!("Cycle detected in path: {}", name);
-
-                    // count by segment and orientation the number of times they appear in the path
-
-                    let mut segment_orient_count = HashMap::new();
-                    for (segment, orient) in path {
-                        let count = segment_orient_count.entry((segment.clone(), orient.clone())).or_insert(0);
-                        *count += 1;
-                    }
-
-                    // print the segment and orientation that appear more than once
-                    for ((segment, orient), count) in segment_orient_count.iter() {
-                        if *count > 1 {
-                            println!("Segment: {}, Orientation: {:?}, Count: {}", segment, orient, count);
-                        }
-                    }
-                }
+            if graph.has_cycle() {
+                println!("Cycle detected in the graph");
             }
+
+            // check if the paths have cycles
+            // for (name, path) in paths.iter() {
+            //     println!("\nPath name: {}", name);
+
+            //     if paths::path_has_cycle(path) {
+            //         println!("Cycle detected in path: {}", name);
+
+            //         // count by segment and orientation the number of times they appear in the path
+
+            //         let mut segment_orient_count = HashMap::new();
+            //         for (segment, orient) in path {
+            //             let count = segment_orient_count
+            //                 .entry((segment.clone(), orient.clone()))
+            //                 .or_insert(0);
+            //             *count += 1;
+            //         }
+
+            //         // print the segment and orientation that appear more than once
+            //         for ((segment, orient), count) in segment_orient_count.iter() {
+            //             if *count > 1 {
+            //                 println!(
+            //                     "Segment: {}, Orientation: {:?}, Count: {}",
+            //                     segment, orient, count
+            //                 );
+            //             }
+            //         }
+            //     }
+            // }
 
             // Print the path gi|568815567:3779003-3792415
 

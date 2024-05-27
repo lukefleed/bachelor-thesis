@@ -111,41 +111,43 @@ where
         }
     }
 
+    // takes a node, visited and rec_stack as arguments
+    pub fn has_cycle_util(
+        &self,
+        node: &V,
+        visited: &mut HashMap<V, bool>,
+        rec_stack: &mut HashMap<V, bool>,
+    ) -> bool {
+        // mark current node as visited and add to recursion stack
+        visited.insert(node.clone(), true);
+        rec_stack.insert(node.clone(), true);
+
+        // recur for all neighbours
+        // if any neighbour is visited and in rec_stack then cycle is detected
+        for neighbour in self.get_adjacencies(node).unwrap() {
+            if !visited.contains_key(neighbour)
+                && self.has_cycle_util(neighbour, visited, rec_stack)
+            {
+                return true;
+            } else if rec_stack.contains_key(neighbour) {
+                return true;
+            }
+        }
+
+        // the node needs to be removed from the recursion stack before function ends
+        rec_stack.remove(node);
+        false
+    }
+
     pub fn has_cycle(&self) -> bool {
-        let mut visited = HashSet::new();
-        let mut stack = VecDeque::new();
-        let mut parent = HashMap::new();
+        // visited is a stack of bools, initiated as false, idem for rec_stack
+        let mut visited = HashMap::new();
+        let mut rec_stack = HashMap::new();
 
         for node in self.nodes.iter() {
-            if visited.contains(node) {
-                continue;
-            }
-
-            stack.push_back(node);
-
-            while let Some(node) = stack.pop_back() {
-                println!("Visiting: {:?}", node);
-
-                if visited.contains(node) {
-                    // Print the cycle
-                    let mut cycle = Vec::new();
-                    let mut current = node;
-                    while !cycle.contains(current) {
-                        cycle.push(current.clone());
-                        current = parent[current];
-                    }
-                    cycle.reverse();
-                    println!("Cycle detected: {:?}", cycle);
+            if !visited.contains_key(node) {
+                if self.has_cycle_util(node, &mut visited, &mut rec_stack) {
                     return true;
-                }
-
-                visited.insert(node.clone());
-
-                if let Some(adjacencies) = self.get_adjacencies(&node) {
-                    for adj in adjacencies {
-                        parent.insert(adj, node);
-                        stack.push_back(adj);
-                    }
                 }
             }
         }
