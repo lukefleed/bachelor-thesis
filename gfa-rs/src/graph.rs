@@ -16,7 +16,7 @@ where
 #[allow(dead_code)]
 impl<V> AdjacencyGraph<V>
 where
-    V: Hash + Eq + Clone + Debug,
+    V: Hash + Eq + Clone + Debug, // Hash and Eq are required for the HashSet, Clone is required for the HashMap, Debug is required for the println! macro
 {
     pub fn new() -> Self {
         AdjacencyGraph {
@@ -97,21 +97,7 @@ where
         })
     }
 
-    pub fn remove_self_loops(&mut self) {
-        let mut to_remove = Vec::new();
-
-        for (from, tos) in self.adjacencies.iter_mut() {
-            if tos.contains(from) {
-                to_remove.push((from.clone(), from.clone()));
-            }
-        }
-
-        for (from, to) in to_remove {
-            self.adjacencies.get_mut(&from).unwrap().remove(&to);
-        }
-    }
-
-    // takes a node, visited and rec_stack as arguments
+    // Util function for has_cycle that uses recursion
     pub fn has_cycle_util(
         &self,
         node: &V,
@@ -139,6 +125,7 @@ where
         false
     }
 
+    // Function that checks if the graph has a cycle
     pub fn has_cycle(&self) -> bool {
         // visited is a stack of bools, initiated as false, idem for rec_stack
         let mut visited = HashMap::new();
