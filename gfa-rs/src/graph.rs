@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{BTreeSet, HashMap, VecDeque},
     fmt::Debug,
     hash::Hash,
 };
@@ -17,18 +17,18 @@ pub struct AdjacencyGraph<V>
 where
     V: Hash + Eq + Clone,
 {
-    nodes: HashSet<V>,
-    adjacencies: HashMap<V, HashSet<V>>,
+    nodes: BTreeSet<V>,
+    adjacencies: HashMap<V, BTreeSet<V>>,
 }
 
 #[allow(dead_code)]
 impl<V> AdjacencyGraph<V>
 where
-    V: Hash + Eq + Clone + Debug,
+    V: Hash + Eq + Clone + Debug + Ord,
 {
     pub fn new() -> Self {
         AdjacencyGraph {
-            nodes: HashSet::new(),
+            nodes: BTreeSet::new(),
             adjacencies: HashMap::new(),
         }
     }
@@ -43,15 +43,15 @@ where
 
         self.adjacencies
             .entry(from)
-            .or_insert_with(HashSet::new)
+            .or_insert_with(BTreeSet::new)
             .insert(to);
     }
 
-    pub fn get_adjacencies(&self, node: &V) -> Option<&HashSet<V>> {
+    pub fn get_adjacencies(&self, node: &V) -> Option<&BTreeSet<V>> {
         self.adjacencies.get(node)
     }
 
-    pub fn adjacencies(&self) -> &HashMap<V, HashSet<V>> {
+    pub fn adjacencies(&self) -> &HashMap<V, BTreeSet<V>> {
         &self.adjacencies
     }
 
@@ -70,7 +70,7 @@ where
     }
 
     pub fn dfs<'a>(&'a self, node: &'a V) -> impl Iterator<Item = V> + 'a {
-        let mut visited = HashSet::new();
+        let mut visited = BTreeSet::new();
         let mut stack = VecDeque::from([node]);
 
         std::iter::from_fn(move || {
@@ -91,7 +91,7 @@ where
 
     // Modified DFS for edge classification
     pub fn dfs_classify_edges<'a>(&'a self, start_node: &'a V) -> HashMap<(V, V), EdgeType> {
-        let mut visited = HashSet::new();
+        let mut visited = BTreeSet::new();
         let mut stack = VecDeque::from([start_node]);
         let mut arrival_times = HashMap::new();
         let mut departure_times = HashMap::new();

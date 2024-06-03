@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum Orientation {
     Forward,
     Reverse,
