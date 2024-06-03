@@ -68,8 +68,9 @@ fn main() -> std::io::Result<()> {
             }
 
             println!(
-                "\nBEFORE CONVERSION\nGraph has {} edges",
-                graph.edges().count()
+                "\nBEFORE CONVERSION\nGraph has {} edges and {} nodes",
+                graph.edges().count(),
+                graph.adjacencies().len()
             );
 
             if graph.has_cycle() {
@@ -81,7 +82,11 @@ fn main() -> std::io::Result<()> {
             // Convert the graph to DAG
             let dag = graph.to_dag();
 
-            println!("\nAFTER CONVERSION\nDAG has {} edges", dag.edges().count());
+            println!(
+                "\nAFTER CONVERSION\nDAG has {} edges and {} nodes",
+                dag.edges().count(),
+                dag.adjacencies().len()
+            );
 
             // add an if else print for cycles
             if dag.has_cycle() {
