@@ -67,18 +67,34 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            // if graph.has_cycle() {
-            //     println!("Cycle detected in the graph");
-            // }
+            println!(
+                "\nBEFORE CONVERSION\nGraph has {} edges",
+                graph.edges().count()
+            );
+
+            if graph.has_cycle() {
+                println!("Cycle(s) detected in the graph");
+            } else {
+                println!("No cycle(s) detected in the graph");
+            }
+
+            // Convert the graph to DAG
+            let dag = graph.to_dag();
+
+            println!("\nAFTER CONVERSION\nDAG has {} edges", dag.edges().count());
+
+            // add an if else print for cycles
+            if dag.has_cycle() {
+                println!("Cycle(s) detected in the DAG");
+            } else {
+                println!("No cycle(s) detected in the DAG");
+            }
 
             // for (name, path) in paths.iter() {
             //     println!("\nPath name: {}", name);
-
             //     if paths::path_has_cycle(path) {
             //         println!("Cycle detected in path: {}", name);
-
             //         // count by segment and orientation the number of times they appear in the path
-
             //         // let mut segment_orient_count = HashMap::new();
             //         // for (segment, orient) in path {
             //         //     let count = segment_orient_count
@@ -86,7 +102,6 @@ fn main() -> std::io::Result<()> {
             //         //         .or_insert(0);
             //         //     *count += 1;
             //         // }
-
             //         // // print the segment and orientation that appear more than once
             //         // for ((segment, orient), count) in segment_orient_count.iter() {
             //         //     if *count > 1 {

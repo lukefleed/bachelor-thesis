@@ -13,6 +13,7 @@ pub fn _print_paths(paths: &HashMap<String, Vec<(String, Orientation)>>) {
 }
 
 // loop through the path (segment, orientation) pairs, and keep track of the visited segments, if you find a segment that has already been visited, then there is a cycle. Print to terminal the subpath that starts and ends at the cycle (so with the same segment and orientation at the start and end)
+#[allow(dead_code)]
 pub fn path_has_cycle(path: &Vec<(String, Orientation)>) -> bool {
     let mut visited = HashSet::new(); // (segment, orientation)
                                       // loop using idex so we can get the subpath that forms the cycle
