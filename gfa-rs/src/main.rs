@@ -88,7 +88,6 @@ fn main() -> std::io::Result<()> {
                 dag.adjacencies().len()
             );
 
-            // add an if else print for cycles
             if dag.has_cycle() {
                 println!("Cycle(s) detected in the DAG");
             } else {

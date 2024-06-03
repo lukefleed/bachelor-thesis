@@ -98,6 +98,8 @@ where
         let mut time = 0;
         let mut edge_types = HashMap::new();
 
+        // We use arrival and departure times to classify edges: arrival time is when a node is first visited and departure time is when it is last visited
+
         while let Some(node) = stack.pop_back() {
             if !visited.contains(node) {
                 visited.insert(node.clone());
@@ -107,17 +109,17 @@ where
                 if let Some(adjacencies) = self.get_adjacencies(node) {
                     for neighbor in adjacencies {
                         if !visited.contains(neighbor) {
-                            // Tree edge
+                            // Tree edge since neighbor is not visited
                             edge_types.insert((node.clone(), neighbor.clone()), EdgeType::Tree);
                             stack.push_back(neighbor);
                         } else if !departure_times.contains_key(neighbor) {
-                            // Back edge
+                            // Back edge since neighbor is visited but not yet departed
                             edge_types.insert((node.clone(), neighbor.clone()), EdgeType::Back);
                         } else if arrival_times.get(node) < arrival_times.get(neighbor) {
-                            // Forward edge
+                            // Forward edge since neighbor is visited and arrived after node
                             edge_types.insert((node.clone(), neighbor.clone()), EdgeType::Forward);
                         } else {
-                            // Cross edge
+                            // Cross edge since neighbor is visited and arrived before node
                             edge_types.insert((node.clone(), neighbor.clone()), EdgeType::Cross);
                         }
                     }
