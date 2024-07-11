@@ -69,6 +69,16 @@ where
         }
     }
 
+    pub fn remove_edge(&mut self, from: &V, to: &V) {
+        if let Some(adjacencies) = self.adjacencies.get_mut(from) {
+            adjacencies.remove(to);
+        }
+    }
+
+    pub fn nodes(&self) -> &BTreeSet<V> {
+        &self.nodes
+    }
+
     pub fn dfs<'a>(&'a self, node: &'a V) -> impl Iterator<Item = V> + 'a {
         let mut visited = BTreeSet::new();
         let mut stack = VecDeque::from([node]);
@@ -133,7 +143,7 @@ where
         edge_types
     }
 
-    // Function to extract the DAG
+    // Function to extract the DAG from a graph
     pub fn to_dag(&self) -> Self {
         let mut dag = AdjacencyGraph::new();
 
@@ -196,11 +206,5 @@ where
         }
 
         false
-    }
-
-    pub fn remove_edge(&mut self, from: &V, to: &V) {
-        if let Some(adjacencies) = self.adjacencies.get_mut(from) {
-            adjacencies.remove(to);
-        }
     }
 }

@@ -84,3 +84,8 @@ Each sub-list will contain the ids of the nodes in that level. For each node we 
 ### Compression
 
 Both the ids in the levels and the values in the out sets are increasing integers, so we can use Elias-Fano. We can use the same steps discussed before to compress the offset list.
+
+## Extra
+
+- I will need metrics about time efficiency and space occupance in order to compare the two methods and choose the best one.
+- I will need something very general to compress the list of integers with Elias Fano and build above it the RRR data structure.

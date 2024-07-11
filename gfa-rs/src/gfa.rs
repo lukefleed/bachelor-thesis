@@ -16,18 +16,19 @@ impl Display for Orientation {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum Entry {
     Header {
         version: String,
     },
     Segment {
-        id: String,
+        id: usize,
         sequence: String,
     },
     Link {
-        from: String,
+        from: usize,
         from_orient: Orientation,
-        to: String,
+        to: usize,
         to_orient: Orientation,
     },
     Path {
@@ -36,12 +37,10 @@ pub enum Entry {
     },
     Walk {
         sample: String,
-
         haplotype_index: usize,
         seq_id: String,
         seq_start: usize,
         seq_end: usize,
-
         segments: Vec<(String, Orientation)>,
     },
 }

@@ -35,12 +35,11 @@ fn parse_header(line: &str) -> Entry {
 /// ```txt
 /// S  1  ACGT
 
-
 fn parse_segment(line: &str) -> Entry {
     let columns: Vec<&str> = line.split('\t').collect();
 
     Entry::Segment {
-        id: columns[1].to_string(),
+        id: columns[1].parse().unwrap(),
         sequence: columns[2].to_string(),
     }
 }
@@ -54,9 +53,9 @@ fn parse_link(line: &str) -> Entry {
     let columns: Vec<&str> = line.split('\t').collect();
 
     Entry::Link {
-        from: columns[1].to_string(),
+        from: columns[1].parse().unwrap(),
         from_orient: parse_orientation(columns[2]),
-        to: columns[3].to_string(),
+        to: columns[3].parse().unwrap(),
         to_orient: parse_orientation(columns[4]),
     }
 }
