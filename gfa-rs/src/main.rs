@@ -68,7 +68,56 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
+            // print information of the graph before removing converting it to a dag
+            println!("Graph before removing isolated nodes:");
+            println!("Number of nodes: {:?}", graph.nodes().len());
+            println!("Number of edges: {:?}", graph.edges().count());
+            println!("Has Cycles? {:?}", graph.has_cycle());
+
+            let mut dag = graph.to_dag();
+
+            println!("\nGraph after removing isolated nodes:");
+            println!("Number of nodes: {:?}", dag.nodes().len());
+            println!("Number of edges: {:?}", dag.edges().count());
+            println!("Has Cycles? {:?}", dag.has_cycle());
+
+            // remove from the dag the isolated nodes
+            println!("\nRemoving isolated nodes from the graph...");
+            let num = dag.nodes().len();
+            dag.remove_isolated_nodes();
+            if num != dag.nodes().len() {
+                println!("Isolated nodes removed.");
+            } else {
+                println!("No isolated nodes found.");
+            }
+
+            println!("Starting to identify keys to remove...");
+            // remove from the sequence map the nodes that are not in the dag
+            let mut keys_to_remove = Vec::new();
+
+            // loop over the sequence map, if there is a key that does not match any node id in the dag, add it to the keys_to_remove.
+            for key in sequence_map.keys() {
+                let mut found = false;
+                for node in dag.nodes() {
+                    if node.0 == *key {
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
+                    keys_to_remove.push(key.clone());
+                }
+            }
+
+            println!("Keys to remove identified: {}", keys_to_remove.len());
+
+            // remove the keys from the sequence map
+            for key in keys_to_remove {
+                sequence_map.remove(&key);
+            }
+
             // Sort the sequence map
+            println!("Sorting the sequence map...");
             let mut keys = sequence_map.keys().cloned().collect::<Vec<usize>>();
             keys.sort();
             let mut sequence_map_sorted = HashMap::new();
@@ -77,26 +126,33 @@ fn main() -> std::io::Result<()> {
             }
 
             // Step 1: Collect node identifiers into a new vector to avoid borrowing issues
-            let node_ids: Vec<_> = graph
+            println!("Collecting node identifiers...");
+            let node_ids: Vec<_> = dag
                 .nodes()
                 .into_iter()
                 .map(|node| (node.0, node.1.clone()))
                 .collect();
 
             // Step 2: Iterate over the new collection of node identifiers
+            println!("Applying changes to the graph...");
             for (node_id_0, node_id_1) in node_ids {
                 // Step 3: Apply changes to `graph` using the mutable borrow
                 utils::change_and_replace(
                     &node_id_0,
                     &node_id_1,
                     &mut sequence_map_sorted,
-                    &mut graph,
+                    &mut dag,
                 );
             }
 
+            println!("Changes applied.");
+
             // Write the graph to a file
-            let mut file = std::fs::File::create("chrY.pan.fa.a2fb268.4030258.6a1ecc2.smooth.tsv")?;
-            utils::write_graph_to_file(&graph, &sequence_map_sorted, &mut file)?;
+            println!("Writing the graph to a file...");
+            let mut file = std::fs::File::create("chrX.pan.fa.a2fb268.4030258.6a1ecc2.smooth.tsv")?;
+            utils::write_graph_to_file(&dag, &sequence_map_sorted, &mut file)?;
+
+            println!("Graph written to file successfully.");
 
             Ok(())
         }

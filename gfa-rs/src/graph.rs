@@ -79,6 +79,20 @@ where
         &self.nodes
     }
 
+    pub fn remove_isolated_nodes(&mut self) {
+        let mut isolated_nodes = Vec::new();
+
+        for node in self.nodes.iter() {
+            if self.adjacencies.get(node).is_none() {
+                isolated_nodes.push(node.clone());
+            }
+        }
+
+        for node in isolated_nodes {
+            self.nodes.remove(&node);
+        }
+    }
+
     pub fn dfs<'a>(&'a self, node: &'a V) -> impl Iterator<Item = V> + 'a {
         let mut visited = BTreeSet::new();
         let mut stack = VecDeque::from([node]);
