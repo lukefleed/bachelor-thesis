@@ -8,6 +8,3 @@ edition = "2021"
 [dependencies]
 argh = "0.1.12"
 rayon = "1.5.1"
-
-[workspace]
-members = ["examples/*"]
