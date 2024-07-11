@@ -20,16 +20,20 @@ struct CliTool {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 enum MySubCommandEnum {
-    Show(CommandShow),
+    Show(CommandConvert),
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
 /// Parse and show the content of a file
-#[argh(subcommand, name = "show")]
-struct CommandShow {
+#[argh(subcommand, name = "convert")]
+struct CommandConvert {
     #[argh(option, short = 'i')]
     /// file to read
     input: String,
+
+    #[argh(option, short = 'o')]
+    /// file to write
+    output: String,
 }
 
 fn main() -> std::io::Result<()> {
@@ -149,7 +153,7 @@ fn main() -> std::io::Result<()> {
 
             // Write the graph to a file
             println!("Writing the graph to a file...");
-            let mut file = std::fs::File::create("chrX.pan.fa.a2fb268.4030258.6a1ecc2.smooth.tsv")?;
+            let mut file = std::fs::File::create(show.output)?;
             utils::write_graph_to_file(&dag, &sequence_map_sorted, &mut file)?;
 
             println!("Graph written to file successfully.");
