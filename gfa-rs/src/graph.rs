@@ -33,6 +33,17 @@ where
         }
     }
 
+    pub fn unique_nodes_from_edges(&self) -> BTreeSet<V> {
+        let mut nodes = BTreeSet::new();
+
+        for (from, to) in self.edges() {
+            nodes.insert(from.clone());
+            nodes.insert(to.clone());
+        }
+
+        nodes
+    }
+
     pub fn add_node(&mut self, node: V) {
         self.nodes.insert(node);
     }
@@ -79,7 +90,7 @@ where
         &self.nodes
     }
 
-    pub fn remove_isolated_nodes(&mut self) {
+    pub fn _remove_isolated_nodes(&mut self) {
         let mut isolated_nodes = Vec::new();
 
         for node in self.nodes.iter() {

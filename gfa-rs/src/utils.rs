@@ -7,7 +7,7 @@ use crate::{gfa::Orientation, graph::AdjacencyGraph};
 pub fn change_and_replace(
     id: &usize,
     orient: &Orientation,
-    sequence_map_sorted: &mut HashMap<usize, String>,
+    segments: &mut HashMap<usize, String>,
     graph: &mut AdjacencyGraph<(usize, Orientation)>,
 ) {
     // If the orientation is forward, return
@@ -16,13 +16,13 @@ pub fn change_and_replace(
     }
 
     // Create a new id by incrementing the last id
-    let new_id = *sequence_map_sorted.keys().last().unwrap() + 1;
+    let new_id = *segments.keys().max().unwrap() + 1;
 
-    // Extract the value of the element with key id in the sequence_map_sorted
-    let value = sequence_map_sorted.get(id).unwrap().to_owned();
+    // Extract the value of the element with key id in the segments
+    let value = segments.get(id).unwrap().to_owned();
 
-    // Insert the new id and the value in the sequence_map_sorted
-    sequence_map_sorted.insert(new_id, value);
+    // Insert the new id and the value in the segments
+    segments.insert(new_id, value);
 
     // Collect edges to modify before mutating the graph
     let edges_to_modify: Vec<((usize, Orientation), (usize, Orientation))> = graph
@@ -37,6 +37,8 @@ pub fn change_and_replace(
             }
         })
         .collect();
+
+    println!("Edges to modify: {:?}", edges_to_modify.len());
 
     // Now modify the graph based on collected edges
     for (from, to) in edges_to_modify {
