@@ -168,12 +168,43 @@ where
         edge_types
     }
 
+    // Write a function that prints the number of edges per type of edge
+    pub fn print_edge_types(&self) {
+        let edge_types = self.dfs_classify_edges(self.nodes.iter().next().unwrap());
+        let mut tree_edges = 0;
+        let mut forward_edges = 0;
+        let mut back_edges = 0;
+        let mut cross_edges = 0;
+
+        for (_edge, edge_type) in edge_types {
+            match edge_type {
+                EdgeType::Tree => tree_edges += 1,
+                EdgeType::Forward => forward_edges += 1,
+                EdgeType::Back => back_edges += 1,
+                EdgeType::Cross => cross_edges += 1,
+            }
+        }
+
+        println!("Tree edges: {:?}", tree_edges);
+        println!("Forward edges: {:?}", forward_edges);
+        println!("Back edges: {:?}", back_edges);
+        println!("Cross edges: {:?}", cross_edges);
+    }
+
     // Function to extract the DAG from a graph
     pub fn to_dag(&self) -> Self {
         let mut dag = AdjacencyGraph::new();
 
         // Perform DFS to classify edges
         let edge_types = self.dfs_classify_edges(self.nodes.iter().next().unwrap());
+
+        for (from, to) in self.edges() {
+            if let Some(edge_type) = edge_types.get(&(from.clone(), to.clone())) {
+                if *edge_type == EdgeType::Back {
+                    dag.add_edge(to.clone(), from.clone());
+                }
+            }
+        }
 
         for (from, to) in self.edges() {
             if let Some(edge_type) = edge_types.get(&(from.clone(), to.clone())) {

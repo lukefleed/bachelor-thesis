@@ -76,13 +76,15 @@ fn main() -> std::io::Result<()> {
             println!("Number of nodes: {:?}", graph.nodes().len());
             println!("Number of edges: {:?}", graph.edges().count());
             println!("Has Cycles? {:?}", graph.has_cycle());
+            graph.print_edge_types();
 
             let mut dag = graph.to_dag();
 
-            println!("Graph after being converted to DAG:");
+            println!("\nGraph after being converted to DAG:");
             println!("Number of nodes: {:?}", dag.nodes().len());
             println!("Number of edges: {:?}", dag.edges().count());
-            println!("Has Cycles? {:?}", dag.has_cycle());
+            println!("Has Cycles? {:?}\n", dag.has_cycle());
+            dag.print_edge_types();
 
             // remove from the sequence map the nodes that are not in the dag
             let mut keys_to_remove = Vec::new();
