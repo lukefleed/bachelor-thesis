@@ -263,4 +263,34 @@ where
 
         false
     }
+
+    // In-degree histogram
+    pub fn in_degree_histogram(&self) -> HashMap<usize, usize> {
+        let mut in_degrees = HashMap::new();
+
+        for node in self.nodes.iter() {
+            let in_degree = self
+                .adjacencies
+                .iter()
+                .filter(|(_, tos)| tos.contains(node))
+                .count();
+
+            *in_degrees.entry(in_degree).or_insert(0) += 1;
+        }
+
+        in_degrees
+    }
+
+    // Out-degree histogram
+    pub fn out_degree_histogram(&self) -> HashMap<usize, usize> {
+        let mut out_degrees = HashMap::new();
+
+        for node in self.nodes.iter() {
+            let out_degree = self.adjacencies.get(node).map_or(0, |tos| tos.len());
+
+            *out_degrees.entry(out_degree).or_insert(0) += 1;
+        }
+
+        out_degrees
+    }
 }

@@ -41,7 +41,7 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
 
 \subsection{Rank} \label{subsec:rank}
 
-In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using \todo{or  just $o(n)$?} $n + o(n)$  bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block. \vspace{0.4cm}
+In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using only extra $o(n)$  bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block. \vspace{0.4cm}
 
 \noindent More precisely, the structure is composed of three levels: in the first one we (logically) split $B[1, n]$ into blocks of size $Z$ each, where at the beginning of each superblock we store the number (\emph{class number}) of bits set to $1$ in the corresponding block, i.e the output of the query $rank_1(i)$ for $i$ being the starting position of the block. In the second level, we split the superblocks into blocks of size $z$ bits each\footnote{For simplicity, we assume that $z$ divides $Z$} with the same meta-information stored at the beginning of each block. Finally the third level is a lookup table that is indexed by the small blocks and queried positions. In other words, for each possible small block and each possible position within that block, the lookup table stores the result of the $rank_1$ operation. This pre-computed information allows for constant time retrieval of the $rank_1$ operation results, as the result can be directly looked up in the table instead of having to be computed each time. This is the key to the efficiency of the data structure. In this way, the $i-th$ block, of size $Z$, can be accessed as
 \[
@@ -196,6 +196,8 @@ The $select$ operation can be seen as the inverse of the rank operation, i.e giv
 \[
     rank_c(B, select_c(B, i)) = i
 \]
+\todo{Maybe talk about monoids and how rank and select are inverses of each other} \vspace{0.4cm}
+
 The implementation of the select operation heavily relies on the three level data structure discussed before (\ref{subsec:rank}). The difference lies in the fact that, in this case, the bitmap $B$ doesn't get split into blocks of fixed size, but rather into blocks of variable size that are determined by the rank of the block. We start by designing the first level of the select data structure: we split the bitmap $B$ into blocks of size $Z$ bitvectors each containing $K$ bits set to $1$.
 
 \begin{remark}[Notation and assumptions]

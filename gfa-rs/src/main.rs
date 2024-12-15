@@ -72,66 +72,70 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            println!("Graph before any changes:");
-            println!("Number of nodes: {:?}", graph.nodes().len());
-            println!("Number of edges: {:?}", graph.edges().count());
-            println!("Has Cycles? {:?}", graph.has_cycle());
-            graph.print_edge_types();
+            // print the in-degree
+            println!("Out-degree: {:?}", graph.out_degree_histogram());
+            println!("In-degree: {:?}", graph.in_degree_histogram());
 
-            let mut dag = graph.to_dag();
+            // println!("Graph before any changes:");
+            // println!("Number of nodes: {:?}", graph.nodes().len());
+            // println!("Number of edges: {:?}", graph.edges().count());
+            // println!("Has Cycles? {:?}", graph.has_cycle());
+            // graph.print_edge_types();
 
-            println!("\nGraph after being converted to DAG:");
-            println!("Number of nodes: {:?}", dag.nodes().len());
-            println!("Number of edges: {:?}", dag.edges().count());
-            println!("Has Cycles? {:?}\n", dag.has_cycle());
-            dag.print_edge_types();
+            // let mut dag = graph.to_dag();
 
-            // remove from the sequence map the nodes that are not in the dag
-            let mut keys_to_remove = Vec::new();
-            let mut dag_segments = sequence_map.clone();
+            // println!("\nGraph after being converted to DAG:");
+            // println!("Number of nodes: {:?}", dag.nodes().len());
+            // println!("Number of edges: {:?}", dag.edges().count());
+            // println!("Has Cycles? {:?}\n", dag.has_cycle());
+            // dag.print_edge_types();
 
-            // loop over the sequence map, if there is a key that does not match any node id in the dag, add it to the keys_to_remove.
-            for key in sequence_map.keys() {
-                let mut found = false;
-                for node in dag.nodes() {
-                    if node.0 == *key {
-                        // if the key is found in the dag, break the loop
-                        found = true;
-                        break;
-                    }
-                }
-                if !found {
-                    // if the key is not found in the dag, add it to the keys_to_remove
-                    keys_to_remove.push(key.clone());
-                }
-            }
+            // // remove from the sequence map the nodes that are not in the dag
+            // let mut keys_to_remove = Vec::new();
+            // let mut dag_segments = sequence_map.clone();
 
-            // remove the keys from the dag segments
-            for key in keys_to_remove {
-                dag_segments.remove(&key);
-            }
+            // // loop over the sequence map, if there is a key that does not match any node id in the dag, add it to the keys_to_remove.
+            // for key in sequence_map.keys() {
+            //     let mut found = false;
+            //     for node in dag.nodes() {
+            //         if node.0 == *key {
+            //             // if the key is found in the dag, break the loop
+            //             found = true;
+            //             break;
+            //         }
+            //     }
+            //     if !found {
+            //         // if the key is not found in the dag, add it to the keys_to_remove
+            //         keys_to_remove.push(key.clone());
+            //     }
+            // }
 
-            // Step 1: Collect node identifiers into a new vector to avoid borrowing issues
-            // println!("Collecting node identifiers...");
-            let node_ids: Vec<_> = dag
-                .nodes()
-                .into_iter()
-                .map(|node| (node.0, node.1.clone()))
-                .collect();
+            // // remove the keys from the dag segments
+            // for key in keys_to_remove {
+            //     dag_segments.remove(&key);
+            // }
 
-            // Step 2: Iterate over the new collection of node identifiers
-            for (node_id_0, node_id_1) in node_ids {
-                // Step 3: Apply changes to `graph` using the mutable borrow
-                utils::change_and_replace(&node_id_0, &node_id_1, &mut dag_segments, &mut dag);
+            // // Step 1: Collect node identifiers into a new vector to avoid borrowing issues
+            // // println!("Collecting node identifiers...");
+            // let node_ids: Vec<_> = dag
+            //     .nodes()
+            //     .into_iter()
+            //     .map(|node| (node.0, node.1.clone()))
+            //     .collect();
 
-                // println!("Number of nodes from segments: {:?}", dag_segments.len());
-            }
+            // // Step 2: Iterate over the new collection of node identifiers
+            // for (node_id_0, node_id_1) in node_ids {
+            //     // Step 3: Apply changes to `graph` using the mutable borrow
+            //     utils::change_and_replace(&node_id_0, &node_id_1, &mut dag_segments, &mut dag);
 
-            // Write the graph to a file
-            println!("Writing the graph to a file...");
-            let mut file = std::fs::File::create(show.output)?;
-            utils::write_graph_to_file(&dag, &dag_segments, &mut file)?;
-            println!("Graph written to file successfully.");
+            //     // println!("Number of nodes from segments: {:?}", dag_segments.len());
+            // }
+
+            // // Write the graph to a file
+            // println!("Writing the graph to a file...");
+            // let mut file = std::fs::File::create(show.output)?;
+            // utils::write_graph_to_file(&dag, &dag_segments, &mut file)?;
+            // println!("Graph written to file successfully.");
 
             Ok(())
         }

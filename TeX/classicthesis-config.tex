@@ -56,6 +56,10 @@
 \newcommand{\Ie}{I.\,e.}
 \newcommand{\eg}{e.\,g.}
 \newcommand{\Eg}{E.\,g.}
+\newcommand{\Rank}{\textsf{rank}}
+\newcommand{\Select}{\textsf{select}}
+\newcommand{\Drank}{\textsf{subset-rank}}
+\newcommand{\Dselect}{\textsf{subset-select}}
 
 \newcounter{dummy} % Necessary for correct hyperlinks (to index, bib, etc.)
 \providecommand{\mLyX}{L\kern-.1667em\lower.25em\hbox{Y}\kern-.125emX\@}
@@ -93,6 +97,8 @@
 % }{biblatex}
 \usepackage[natbib,refsection=chapter]{biblatex}
 \usepackage{import}
+\usepackage{enumitem}
+
 
 %------------------------------------------------
 
@@ -144,6 +150,7 @@
 
 \usepackage{algorithm} % For algorithm environment
 \usepackage{algpseudocode}
+% \usepackage[ruled,vlined]{algorithm2e}
 
 %------------------------------------------------
 
