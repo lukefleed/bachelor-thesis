@@ -44,9 +44,6 @@ Rice codes \cite{rice1979some} are a family of codes parameterized by a positive
 
 \noindent The fist part takes $1 + \lceil\log_2(x/2^k)\rceil$ bits, and the second part takes $k$ bits (since it's in the range $[0,2^k)$). Thus, the first part is encoded in variable-length unary code, and the second part is encoded in fixed-length binary code. The closer the values of $x$ are to $2^k$, the shorter the first part becomes, making the decoding process faster.
 
-
-
-
 \subsection{Elias-Fano Code}
 
-\todo[inline,color=blue!30]{TBD if to include this section or not. If included, it should be a brief mention of the Elias-Fano code and its use in integer compression \cite{ferragina2023pearls}}.
+\todo[inline]{Add a detailed section about Elias Fano since it will be crucial in the implementation of the succinct DAG \cite{ferragina2023pearls}}.
