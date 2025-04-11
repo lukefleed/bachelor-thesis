@@ -1,6 +1,7 @@
 \section{Entropy} \label{sec:shannon_entropy}
 
-Let's introduce the concept of entropy as a measure of uncertainty of a random variable. A deeper explanation can be found in \cite{han2002mathematics,navarro2016compact,ElementsofInformationTheory}
+% Let's introduce the concept of entropy as a measure of uncertainty of a random variable. A deeper explanation can be found in \cite{han2002mathematics,navarro2016compact,ElementsofInformationTheory}
+Let's introduce the concept of entropy as a measure of uncertainty of a random variable. While the worst-case entropy $H_{wc}$, discussed previously, provides a lower bound based solely on the set's cardinality (effectively assuming fixed-length codes or a uniform probability distribution over the elements), Shannon entropy offers a more refined measure. It accounts for the actual probability distribution of the elements, quantifying the \emph{average} uncertainty or information content associated with the random variable. A deeper explanation can be found in \cite{han2002mathematics,navarro2016compact,ElementsofInformationTheory}
 
 \begin{definition}[Entropy of a Random Variable]\label{def:entropy}
     Let $X$ \marginpar{This is also known as Shannon entropy, named after Claude Shannon, who introduced it in his seminal work \cite{Shannon1948}}be a random variable taking values in a finite alphabet $\mathcal{X}$ with the probabilistic distribution $P_X(x)= \text{Pr}\{X=x\}~(x\in\mathcal{X})$. Then, the entropy of $X$ is defined as
@@ -30,7 +31,7 @@ Let's introduce the concept of entropy as a measure of uncertainty of a random v
 
 
 \subsection{Properties}
-In the previous section \ref{sec:shannon_entropy}, we have introduced the entropy of a single random variable $X$. What if we have two random variables $X$ and $Y$? How can we measure the uncertainty of the pair $(X,Y)$? This is where the concept of joint entropy comes into play. The idea is to consider $(X,Y)$ as a single vector-valued random variable and compute its entropy. This is the joint entropy of $X$ and $Y$.
+In the previous section \ref{sec:shannon_entropy}, we have introduced the entropy of a single random variable $X$. What if we have two random variables $X$ and $Y$? How can we measure the uncertainty of the pair $(X,Y)$? This is where the concept of joint entropy comes into play. The idea is to consider $(X,Y)$ as a single vector-valued random variable and compute its entropy. This is the joint entropy of $X$ and $Y$. To quantify the total uncertainty associated with a pair of variables considered together, we define the joint entropy:
 
 \begin{definition}[Joint Entropy]\label{def:joint_entropy}
     Let $(X,Y)$ be a pair of discrete random variables $(X,Y)$ with a joint distribution $P_{XY}(x,y) = \text{Pr}\{X=x,Y=y\}$. The joint entropy of $(X,Y)$ is defined as
@@ -40,7 +41,9 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 \end{definition}
 \noindent Which we can be extended to the joint entropy of $n$ random variables $(X_1,X_2,\ldots,X_n)$ as $H(X_1,\ldots, X_n)$. \vspace*{0.4cm}
 
-\noindent We also define the conditional entropy of a random variable given another as the expected value of the entropies of the conditional distributions, averaged over the conditioning random variable. Given two random variables $X$ and $Y$, we can define $W(y|x)$, with $x \in \mathcal{X}$ and $y \in \mathcal{Y}$, as the conditional probability of $Y$ given $X$. The set $W$ of those conditional probabilities is called \emph{channel} with \emph{input alphabet} $\mathcal{X}$ and \emph{output alphabet} $\mathcal{Y}$.
+\noindent We also define the conditional entropy of a random variable given another as the expected value of the entropies of the conditional distributions, averaged over the conditioning random variable.
+% Given two random variables $X$ and $Y$, we can define $W(y|x)$, with $x \in \mathcal{X}$ and $y \in \mathcal{Y}$, as the conditional probability of $Y$ given $X$. The set $W$ of those conditional probabilities is called \emph{channel} with \emph{input alphabet} $\mathcal{X}$ and \emph{output alphabet} $\mathcal{Y}$.
+Often, it's helpful to conceptualize the relationship between $Y$ and $X$ in terms of information transmission. Given $X$, we can determine the probability of observing $Y$ through the conditional probability $W(y|x) = \text{Pr}\{Y=y|X=x\}$ for all $x \in \mathcal{X}$ and $y \in \mathcal{Y}$. The collection $W$ of these conditional probabilities effectively describes how information about X influences the outcome of Y, and is often referred to as a \emph{channel} with \emph{input alphabet} $\mathcal{X}$ and \emph{output alphabet} $\mathcal{Y}$.
 
 \begin{definition}[Conditional Entropy]\label{def:conditional_entropy}
     Let $(X,Y)$ be a pair of discrete random variables with a joint distribution $P_{XY}(x,y) = \text{Pr}\{X=x,Y=y\}$. The conditional entropy of $Y$ given $X$ is defined as
@@ -97,7 +100,7 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
 \end{proof}
 
 \subsection{Mutual Information}
-Given two random variables $X$ and $Y$, the mutual information between them quantifies the reduction in uncertainty about one variable due to the knowledge of the other. It is defined as the difference between the entropy and the conditional entropy. Figure \ref{fig:mutual_information} illustrates the concept of mutual information between two random variables.
+Given two random variables $X$ and $Y$, the mutual information between them quantifies the reduction in uncertainty about one variable due to the knowledge of the other. It is defined as the difference between the entropy and the conditional entropy. Figure \ref{fig:mutual_information} illustrates the concept of mutual information between two random variables. We've seen how to measure the uncertainty of individual variables and pairs. But how much does knowing one variable tell us about the other? In other words, how much uncertainty about $X$ is removed by knowing $Y$? This is quantified by the mutual information:
 
 \begin{definition}[Mutual Information]\label{def:mutual_information}
     Let $(X,Y)$ be a pair of discrete random variables with a joint distribution $P_{XY}(x,y)$. The mutual information between $X$ and $Y$ is defined as
@@ -189,5 +192,6 @@ Information theory serves as a cornerstone for understanding fundamental limits 
     \end{equation}
     From equations \ref{eq:entropy_decomposition}, \ref{eq:entropy_decomposition2} and \ref{eq:entropy_decomposition3}, we have Fano's inequality.
 \end{proof}
-\todo[inline]{Add some conclusions to this section.}
+% \todo[inline]{Add some conclusions to this section.}
+\noindent Fano's inequality thus provides a tangible link between the conditional entropy $H(X|Y)$, which quantifies the remaining uncertainty about $X$ when $Y$ is known, and the minimum probability of error achievable in any attempt to estimate $X$ from $Y$. This inequality, along with the foundational concepts of entropy, joint entropy, conditional entropy, and mutual information introduced throughout this section, establishes a robust theoretical framework. These tools are not merely abstract measures; they allow us to quantify information, understand dependencies between data sources, and ultimately, to delineate the fundamental limits governing how efficiently data can be represented and compressed. Understanding these limits is essential as we delve deeper into specific encoding techniques.
 \clearpage
