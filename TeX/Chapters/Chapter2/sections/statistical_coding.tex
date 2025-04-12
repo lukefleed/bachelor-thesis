@@ -5,7 +5,7 @@ This section explores a technique called \emph{statistical coding}: a method for
 
 \subsection{Huffman Coding} \label{subsec:huffman_coding}
 
-Compared to the methods seen in \autoref{sec:integer_coding}, Huffman Codes (introduced by Huffman in his landmark paper \cite{Huffman1952} in the 1950s) offer a broader applicability as they do not require any specific assumptions about the probability distribution, only that all probabilities are non-zero. This versatility makes them suitable for all distributions, including those where there is no clear relationship between symbol number and probability, such as in text data. \vspace{0.4cm}
+Compared to the methods seen in \autoref{sec:integer_coding}, Huffman Codes (introduced by Huffman in his landmark paper \cite{Huffman1952} in the 1950s) offer a broader applicability as they do not require any specific assumptions about the probability distribution, only that all probabilities are non-zero. This versatility makes them suitable for all distributions, including those where there is no clear relationship between symbol number and probability, such as in text data.
 
 \noindent For example, in text, characters typically range from "\emph{a}" to "\emph{z}" and are often mapped to a contiguous range, such as $0$ to $25$ or $97$ to $122$ in ASCII. However, there is no direct correlation between a symbol's number and its frequency rank.
 
@@ -25,7 +25,7 @@ Compared to the methods seen in \autoref{sec:integer_coding}, Huffman Codes (int
     Let $C$ be an Huffman Code and $L_C$ is the shortest possible average length among all prefix-free codes $C'$. That is, $L_C \leq L_{C'}$
 \end{theorem}
 
-\noindent This can also be interpreted as the \emph{the minimality of the average depth} of the Huffman tree. A proof can be found in most information theory books \cite{ferragina2023pearls,sayood2002lossless,han2002mathematics,ElementsofInformationTheory}. \vspace{0.4cm}
+\noindent This can also be interpreted as the \emph{the minimality of the average depth} of the Huffman tree. A proof can be found in most information theory books \cite{ferragina2023pearls,sayood2002lossless,han2002mathematics,ElementsofInformationTheory}.
 
 \noindent In the worst case, an Huffman Code can have a length of $|\Sigma|-1$ bits, which is the same as the number of internal nodes in the tree. However, its length is limited also by $\lfloor \log_\varPhi \frac{1}{p_{\min}} \rfloor$, where $p_{\min}$ is the smallest probability in the set and $\varPhi$ is the golden ratio. \cite{navarro2016compact}. Thus, if the probabilities come from the observed frequencies of the symbols in the text, let's say $n$ symbols, then $p_{\min} \geq \frac{1}{n}$ and the maximum length of the code is $\log_\varPhi n $. In particular, the encoding process is linear in the size of the input text \footnote{In the RAM model, $O(\log n)$ bits can be manipulated in $O(1)$, so the this is true also in practice}.
 
@@ -42,7 +42,7 @@ The decoding process uses the Huffman Tree. It starts by reading consecutive bit
 
 \subsection{Arithmetic Coding}
 
-Introduced by Elias in the 1960s and then refined by Rissanen and Pasco in the 1970s \cite{pasco1976source}. Arithmetic coding is a more general technique than Huffman coding, as it can achieve a better compression ratio (it can code symbols arbitrary close to 0-th order entropy) by encoding a sequence of symbols as a single number in the interval $[0,1)$. This number is then converted into a binary representation. \vspace{0.4cm}
+Introduced by Elias in the 1960s and then refined by Rissanen and Pasco in the 1970s \cite{pasco1976source}. Arithmetic coding is a more general technique than Huffman coding, as it can achieve a better compression ratio (it can code symbols arbitrary close to 0-th order entropy) by encoding a sequence of symbols as a single number in the interval $[0,1)$. This number is then converted into a binary representation.
 
 \noindent Consider any prefix coder, like Huffman coding. If we apply Huffman coding to a sequence of symbols, it must use \emph{at least one bit} (or more generally, an integer number of bits) per symbol, that is more then ten times the entropy of the source. This makes any prefix coder far from the $0$-th order entropy of the source. From the definition of Huffman Coding we can easily derive that it can be optimal only if $-\log p$ is a natural number, thus if and only if $p = 2^{-k}$ for some $k \in \mathbb{N}$. Arithmetic coding relaxes the request to define a prefix-free code for each symbol, and instead defines a strategy in which every bit of the output can be used to represent more than one symbol.
 

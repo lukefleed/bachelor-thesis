@@ -1,12 +1,12 @@
 \clearpage
 \section{Integer Coding} \label{sec:integer_coding}
 
-\todo[inline]{TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing}} \vspace{0.4cm}
+\todo[inline]{TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing}}
 
 \noindent The central concern in this section revolves around formulating an efficient binary representation method for an indefinite sequence of integers. Our objective is to minimize bit usage while ensuring that the encoding remains prefix-free. In simpler terms, we aim to devise a binary format where the codes for individual integers can be concatenated without ambiguity, allowing the decoder to reliably identify the start and end of each integer's representation within the bit stream and thus restore it to its original uncompressed state.
 
 \subsection{Unary Code}
-We begin by examining the unary code, a straightforward encoding method that represents a positive integer $x \geq 1$\footnote{This is not a strict condition, but we will assume it for clarity} using $x$ bits. It represents $x$ as a sequence of $x-1$ zeros followed by a single one. The correctness of this encoding is straightforward to verify: the decoder can identify the end of the integer by detecting the first one in the sequence, and the number of zeros preceding it determines the value of $x$. \vspace{0.4cm}
+We begin by examining the unary code, a straightforward encoding method that represents a positive integer $x \geq 1$\footnote{This is not a strict condition, but we will assume it for clarity} using $x$ bits. It represents $x$ as a sequence of $x-1$ zeros followed by a single one. The correctness of this encoding is straightforward to verify: the decoder can identify the end of the integer by detecting the first one in the sequence, and the number of zeros preceding it determines the value of $x$.
 
 \noindent This coding method requires $x$ bits to represent the integer $x$, which is way more than the $\lceil\log_2(x)\rceil$ bits needed by a fixed-length binary code. In fact, it is very efficient for small values of $x$ but becomes increasingly inefficient as $x$ grows. This is a direct consequence of \autoref{thm:source_coding_theorem}, which states that the ideal code length $L(c)$ for a symbol $c$ is $-\log_2 P(c)$, where $P(c)$ is the probability of symbol $c$. In the case of the unary code, where we are considering positive integers, the ideal code for $x$ would be $-\log_2 P(x) = -\log_2 2^{-x} = x$ bits. The following theorem formalizes this observation. \cite{ferragina2023pearls}
 
@@ -22,7 +22,7 @@ We begin by examining the unary code, a straightforward encoding method that rep
 First introduced by Levenstein in the 1960s and later refined by Elias \cite{Elias1975} in the 1970s, the $\gamma$ and $\delta$ codes are two of the most popular \emph{universal codes} for integers. The term \emph{universal code} refers to the characteristic of these codes to have fixed-length of $O(\log x)$ for any integer $x$. Compared to the binary code that requires $\lceil\log_2(x+1)\rceil$ bits, the $\gamma$ and $\delta$ codes are just a constant factor away from it, while having the advantage of being prefix-free.
 
 \paragraph{Gamma Code} The $\gamma$ code represents a positive integer $x$ is divided into two parts: given $|B(x)|$ as the number of bits needed to represent $x$ in binary, the first part is a sequence of $|B(x)| - 1$ zeros followed by the binary representation of $x$. The $\gamma$ code of $x$ is then the concatenation of these two parts, delimited by the first one bit. The decoding process is therefore very simple: the decoder reads the bits until it finds the first one, and the number of zeros preceding it determines the length of the binary representation of $x$. From Shannon's condition of ideal codes (\autoref{thm:source_coding_theorem}), we can see that the $\gamma$ code is optimal for the distribution $P(x)\approx 1/x^2$. \cite{ferragina2023pearls}
-\vspace{0.4cm}
+
 
 \begin{theorem}
     The $\gamma$ code of a positive integer $x$ takes $2\lceil\log_2(x+1)\rceil-1$ bits, and thus it is optimal for the distribution $P(x)=1/x^2$. This is within a factor of two from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code.
@@ -40,7 +40,7 @@ First introduced by Levenstein in the 1960s and later refined by Elias \cite{Eli
 
 \subsection{Rice Code}
 
-Rice codes \cite{rice1979some} are a family of codes parameterized by a positive integer $k$. Their representation is the concatenation of $(1+x/2^k)$ as a unary code and the binary representation of the integer ($x \mod 2^k$). Rice codes are very efficient when the values iof $x$ are close to $2^k$. When dealing with large values of $x$, the efficiency of the $\gamma$ and $\delta$ codes decreases, and Rice codes become a better alternative providing fast compression and decompression. \vspace{0.4cm}
+Rice codes \cite{rice1979some} are a family of codes parameterized by a positive integer $k$. Their representation is the concatenation of $(1+x/2^k)$ as a unary code and the binary representation of the integer ($x \mod 2^k$). Rice codes are very efficient when the values iof $x$ are close to $2^k$. When dealing with large values of $x$, the efficiency of the $\gamma$ and $\delta$ codes decreases, and Rice codes become a better alternative providing fast compression and decompression.
 
 \noindent The fist part takes $1 + \lceil\log_2(x/2^k)\rceil$ bits, and the second part takes $k$ bits (since it's in the range $[0,2^k)$). Thus, the first part is encoded in variable-length unary code, and the second part is encoded in fixed-length binary code. The closer the values of $x$ are to $2^k$, the shorter the first part becomes, making the decoding process faster.
 

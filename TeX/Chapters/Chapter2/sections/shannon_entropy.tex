@@ -39,7 +39,7 @@ In the previous section \ref{sec:shannon_entropy}, we have introduced the entrop
         H(X,Y) = H(P_{XY}) = -\sum_{x\in\mathcal{X}}\sum_{y\in\mathcal{Y}} P_{XY}(x,y)\log P_{XY}(x,y)
     \end{equation}
 \end{definition}
-\noindent Which we can be extended to the joint entropy of $n$ random variables $(X_1,X_2,\ldots,X_n)$ as $H(X_1,\ldots, X_n)$. \vspace*{0.4cm}
+\noindent Which we can be extended to the joint entropy of $n$ random variables $(X_1,X_2,\ldots,X_n)$ as $H(X_1,\ldots, X_n)$.
 
 \noindent We also define the conditional entropy of a random variable given another as the expected value of the entropies of the conditional distributions, averaged over the conditioning random variable.
 % Given two random variables $X$ and $Y$, we can define $W(y|x)$, with $x \in \mathcal{X}$ and $y \in \mathcal{Y}$, as the conditional probability of $Y$ given $X$. The set $W$ of those conditional probabilities is called \emph{channel} with \emph{input alphabet} $\mathcal{X}$ and \emph{output alphabet} $\mathcal{Y}$.
@@ -55,7 +55,7 @@ Often, it's helpful to conceptualize the relationship between $Y$ and $X$ in ter
     \end{align}
 \end{definition}
 
-\noindent Since entropy is always nonnegative, conditional entropy is likewise nonnegative; it has value zero if and only if $Y$ can be entirely determined from $X$ with certainty, meaning there exists a function $f(X)$ such that $Y = f(X)$ with probability one. \vspace*{0.4cm}
+\noindent Since entropy is always nonnegative, conditional entropy is likewise nonnegative; it has value zero if and only if $Y$ can be entirely determined from $X$ with certainty, meaning there exists a function $f(X)$ such that $Y = f(X)$ with probability one.
 
 \noindent The connection between joint entropy and conditional is more evident when considering that the entropy of two random variables equals the entropy of one of them plus the conditional entropy of the other. This connection is formally proven in the following theorem.
 

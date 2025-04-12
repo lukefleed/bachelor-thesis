@@ -1,11 +1,11 @@
 \clearpage
 \section{Wavelet Trees} \label{sec:wavelet_trees}
 \todo[fancyline]{Improve this introduction, just a draft}
-\noindent Wavelet trees, introduced in 2003 by Grossi, Gupta, and Vitter \cite{GrossiWT2003,} are a self indexing data structure: meaning they can answer rank and select queries, while still allowing to access the text. This combination makes them particularly useful for compressed full-text indexes like the FM-index \cite{ferragina2000opportunistic}. In such indexes, wavelet trees are employed to efficiently answer rank queries during the search process. \vspace{0.4cm}
+\noindent Wavelet trees, introduced in 2003 by Grossi, Gupta, and Vitter \cite{GrossiWT2003,} are a self indexing data structure: meaning they can answer rank and select queries, while still allowing to access the text. This combination makes them particularly useful for compressed full-text indexes like the FM-index \cite{ferragina2000opportunistic}. In such indexes, wavelet trees are employed to efficiently answer rank queries during the search process.
 
-% Its name reflects its similarity to wavelet packet decomposition, where the sequence's "high" and "low" symbol values are separated and recursively subdivided. \vspace{0.4cm}
+% Its name reflects its similarity to wavelet packet decomposition, where the sequence's "high" and "low" symbol values are separated and recursively subdivided.
 
-\todo[inline, color=blue!30]{Upon closer examination, one can recognize that the wavelet tree is a slight extension of an older (1988) data structure by Chazelle \cite{Chazelle1988}, commonly used in Computational Geometry. This structure represents points on a two-dimensional grid, undergoing a reshuffling process to sort them by one coordinate and then by the other. Kärkkäinen (1999) \cite{karkkainen1999repetition} was the first to apply this structure to text indexing, although the concept and usage differed from Grossi et al.'s proposal four years later} \vspace{0.4cm}
+\todo[inline, color=blue!30]{Upon closer examination, one can recognize that the wavelet tree is a slight extension of an older (1988) data structure by Chazelle \cite{Chazelle1988}, commonly used in Computational Geometry. This structure represents points on a two-dimensional grid, undergoing a reshuffling process to sort them by one coordinate and then by the other. Kärkkäinen (1999) \cite{karkkainen1999repetition} was the first to apply this structure to text indexing, although the concept and usage differed from Grossi et al.'s proposal four years later}
 
 \noindent Wavelet Trees can be seen in different ways: (i) as sequence representation, (ii) as a permutation of elements, and (iii) as grid point representation. Since 2003, these perspectives and their interconnections have proven valuable across diverse problem domains, extending beyond text indexing and computational geometry, where the structure originated \cite{WTForALL,WTFromTheoryToPractice,TheMyriadVirtuesWT}.
 
@@ -28,7 +28,7 @@ If we try to use the techniques from \autoref{sec:bitvectors} to compress the bi
 
 \subsection{Structure and construction}
 
-In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL} \vspace{0.4cm}
+In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL}
 
 \noindent Building a wavelet tree is a recursive process that takes $O(n\log \sigma$) time by processing each node of the tree in linear time. The steps are outlined in Algorithm \ref{alg:build_wt}. Excluding the sequence $S$ and the final wavelet tree $T$, the algorithm uses $n \log \sigma$ bits of space \footnote{While building the wavelet tree, we can store the sequence $S$ on disk to free memory.}.
 
@@ -38,14 +38,14 @@ In the beginning of this section we showed that storing one bitvector per symbol
     \begin{algorithmic}
         % \Require Sequence $S[1,n]$ over alphabet $\Sigma = \{1,\dots,\sigma\}$
         % \Ensure Wavelet tree $T$ for $S$
-        % \vspace{0.4cm}
+        %
 
         \Function{build\_wt}{$S,n$}
         \State $T \gets build(S,n,1,\sigma)$
         \State \Return $T$
         \EndFunction
 
-        \vspace{0.4cm}
+
         \Function {build}{$S,n,a,b$} \Comment{\small{Takes a string $S[1,n]$ over $[a,b]$}}
         \If {$a = b$}
         \State Free S
@@ -97,12 +97,12 @@ In the beginning of this section we showed that storing one bitvector per symbol
     \[
         \Sigma = \{\$, \_, a, c, d, e, h, i, k, l, m, n, o, p, s, t, w \}
     \]
-    where we assume that in the lexicon the special character comes before the underscore. We now assign a bit to each symbol in the alphabet, where 0 is assigned to the first half of the alphabet and 1 to the second half. \vspace{0.4cm}
+    where we assume that in the lexicon the special character comes before the underscore. We now assign a bit to each symbol in the alphabet, where 0 is assigned to the first half of the alphabet and 1 to the second half.
 
     \begin{tabular}{*{17}{c}}
         \$                        & \_                        & a                         & c                         & d                         & e                         & h                         & i                         & k                         & l                         & m                         & n                         & o                         & p                         & s                         & t                         & w                         \\
         \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} \\
-    \end{tabular} \vspace{0.4cm}
+    \end{tabular}
 
     \noindent We can now build the wavelet tree for this sequence, recursively partitioning the alphabet and assigning a bit to each symbol. The resulting wavelet tree is shown in \autoref{fig:wavelet_tree_example}
 
@@ -216,7 +216,7 @@ In addition to retrieving the $i$-th symbol of the string, we might also need to
         \State \Return $\text{select}(T._{root},1, \sigma, c, j)$
         \EndFunction
 
-        \vspace{0.4cm}
+
 
         \Function{$\text{select}$}{$v,a,b,c,j$}
         % \Comment $v$ is the current node, $[a,b]$ is the alphabet range, $c$ is the symbol, $j$ is the position
@@ -263,9 +263,9 @@ In addition to retrieving the $i$-th symbol of the string, we might also need to
 \end{algorithm}
 
 % \noindent TODO: Add some pratical consideration about using constant-time $rank$ and $select$ on the bitvectors. \cite{navarro2016compact} 6.2
-\vspace{0.4cm}
+
 \todo[inline, color=blue!30]{
-    TBD if to add: In \ref{rem:space_occupancy_wavelet_tree} we mentioned that storing the topology of the wavelet tree requires $O(\sigma \log n)$ bits. This may be critical for large alphabets, and in this section we will show that this term can be removed by slightly altering the balanced wavelet tree shape. \cite{MAKINEN2007332,MAKINEN2006703}. \vspace{0.4cm}
+    TBD if to add: In \ref{rem:space_occupancy_wavelet_tree} we mentioned that storing the topology of the wavelet tree requires $O(\sigma \log n)$ bits. This may be critical for large alphabets, and in this section we will show that this term can be removed by slightly altering the balanced wavelet tree shape. \cite{MAKINEN2007332,MAKINEN2006703}.
 
     Look for section 2.3 of \cite{WTForALL}
 }
@@ -283,7 +283,7 @@ where $n_0$ and $n_1$ are the number of $0$s and $1$s in the bitmap, respectivel
 \begin{equation}
     \sum_{c \in \Sigma} n_c \log (\frac{n}{n_c}) = n H_0(S)
 \end{equation}
-% However, to this quantity we must add the redundancy, i.e the space occupied by the pointers of the tree. This redundancy is $o(n \log \sigma)$. Thus bringing the space occupance of the wavelet tree to $n H_0(S) + o(n \log \sigma)$.\todo{I'm not sure that this is true, navarro says that there should be also a $+ O(\sigma w)$ term, but I don't know where it comes from.} \vspace{0.4cm}
+% However, to this quantity we must add the redundancy, i.e the space occupied by the pointers of the tree. This redundancy is $o(n \log \sigma)$. Thus bringing the space occupance of the wavelet tree to $n H_0(S) + o(n \log \sigma)$.\todo{I'm not sure that this is true, navarro says that there should be also a $+ O(\sigma w)$ term, but I don't know where it comes from.}
 
 \noindent We can now choose from the literature any zero-order entropy coding method for the bitvectors that supports rank and select queries in $O(1)$ time. Some of the most popular methods are RRR \cite{RRR2002} that we have vastly discussed in \autoref{sec:bitvectors}, that for each bitvector of length $n$ uses $n H_0(B) + o(n \log \log n / \log n)$ bits. In \cite{patrascu2008succincter} the authors showed\footnote{In this case, the time complexity of rank and select queries is $O(c)$.} that this value can be further reduced to $n H_0(B) + o(n/\log^c n)$ for any positive constant $c$.
 

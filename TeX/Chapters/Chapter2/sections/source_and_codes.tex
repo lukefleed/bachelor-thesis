@@ -1,8 +1,13 @@
 \section{Source and Code} \label{sec:source_and_codes}
 
-\todo[inline]{Some introduction about the source and coding, maybe with some very simple example like the morse code that uses a single dot to represent the most common symbol.}
+% \todo[inline]{Some introduction about the source and coding, maybe with some very simple example like the morse code that uses a single dot to represent the most common symbol.}
 
-% We enrich the understanding of entropy by establishing its core role in setting the fundamental limit for information compression. This process involves condensing data by assigning shorter descriptions to more frequent outcomes and longer descriptions to less frequent ones. For example, Morse code uses a single dot to represent the most common symbol. Within this chapter, we ascertain the minimum average description length for a random variable. \cite{ElementsofInformationTheory}
+\noindent In the previous section, we established information-theoretic limits based on the probabilistic nature of data sources. Now, we turn our attention to the practical mechanisms for achieving data compression: the interplay between a \emph{source} of information and the \emph{code} used to represent it. A source, in this context, can be thought of as any process generating a sequence of symbols drawn from a specific alphabet (e.g., letters of text, pixel values in an image, sensor readings). Source coding, or data compression, is the task of converting this sequence into a different, typically shorter, sequence of symbols from a target coding alphabet (often binary).
+
+\noindent The core principle behind efficient coding is to exploit the statistical properties of the source. Symbols or patterns that occur frequently should ideally be assigned shorter representations (codewords), while less frequent ones can be assigned longer codewords. A classic, intuitive example is Morse code: the most common letter in English text, 'E', is represented by the shortest possible signal, a single dot (`.`), whereas infrequent letters like 'Q' (`--.-`) receive much longer sequences.
+% This section formalizes these ideas, defining different types of codes and their properties, paving the way to understanding how closely we can approach the theoretical limits dictated by entropy.
+
+% We enrich the understanding of entropy by establishing its core role in setting the fundamental limit for information compression. This process involves condensing data by assigning shorter descriptions to more frequent outcomes and longer descriptions to less frequent ones. For example, Morse code uses a single dot to represent the most common symbol. Within this chapter, we ascertain the minimum average description length for a random variable. \cite{ElementsofInformationTheory} % Puoi commentare o rimuovere questo paragrafo se il testo sopra lo copre adeguatamente
 
 \subsection{Codes}
 
@@ -41,9 +46,7 @@ A source characterized by a random process generates symbols from a specific alp
     In this example we have seen a code that is optimal in the sense that the expected length of the code is equal to the entropy of the random variable.
 \end{example}
 
-\begin{example}[Morse Code]\label{ex:morse_code}
-    \todo[inline]{TODO from \cite{ElementsofInformationTheory}}
-\end{example}
+
 
 \begin{definition}[Nonsingular Code]\label{def:nonsingular_code}
     A code is nonsingular if every element of the range of $X$ maps to a different element of $\mathcal{D}^*$. Thus:
@@ -82,6 +85,29 @@ A source characterized by a random process generates symbols from a specific alp
 %     Shannon entropy, defined in \ref{def:entropy}, gives us a lower bound for the average length of a uniquely decodable code. Given a letter with frequency $p_i$, it carries $-\log p_i$  bits of information.
 % \end{remark}
 
+\begin{example}[Morse Code]\label{ex:morse_code}
+    Morse code serves as a classic illustration of these concepts. Historically used for telegraphy, it represents text characters using sequences from a ternary alphabet: a short signal (dot, `.`), a longer signal (dash, `-`), and a space (pause used as a delimiter). Frequent letters like 'E' receive short codes (`.`), while less common ones like 'Q' get longer codes (`--.-`). Here are a few examples:
+    \begin{center}
+        \begin{tabular}{ll}
+            \textbf{Character/Sequence} & \textbf{Code}        \\ \hline
+            E                           & \texttt{.}           \\
+            T                           & \texttt{-}           \\
+            A                           & \texttt{.-}          \\
+            N                           & \texttt{-.}          \\
+            S                           & \texttt{...}         \\
+            O                           & \texttt{---}         \\
+            SOS                         & \texttt{... --- ...} \\
+        \end{tabular}
+    \end{center}
+    % (Note: The SOS sequence \texttt{... --- ...} is typically sent continuously but represents the individual letters S, O, S separated by standard pauses.)
+    Let's evaluate Morse code based on our definitions:
+    \begin{itemize}
+        \item \textbf{Nonsingular:} The code is nonsingular because each letter corresponds to a unique sequence of dots and dashes. For instance, $E \neq T$, and their respective codes $C(E) = \texttt{.}$ and $C(T) = \texttt{-}$ are distinct.
+        \item \textbf{Prefix Code:} The code does not satisfy the prefix condition. Several codewords are prefixes of others. For example, $C(E) = \texttt{.}$ is a prefix of $C(A) = \texttt{.-}$ and $C(S) = \texttt{...}$. Similarly, $C(T) = \texttt{-}$ is a prefix of $C(N) = \texttt{-.}$ and $C(M) = \texttt{--}$. This lack of the prefix property means that receiving a sequence like `.--` is ambiguous without further information; it could represent 'A' or the sequence 'ET'.
+        \item \textbf{Uniquely Decodable:} The code achieves unique decodability, but this relies critically on the use of pauses (spaces) inserted between letters and words according to specific timing rules. These pauses function as explicit delimiters. Without them, the inherent ambiguity due to the lack of the prefix property would make decoding impossible. This contrasts with true prefix codes (like Example \ref{ex:source_code}), which are uniquely decodable based solely on their structure, without needing external delimiters. For example, the sequence `.---` is unambiguously decoded as 'ET' only when the timing correctly separates the 'E' (`.`) from the 'T' (`-`).
+    \end{itemize}
+\end{example}
+
 \begin{figure}[h]
     \centering
     \begin{tikzpicture}[scale=2.2,transform shape]
@@ -98,13 +124,14 @@ A source characterized by a random process generates symbols from a specific alp
 
 \subsection{Kraft's Inequality}
 
-We would like to construct instantaneous codes that are optimal in the sense that the expected length of the code is equal to the entropy of the random variable. However, we can't assign short codewords to all symbols and hope to be still prefix-free. Kraft's inequality provides a necessary and sufficient condition for the existence of a prefix code with given codeword lengths.
-\vspace{0.4cm}
+We aim to construct efficient codes, ideally prefix codes (instantaneous codes), whose expected length approaches the source entropy. A fundamental constraint arises because we cannot arbitrarily assign short lengths to all symbols while maintaining the prefix property or even unique decodability. Kraft's inequality precisely quantifies this limitation. It establishes a \emph{necessary} condition that the chosen codeword lengths $l(x)$ must satisfy for \emph{any uniquely decodable} code to exist. Crucially, the same inequality also serves as a \emph{sufficient} condition guaranteeing that a \emph{prefix} code with these exact lengths can indeed be constructed. We will first state and prove the necessity part for uniquely decodable codes.
+% Rimuovi il  qui se preferisci, lo spazio è gestito dal paragrafo.
+
 
 \noindent Let's denote the size of the source and code alphabets with $J = |\mathcal{X}|$ and $K = |\mathcal{D}|$, respectively. Different proofs of the following theorem can be found in \cite{ElementsofInformationTheory,han2002mathematics}, here we report the one from \cite{han2002mathematics}, however the one proposed in \cite{ElementsofInformationTheory} is also very interesting, based on the concept of a source tree.
 
 \begin{theorem}[Kraft's Inequality]\label{thm:kraft_inequality}
-    The codeword length $l(x)$, $x \in \mathcal{X}$, of any separable code $C$ must satisfy the inequality
+    The codeword lengths $l(x)$, $x \in \mathcal{X}$, of any uniquely decodable code $C$ over a $K$-ary alphabet must satisfy the inequality
     \begin{equation}\label{eq:kraft_inequality}
         \sum_{x\in\mathcal{X}} K^{-l(x)} \leq 1
     \end{equation}
@@ -136,7 +163,7 @@ We would like to construct instantaneous codes that are optimal in the sense tha
 
 \subsection{Source Coding Theorem}
 
-\todo[inline]{Add some introduction from \cite{ElementsofInformationTheory,Shannon1948,KolmogorovComplexity,han2002mathematics}} \vspace{0.4cm}
+\todo[inline]{Add some introduction from \cite{ElementsofInformationTheory,Shannon1948,KolmogorovComplexity,han2002mathematics}}
 
 \todo[inline]{
     \begin{theorem}[Source Coding Theorem]\label{thm:source_coding_theorem}

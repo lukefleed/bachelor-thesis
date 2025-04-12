@@ -35,15 +35,15 @@ We can now extend these operations to degenerate strings. This problem was recen
     since the symbol $C$ appears in order in the sets $\{CD\}$ and $\{BCD\}$ and the second set containing the symbol $A$ is $\{A\}$ ad index $3$.
 \end{example}
 % The interest in performing this types of queries comes from different problems that aries in pangenomics. In our case, the motivation that lead the authors of \cite{SubsetWT} to study this problem was to support fast membership queries on de Bruijn graphs. In particular in \cite{alanko2023small} the same authors defined the \emph{Spectral Burrows-Wheeler Transform} (\texttt{SBWT}): a particular sequence of subsets of the alphabet of the string that encodes $k$-spectrum of the string. With the \texttt{SBWT} they show how to represent the de Bruijn graph of all length-$k$ substrings of a string $S$ in a way that allows to answer membership queries by performing $2k$ \texttt{subset-rank} queries on the \texttt{SBWT} of $S$. In their experimentation, their approach that, compared to the state-of-the-art, its two order of magnitude faster if the space occupancy remains the same and one order of magnitude faster with improved space occupancy.
-\noindent This type of queries are crucial for solving various problems encountered in pangenomics, the study of entire genomes across a species. In the context of de Bruijn graphs, which can be used to represent relationships between overlapping substrings in biological sequences, researchers in \cite{SubsetWT} aimed to enable efficient membership queries. \vspace{0.4cm}
+\noindent This type of queries are crucial for solving various problems encountered in pangenomics, the study of entire genomes across a species. In the context of de Bruijn graphs, which can be used to represent relationships between overlapping substrings in biological sequences, researchers in \cite{SubsetWT} aimed to enable efficient membership queries.
 
-\noindent Building upon this work, in \cite{alanko2023small} they introduced the \emph{Spectral Burrows-Wheeler Transform} (SBWT). This transform represents a string's $k$ spectrum (the collection of all $k$-length substrings) as a sequence of alphabet subsets, i.e a degenerate string. The authors demonstrated that the SBWT allows for efficient de Bruijn graph representation of all $k$-length substrings in a string $S$. Membership queries within this graph can be answered using just $2k$ \texttt{subset-rank} queries on $S$'s SBWT. \vspace{0.4cm}
+\noindent Building upon this work, in \cite{alanko2023small} they introduced the \emph{Spectral Burrows-Wheeler Transform} (SBWT). This transform represents a string's $k$ spectrum (the collection of all $k$-length substrings) as a sequence of alphabet subsets, i.e a degenerate string. The authors demonstrated that the SBWT allows for efficient de Bruijn graph representation of all $k$-length substrings in a string $S$. Membership queries within this graph can be answered using just $2k$ \texttt{subset-rank} queries on $S$'s SBWT.
 
-\noindent Their experiments revealed significant performance improvements compared to previously \todo{Not anymore since in \cite{bille2023rank} they improved everything} existing methods. Their approach achieves two orders of magnitude faster query times while maintaining the same space usage. Additionally, with improved space efficiency, it offers a one order of magnitude speedup. \vspace{0.4cm}
+\noindent Their experiments revealed significant performance improvements compared to previously \todo{Not anymore since in \cite{bille2023rank} they improved everything} existing methods. Their approach achieves two orders of magnitude faster query times while maintaining the same space usage. Additionally, with improved space efficiency, it offers a one order of magnitude speedup.
 
 \todo[inline]{There is the big problem that in \cite{bille2023rank} they revisit the rank-select problem on degenerate strings, introducing a new, natural parameter and reanalyzing existing reductions to rank-select on regular strings. Plugging in standard data structures, the time bounds for queries are improved exponentially while essentially matching, or improving, the space bounds. Furthermore, they provide a lower bound on space that shows that the reductions lead to succinct data structures in a wide range of cases. Their most compact structure matches the space of the most compact structure of Alanko et al. \cite{SubsetWT} while answering queries twice as fast. They also provide an implementation using modern vector processing features; it uses less than one percent more space than the most compact structure of Alanko et al. \cite{SubsetWT} while supporting queries four to seven times faster, and has competitive query time with all the remaining structures.}
 
-\vspace{0.4cm}
+
 \noindent There is of course a naive and straightforward way to support these queries in $O(1)$. Given a degenerate string $X$ of length $n$ over an alphabet $\Sigma=[1,\sigma]$, for each $c \in \Sigma$ store a bitmap $B_c$ of length $n$ where the $i$-th bit is set to $1$ if and only if $c$ is in $X_i$. This way we can answer the queries in $O(1)$ time. In fact,
 \begin{equation*}
     \texttt{subset-rank}_X(c, i) = rank_{B_c}(1, i)
@@ -55,7 +55,7 @@ In order to support the subset-rank and subset-select queries on degenerate stri
 
 \subsubsection*{Structure} \label{sec:swt_structure}
 
-Imagine we have an alphabet with $\sigma = 2^n$ symbols, where n is a natural number. We can recursively construct a tree with $\sigma$ levels to represent all possible subsets of this alphabet. Each node in the tree corresponds to a unique subset. The root node represents the entire alphabet. Each child node of a node $v$ represents a subset, $A_v$, derived from its parent's alphabet. Let's delve deeper into this recursive process. For each node (except the root), we define its child nodes as follows: the left child represents the first half of the parent's alphabet, while the right child represents the second half. \vspace{0.4cm}
+Imagine we have an alphabet with $\sigma = 2^n$ symbols, where n is a natural number. We can recursively construct a tree with $\sigma$ levels to represent all possible subsets of this alphabet. Each node in the tree corresponds to a unique subset. The root node represents the entire alphabet. Each child node of a node $v$ represents a subset, $A_v$, derived from its parent's alphabet. Let's delve deeper into this recursive process. For each node (except the root), we define its child nodes as follows: the left child represents the first half of the parent's alphabet, while the right child represents the second half.
 
 \noindent We also introduce $Q_v$, a subsequence containing all subsets that include at least one element from $A_v$. Notably, when $A_v$ represents the entire alphabet, $Q_v$ also includes the empty set. In addition to representing subsets, each node $v$ in our tree holds two bit vectors, $L_v$ and $R_v$, with a length equal to the size of the corresponding subsequence $Q_v$.
 \begin{itemize}
@@ -66,7 +66,7 @@ We can leverage these bit vectors $L_v$ and $R_v$ to create a single string usin
 \begin{equation}
     S_v[i] = 2 \cdot R_v[i] + L_v[i]
 \end{equation}
-This formula essentially packs the information from both bit vectors into a single digit. A value of $0$ indicates the subset doesn't contain elements from either half, $1$ signifies the first half only, $2$ signifies the second half only, and $3$ represents elements from both halves. \vspace{0.4cm}
+This formula essentially packs the information from both bit vectors into a single digit. A value of $0$ indicates the subset doesn't contain elements from either half, $1$ signifies the first half only, $2$ signifies the second half only, and $3$ represents elements from both halves.
 
 \subsubsection{Subset-Rank Queries} \label{sec:subset_rank_queries}
 
@@ -141,9 +141,9 @@ To answer subset-select queries, we follow a similar process to subset-rank quer
 \end{algorithm}
 
 \subsubsection*{Space Complexity}
-The subset wavelet answer subset rank and select queries in logarithmic time $(O(\log \sigma))$, since at each level (there are $\log \sigma$ levels) we perform constant time operations. However, the actual number of bits used vary based on the data we are working with. For a general set sequence, it's typically $2n(\sigma - 1) + o(n\sigma)$ bits. \vspace{0.4cm}
+The subset wavelet answer subset rank and select queries in logarithmic time $(O(\log \sigma))$, since at each level (there are $\log \sigma$ levels) we perform constant time operations. However, the actual number of bits used vary based on the data we are working with. For a general set sequence, it's typically $2n(\sigma - 1) + o(n\sigma)$ bits.
 
-\noindent Visualizing the tree as a complete binary tree with $\sigma$ leaves (not explicitly stored) helps. If the sets are full, each internal node stores $2n$ bits\footnote{Since each set goes both to the left and to the right child at each level}, leading to a total space complexity of $(\sigma - 1)2n$ due to the number of internal nodes and their size. However, for balanced degenerate strings \ref{def:balanced_degenerate_string} (where most sets have one element), space usage improves. Since each set element corresponds to at most one symbol per level, the total sequence length is bounded by set sizes. This translates to a space complexity of $2n log \sigma$ bits across all $log \sigma$ tree levels. \vspace{0.4cm}
+\noindent Visualizing the tree as a complete binary tree with $\sigma$ leaves (not explicitly stored) helps. If the sets are full, each internal node stores $2n$ bits\footnote{Since each set goes both to the left and to the right child at each level}, leading to a total space complexity of $(\sigma - 1)2n$ due to the number of internal nodes and their size. However, for balanced degenerate strings \ref{def:balanced_degenerate_string} (where most sets have one element), space usage improves. Since each set element corresponds to at most one symbol per level, the total sequence length is bounded by set sizes. This translates to a space complexity of $2n log \sigma$ bits across all $log \sigma$ tree levels.
 
 \noindent We can sum this up in the following theorem
 
@@ -155,7 +155,7 @@ The subset wavelet answer subset rank and select queries in logarithmic time $(O
 
 \subsubsection*{Rank for Base-$3$ and Base-$4$ Alphabets}
 
-The subset wavelet tree (SWT) relies on efficiently answering regular rank queries on small alphabet sequences stored within its nodes. At the root node, the sequence uses a base-4 alphabet ($\Sigma = \{0, 1, 2, 3\}$), while all other nodes use a base-3 alphabet ($\Sigma = \{0, 1, 2\}$). \vspace{0.4cm}
+The subset wavelet tree (SWT) relies on efficiently answering regular rank queries on small alphabet sequences stored within its nodes. At the root node, the sequence uses a base-4 alphabet ($\Sigma = \{0, 1, 2, 3\}$), while all other nodes use a base-3 alphabet ($\Sigma = \{0, 1, 2\}$).
 
 \noindent However, the SWT requires a more specific operation than a standard rank query. It needs the sum of two rank queries: $rank(i, \Sigma - 1)$ and either $rank(i, \Sigma[0])$ or $rank(i, \Sigma[1])$. We call these combined operations \emph{rank-pair queries}. Here's how we can express rank-pair queries for base-4
 
@@ -186,15 +186,15 @@ In \cite{SubsetWT} they compare 5 methods that supports \texttt{rank} and \textt
 
 \subsubsection{Wavelet Trees}
 
-In their paper, Alanko et. al acknowledge the wavelet tree (\autoref{sec:wavelet_trees}) as the current go-to method for performing rank queries on sequences with non-binary alphabets. Wavelet trees will serve as a baseline for comparison with the other data structures they will evaluate. \vspace{0.4cm}
+In their paper, Alanko et. al acknowledge the wavelet tree (\autoref{sec:wavelet_trees}) as the current go-to method for performing rank queries on sequences with non-binary alphabets. Wavelet trees will serve as a baseline for comparison with the other data structures they will evaluate.
 
-\noindent We have seen in \autoref{sec:wavelet_trees} that we can implement the wavelet trees in different ways, different choices can influence the trade-off between space usage and query speed. The authors experimented with two options: standard bitvectors (faster but larger, \autoref{sec:wavelet_trees}) and RRR bitvectors (smaller but slower, as explained in \autoref{subsec:compressing_bitvectors}). \vspace{0.4cm}
+\noindent We have seen in \autoref{sec:wavelet_trees} that we can implement the wavelet trees in different ways, different choices can influence the trade-off between space usage and query speed. The authors experimented with two options: standard bitvectors (faster but larger, \autoref{sec:wavelet_trees}) and RRR bitvectors (smaller but slower, as explained in \autoref{subsec:compressing_bitvectors}).
 
-\noindent They specifically used implementations from the Succinct Data Structures Library (SDSL)\footnote{\url{https://github.com/simongog/sdsl-lite}} because they are known to be the fastest available WT implementations\footnote{The SDSL library does not provide an implementation for rank-pairs queries, but they are just the sum of two rank queries, so they can be easily implemented on top of the rank queries.}. \vspace{0.4cm}
+\noindent They specifically used implementations from the Succinct Data Structures Library (SDSL)\footnote{\url{https://github.com/simongog/sdsl-lite}} because they are known to be the fastest available WT implementations\footnote{The SDSL library does not provide an implementation for rank-pairs queries, but they are just the sum of two rank queries, so they can be easily implemented on top of the rank queries.}.
 
-\todo[inline]{I have a lot of doubts about this: why don't use an huffman shaped wavelet tree? Why didn't they try to adapt the wavelet tree to this type of queries?} \vspace{0.4cm}
+\todo[inline]{I have a lot of doubts about this: why don't use an huffman shaped wavelet tree? Why didn't they try to adapt the wavelet tree to this type of queries?}
 
-\todo[inline]{There are multiple possible implementations of the WT in the SDSL (all immutable): Balanced wavelet (wt\_blcd), Balanced wavelet tree for integer alphabets (wt\_int), Wavelet matrix for integer alphabets (wm\_int), Huffman-shaped wavelet tree (wt\_huff), Hu-Tucker-shaped wavelet tree (wt\_hutu), Run-length compressed wavelet tree (wt\_rlmn), Fast select wavelet tree for integer alphabets (wt\_gmr). \vspace{0.4cm}
+\todo[inline]{There are multiple possible implementations of the WT in the SDSL (all immutable): Balanced wavelet (wt\_blcd), Balanced wavelet tree for integer alphabets (wt\_int), Wavelet matrix for integer alphabets (wm\_int), Huffman-shaped wavelet tree (wt\_huff), Hu-Tucker-shaped wavelet tree (wt\_hutu), Run-length compressed wavelet tree (wt\_rlmn), Fast select wavelet tree for integer alphabets (wt\_gmr).
 
     \noindent TODO: Check their code to see which one they used both for the standard and the RRR version.}
 
@@ -227,7 +227,7 @@ The data structure comprises three layers to efficiently store and query the seq
 
 \subsubsection{Sequence Splitting}
 
-The authors propose a novel data structure designed to efficiently represent sequences with skewed distributions of symbols, such as those observed in subset sequences (TODO\todo{add a picture with the distributions}). The key idea is to exploit the dominance of certain symbols (e.g., 1 and 2 in base-4 sequences) by splitting the sequence into multiple components. \vspace{0.4cm}
+The authors propose a novel data structure designed to efficiently represent sequences with skewed distributions of symbols, such as those observed in subset sequences (TODO\todo{add a picture with the distributions}). The key idea is to exploit the dominance of certain symbols (e.g., 1 and 2 in base-4 sequences) by splitting the sequence into multiple components.
 
 \noindent Given a base-4 sequence \(X\) of length \(n\), we use the following components:
 \begin{itemize}
@@ -262,18 +262,18 @@ Answering Rank queries on base-4 sequences, denoted as \(\textrm{rank}_X(i, c)\)
     \textrm{rank}_X(i, 0) & = \textrm{rank}_R(i-p, 0) \\
     \textrm{rank}_X(i, 1) & = \textrm{rank}_L(i-p, 1)
 \end{align}
-\noindent Since there's no second binary vector, the result of the predecessor query directly gives the rank for \(c=2\). \vspace{0.4cm}
+\noindent Since there's no second binary vector, the result of the predecessor query directly gives the rank for \(c=2\).
 
 \noindent On the other hand, with this data structure, \emph{rank-pair} queries can be answered more efficiently than two separate rank queries. This is because the predecessor query, which computes \(p\), needs to be performed only once for both symbols in the query.
 
 
 \subsubsection{Generalized RRR}
 
-For this final method, the authors present a generalization of the RRR entropy compressed bitvector (see \autoref{subsec:rank} and \cite{RRR2002}) to accommodate base-3 and base-4 sequences. While generalizations of RRR exist in the literature \cite{ferragina2007compressed}, this specific adaptation draws inspiration from the work of Navarro and Providel \cite{navarro2012fast}. \vspace{0.4cm}
+For this final method, the authors present a generalization of the RRR entropy compressed bitvector (see \autoref{subsec:rank} and \cite{RRR2002}) to accommodate base-3 and base-4 sequences. While generalizations of RRR exist in the literature \cite{ferragina2007compressed}, this specific adaptation draws inspiration from the work of Navarro and Providel \cite{navarro2012fast}.
 
-\noindent Let \(X\) be a sequence of length \(n\) from a constant-sized alphabet \(\sigma\). To efficiently answer rank queries, we employ a three-level indexing structure similar to the basic binary RRR structure. We divide \(X\) into blocks of size \(b = O(\log n)\) and group them into superblocks of size \(B = O(\log n)\), where \(B\) is a multiple of \(b\). For each superblock, we precompute the counts of all symbols \(\sigma\) up to its starting position, storing these counts using \(O(\log n)\) bits each. For each block, we precompute the counts of all symbols \(\sigma\) within the block, storing them using \(O(\log \log n)\) bits each. The total space required for these precomputed counts is \(O(n \sigma \log \log n / \log n) = o(n)\) since \(\sigma\) is constant. \vspace{0.4cm}
+\noindent Let \(X\) be a sequence of length \(n\) from a constant-sized alphabet \(\sigma\). To efficiently answer rank queries, we employ a three-level indexing structure similar to the basic binary RRR structure. We divide \(X\) into blocks of size \(b = O(\log n)\) and group them into superblocks of size \(B = O(\log n)\), where \(B\) is a multiple of \(b\). For each superblock, we precompute the counts of all symbols \(\sigma\) up to its starting position, storing these counts using \(O(\log n)\) bits each. For each block, we precompute the counts of all symbols \(\sigma\) within the block, storing them using \(O(\log \log n)\) bits each. The total space required for these precomputed counts is \(O(n \sigma \log \log n / \log n) = o(n)\) since \(\sigma\) is constant.
 
-\noindent A rank query \(\textrm{rank}(i, c)\) is then answered by: (i) Looking up the precomputed count of symbol \(c\) up to the start of the superblock containing position \(i\). (ii) Summing the precomputed counts of symbol \(c\) in the blocks preceding index \(i\) within the superblock. (iii) Counting the occurrences of symbol \(c\) in the prefix of length \(p = i \mod b\) within the block containing index \(i\). \vspace{0.4cm}
+\noindent A rank query \(\textrm{rank}(i, c)\) is then answered by: (i) Looking up the precomputed count of symbol \(c\) up to the start of the superblock containing position \(i\). (ii) Summing the precomputed counts of symbol \(c\) in the blocks preceding index \(i\) within the superblock. (iii) Counting the occurrences of symbol \(c\) in the prefix of length \(p = i \mod b\) within the block containing index \(i\).
 
 
 \noindent To determine the symbol count within a block's prefix, additional meta-information is encoded for decoding the block's symbol sequence. Then, we loop to count the occurrences of symbol \(c\) within the prefix of length $i \mod b$. The authors introduce a equivalence relation within all the possibile $\sigma^b$ blocks, such that two blocks are equivalent if and only if they contain tha same multiset of symbols\footnote{A multiset is a generalization of the concept of a set that, unlike a set, allows multiple instances of the same element.}. We can use the equivalence classes to efficiently choose the meta-information to store: each block will store the rank $r$ of the block within the lexicographically sorted list of all the blocks in the same equivalence class.
@@ -282,7 +282,7 @@ For this final method, the authors present a generalization of the RRR entropy c
 
 \noindent The class and the lexicographically rank of the block within the class completely determine the block's content (i.e the sequence of symbols it contains). This means that we can define a function
 $$\textrm{unrank}(r,d_0, \dots, d_{\sigma-1})$$
-that takes as input the lexicographic rank $r$ and the precomputed counts of the symbols in the block and returns the block's content. A naive implementation of this function would require to precompute and store all the possibile answers to the function, similarly to the third layer (the lookup table) of the RRR rank data structure. However, for large values of $b$ this is not feasible. \vspace{0.4cm}
+that takes as input the lexicographic rank $r$ and the precomputed counts of the symbols in the block and returns the block's content. A naive implementation of this function would require to precompute and store all the possibile answers to the function, similarly to the third layer (the lookup table) of the RRR rank data structure. However, for large values of $b$ this is not feasible.
 
 \noindent Given the \emph{multinomial coefficient}
 \begin{equation} \label{eq:multinomial}
@@ -292,9 +292,9 @@ defined so that the value is $0$ if the sum of the $d_i$ is greater than $n$ or 
 \begin{equation} \label{eq:lexrank}
     \textrm{lexrank}(c_0, c_1, \dots, c_{b-1}) = \sum_{i=0}^{b-1} \sum_{j=0}^{c_i -1} \binom{b-1-i}{D_0(i) ~ \dots ~ D_j(i) -1 ~ \dots ~ D_{\sigma-1}(i)}
 \end{equation}
-where $D_k(i)$ is the number of occurrences of the symbol $k$ in the suffix of length $i$ of the block\footnote{$c_i, \dots, c_{b-1}$}. This function can be computed in $O(b \sigma)$ time. The term $-1$ that appears in the choices of the multinomial is there to avoid counting the block itself. \vspace{0.4cm}
+where $D_k(i)$ is the number of occurrences of the symbol $k$ in the suffix of length $i$ of the block\footnote{$c_i, \dots, c_{b-1}$}. This function can be computed in $O(b \sigma)$ time. The term $-1$ that appears in the choices of the multinomial is there to avoid counting the block itself.
 
-\noindent Formula \ref{eq:lexrank} is a process that iterates through the symbols within a block from left to right, computing different ways to choose the remaining symbols in the block using the remaining counts, with the constraint that the complete block must be lexicographically smaller than the current block. The \texttt{unrank} function essentially reverses the \texttt{lexrank} function. This can be done by incrementally adding the multinomial terms in the inner sum until the total surpasses the target rank ($r$). At this point, the current symbol ($j$) is appended to the block's sequence, and the process moves on to the next iteration of the outer sum. \vspace{0.4cm}
+\noindent Formula \ref{eq:lexrank} is a process that iterates through the symbols within a block from left to right, computing different ways to choose the remaining symbols in the block using the remaining counts, with the constraint that the complete block must be lexicographically smaller than the current block. The \texttt{unrank} function essentially reverses the \texttt{lexrank} function. This can be done by incrementally adding the multinomial terms in the inner sum until the total surpasses the target rank ($r$). At this point, the current symbol ($j$) is appended to the block's sequence, and the process moves on to the next iteration of the outer sum.
 
 \noindent Algorithm \ref{alg:base4unrank} provides a pseudocode implementation of this unranking process for a sequence based on a base-4 number system. The function prints the sequence of symbols in the block with rank $r$ among the class of blocks with symbol counts $d_0$, $d_1$, $d_2$, and $d_3$
 
