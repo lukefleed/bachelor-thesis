@@ -1,49 +1,206 @@
 \clearpage
 \section{Integer Coding} \label{sec:integer_coding}
 
-\todo[inline]{TODO: Introduce the following problem: given $S=\{x_1,x_2,\ldots,x_n\}$, where $x_i\in\mathbb{N}$, we want to represent the integers of $S$ as a sequence of bits that are self-delimiting. The goal is to minimize the space occupancy of the representation \cite{ferragina2023pearls}. Add here some examples of where this problem appears in practice \cite{witten1999managing}}
+\noindent This chapter examines methods for representing a sequence of positive integers, $S = \{x_1, x_2, \ldots, x_n\}$, potentially containing repetitions, as a compact sequence of bits \cite{ferragina2023pearls}. The primary objective is to minimize the total bits used. A key requirement is that the resulting binary sequence must be \emph{self-delimiting}: the concatenation of individual integer codes must be unambiguously decodable, allowing a decoder to identify the boundaries between consecutive codes.
+
+\noindent The practical importance of efficient integer coding affects both storage space and processing speed in numerous applications. For example, \emph{search engines} maintain large indexes mapping terms to lists of document identifiers (IDs). These \emph{posting lists} can contain billions of integer IDs. Efficient storage is vital. A common approach involves sorting the IDs and encoding the differences (gaps) between consecutive IDs using variable-length integer codes, assigning shorter codes to smaller, more frequent gaps \cite{ferragina2023pearls, witten1999managing}.
+
+\noindent Another significant application occurs in the final stage of many \emph{data compression algorithms}. Techniques such as LZ77, Move-to-Front (MTF), Run-Length Encoding (RLE), or Burrows-Wheeler Transform (BWT) often generate intermediate outputs as sequences of integers, where smaller values typically appear more frequently. An effective integer coding scheme is then needed to convert this intermediate sequence into a compact final bitstream \cite{ferragina2023pearls}. Similarly, compressing natural language text might involve mapping words or characters to integer token IDs and subsequently compressing the resulting ID sequence using integer codes \cite{ferragina2023pearls}.
+
+\noindent This chapter explores techniques for designing such variable-length, prefix-free binary representations for integer sequences, aiming for maximum space efficiency.
+
 
 \noindent The central concern in this section revolves around formulating an efficient binary representation method for an indefinite sequence of integers. Our objective is to minimize bit usage while ensuring that the encoding remains prefix-free. In simpler terms, we aim to devise a binary format where the codes for individual integers can be concatenated without ambiguity, allowing the decoder to reliably identify the start and end of each integer's representation within the bit stream and thus restore it to its original uncompressed state.
 
 \subsection{Unary Code}
-We begin by examining the unary code, a straightforward encoding method that represents a positive integer $x \geq 1$\footnote{This is not a strict condition, but we will assume it for clarity} using $x$ bits. It represents $x$ as a sequence of $x-1$ zeros followed by a single one. The correctness of this encoding is straightforward to verify: the decoder can identify the end of the integer by detecting the first one in the sequence, and the number of zeros preceding it determines the value of $x$.
+We begin by examining the unary code, a straightforward encoding method that represents a positive integer $x \geq 1$\footnote{This is not a strict condition, but we will assume it for clarity.} using $x$ bits. It represents $x$ as a sequence of $x-1$ zeros followed by a single one, denoted as $U(x)$. The correctness of this encoding is straightforward: the decoder identifies the end of the code upon encountering the first '1', and the value $x$ is simply the total number of bits read.
 
-\noindent This coding method requires $x$ bits to represent the integer $x$, which is way more than the $\lceil\log_2(x)\rceil$ bits needed by a fixed-length binary code. In fact, it is very efficient for small values of $x$ but becomes increasingly inefficient as $x$ grows. This is a direct consequence of \autoref{thm:source_coding_theorem}, which states that the ideal code length $L(c)$ for a symbol $c$ is $-\log_2 P(c)$, where $P(c)$ is the probability of symbol $c$. In the case of the unary code, where we are considering positive integers, the ideal code for $x$ would be $-\log_2 P(x) = -\log_2 2^{-x} = x$ bits. The following theorem formalizes this observation. \cite{ferragina2023pearls}
+\noindent This coding method requires $x$ bits to represent $x$. While simple, this is exponentially longer than the $\lceil\log_2 x \rceil$ bits needed by its standard binary representation $B(x)$. Consequently, unary coding is efficient only for very small values of $x$ and becomes rapidly impractical as $x$ increases. This behavior aligns with the principles of Shannon's source coding theorem (\autoref{thm:source_coding_theorem}), which suggests an ideal code length of $-\log_2 P(x)$ bits for a symbol $x$ with probability $P(x)$. The unary code's length of $x$ bits corresponds precisely to this ideal length if the integers follow the specific probability distribution $P(x) = 2^{-x}$ \cite{ferragina2023pearls}.
 
 \begin{theorem}
-    The unary code of a positive integer $x$ takes $x$ bits, and thus it is optimal for the distribution $P(x)=2^{-x}$.
+    The unary code $U(x)$ of a positive integer $x$ requires $x$ bits, and it is optimal for the geometric distribution $P(x)=2^{-x}$.
 \end{theorem}
 
-\noindent It is important to note that implementing a unary code requires a lot of bit shifts and bitwise operations, which are computationally expensive on modern processors. This makes the unary code impractical for large values of $x$
+\noindent Despite its theoretical optimality for the $P(x)=2^{-x}$ distribution, the unary code faces practical challenges. Its implementation often involves numerous bit shifts or bit-level operations during decoding, which can be relatively slow on modern processors, especially for large $x$.
+
+\begin{figure}[hbtp]
+    \centering
+    \begin{tikzpicture}[node distance=0mm, bit/.style={draw, minimum size=5mm, inner sep=0pt}]
+        \node[bit] (b1) {0};
+        \node[bit, right=of b1] (b2) {0};
+        \node[bit, right=of b2] (b3) {0};
+        \node[bit, right=of b3] (b4) {0};
+        \node[bit, right=of b4] (b5) {1};
+        % \draw [decorate, decoration={brace, amplitude=4pt, raise=4pt}] (b1.north west) -- (b5.north east) node [midway, above=6pt] {$x=5$ bits};
+    \end{tikzpicture}
+    \caption{Unary code $U(5) = \texttt{00001}$. It uses $x=5$ bits, consisting of $x-1=4$ zeros followed by a one.}
+    \label{fig:unary_code_example}
+\end{figure}
+
 
 % ------------------------------------ Elias Codes ------------------------------------
 
 \subsection{Elias Codes}
-First introduced by Levenstein in the 1960s and later refined by Elias \cite{Elias1975} in the 1970s, the $\gamma$ and $\delta$ codes are two of the most popular \emph{universal codes} for integers. The term \emph{universal code} refers to the characteristic of these codes to have fixed-length of $O(\log x)$ for any integer $x$. Compared to the binary code that requires $\lceil\log_2(x+1)\rceil$ bits, the $\gamma$ and $\delta$ codes are just a constant factor away from it, while having the advantage of being prefix-free.
+While unary code is simple, its inefficiency for larger integers motivates the development of \emph{universal codes} like those proposed by Elias \cite{Elias1975}, building upon earlier work by Levenstein. The term universal signifies that the length of the codeword for an integer $x$ grows proportionally to its minimal binary representation, specifically as $O(\log x)$, rather than, for instance, $O(x)$ as in the unary code. Compared to the standard binary code $B(x)$ (which requires $\lceil\log_2 x \rceil$ bits but is not prefix-free), the $\gamma$ and $\delta$ codes are only a constant factor longer but possess the crucial property of being prefix-free.
 
-\paragraph{Gamma Code} The $\gamma$ code represents a positive integer $x$ is divided into two parts: given $|B(x)|$ as the number of bits needed to represent $x$ in binary, the first part is a sequence of $|B(x)| - 1$ zeros followed by the binary representation of $x$. The $\gamma$ code of $x$ is then the concatenation of these two parts, delimited by the first one bit. The decoding process is therefore very simple: the decoder reads the bits until it finds the first one, and the number of zeros preceding it determines the length of the binary representation of $x$. From Shannon's condition of ideal codes (\autoref{thm:source_coding_theorem}), we can see that the $\gamma$ code is optimal for the distribution $P(x)\approx 1/x^2$. \cite{ferragina2023pearls}
-
-
-\begin{theorem}
-    The $\gamma$ code of a positive integer $x$ takes $2\lceil\log_2(x+1)\rceil-1$ bits, and thus it is optimal for the distribution $P(x)=1/x^2$. This is within a factor of two from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code.
-\end{theorem}
-
-\noindent The $\gamma$ code is inefficient due to the large number of zeros that need to be stored in the prefix, that becomes increasingly large as $x$ grows. The $\delta$ code, introduced by Elias in 1975, addresses this issue by using a more efficient prefix.
-
-\paragraph{Delta code} The $\delta$ code is a variation of the $\gamma$ code that uses a more efficient prefix. It represents a positive integer $x$ by first encoding the binary length of $x$ using the $\gamma$ code (we can write it as $\gamma(|B(x)|)$) and then appending the binary representation of $x$ itself. The $\delta$ code is thus the concatenation of these two parts that do not share any bits. The decoding process is similar to the $\gamma$ code: the decoder reads the bits until it finds the first one, and the number of zeros preceding it determines the length of the binary representation of $x$, then we fetch the next $|B(x)|$ bits to get the binary representation of $x$. This code takes $|\gamma(|B(x)|)| + |B(x)|$ = 2$\lceil\log_2(|B(x)| + 1) \rceil - 1 + |B(x)| \approx 2 \log \log x + 1 + \log x$ bits, which is $1 + o(1)$ factor away from the bit length of the fixed-length binary code. \cite{ferragina2023pearls}
+\paragraph{Gamma ($\gamma$) Code} The $\gamma$ code represents a positive integer $x$ by combining information about its magnitude (specifically, the length of its binary representation) with its actual bits. First, determine the length of the standard binary representation of $x$, denoted as $l = \lfloor \log_2 x \rfloor + 1$. The $\gamma$ code, $\gamma(x)$, is formed by concatenating the unary code of this length, $U(l)$, with the $l-1$ least significant bits of $x$ (i.e., $B(x)$ excluding its leading '1' bit, which is implicitly represented by the '1' in $U(l)$).
+The decoding process mirrors this structure: read bits until the terminating '1' of the unary part is found to determine $l$, then read the subsequent $l-1$ bits and prepend a '1' to reconstruct $x$. The total length is $|U(l)| + (l-1) = l + (l-1) = 2l-1 = 2(\lfloor \log_2 x \rfloor + 1) - 1$ bits. From Shannon's condition, it follows that this code is optimal for sources where integer probabilities decay approximately as $P(x) \approx 1/x^2$ \cite{ferragina2023pearls}.
 
 \begin{theorem}
-    The $\delta$ code of $x \geq 0$ takes $1 + \log_2x + 2\log_2 \log_2 x$ bits, and thus it is optimal for the distribution $P(x)\approx1/x(\log x)^2$. This is within a factor of $1 + o(1)$ from the bit length $|B(x)| = \lceil\log_2(x)\rceil$ of the fixed-length binary code. \cite{ferragina2023pearls}
+    The $\gamma$ code of a positive integer $x$ takes $2(\lfloor \log_2 x \rfloor + 1) - 1$ bits. It is optimal for distributions where $P(x) \propto 1/x^2$ and its length is within a factor of two of the length of the standard binary code $B(x)$.
 \end{theorem}
 
-\noindent As for the Unary Code, implementing these codes requires a lot of bit shifts during the decoding process, making them impractical for large values of $x$.
+\begin{figure}[hbtp]
+    \centering
+    \begin{tikzpicture}[
+            node distance=0mm,
+            bit/.style={draw, minimum size=5mm, inner sep=0pt, anchor=west},
+            lbl/.style={font=\footnotesize, text centered}
+        ]
+        % Example: x = 6 -> B(x) = 110, l = 3
+        % Nodes
+        \node[bit] (u1) {0};
+        \node[bit, right=of u1] (u2) {0};
+        \node[bit, right=of u2] (u3) {1};
+        \node[bit, right=of u3] (b1) {1};
+        \node[bit, right=of b1] (b2) {0};
+
+        % Braces and labels above
+        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (u1.south west) -- (u3.south east)
+        % node [midway, below=6pt, lbl] (lengthlbl) {Length part: $U(l=3)$};
+        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (b1.south west) -- (b2.south east)
+        % node [midway, below=6pt, lbl] (valuelbl) {Value part: $l-1$ bits (\texttt{10})};
+
+        % Align labels properly below
+        %\node[below=2pt of lengthlbl] {Unary code of length $l=3$};
+        %\node[below=2pt of valuelbl] {Trailing bits of $x=6=\texttt{110}$};
+    \end{tikzpicture}
+    \caption{Elias $\gamma$ code for $x=6$. Binary $B(6)=\texttt{110}$, length $l=3$. The code consists of $U(3)=\texttt{001}$ followed by the $l-1=2$ trailing bits (\texttt{10}). Result: $\gamma(6)=\texttt{00110}$ (5 bits).}
+    \label{fig:gamma_code_example}
+\end{figure}
+
+\noindent The inefficiency in the $\gamma$ code resides in the unary encoding of the length $l$, which can become long for large $x$. The $\delta$ code addresses this.
+
+\paragraph{Delta ($\delta$) code} The $\delta$ code improves upon $\gamma$ by encoding the length $l = \lfloor \log_2 x \rfloor + 1$ more efficiently using the $\gamma$ code itself. The $\delta$ code, $\delta(x)$, is constructed by first computing $\gamma(l)$, the gamma code of the length $l$. Then, it appends the same $l-1$ least significant bits of $x$ used in $\gamma(x)$ (i.e., $B(x)$ without its leading '1').
+Decoding involves first decoding $\gamma(l)$ to find the length $l$, and then reading the next $l-1$ bits to reconstruct $x$. The total number of bits is $|\gamma(l)| + (l-1) = (2\lfloor \log_2 l \rfloor + 1) + (l-1) = 2\lfloor \log_2 l \rfloor + l$. Asymptotically, this is approximately $\log_2 x + 2\log_2 \log_2 x + O(1)$ bits, which is only marginally longer ($1+o(1)$ factor) than the raw binary representation $B(x)$. This code achieves optimality for distributions where $P(x) \approx 1/(x(\log_2 x)^2)$ \cite{ferragina2023pearls}.
+
+\begin{theorem}
+    The $\delta$ code of a positive integer $x$ takes $2\lfloor \log_2 (\lfloor \log_2 x \rfloor + 1) \rfloor + \lfloor \log_2 x \rfloor + 1$ bits, approximately $\log_2 x + 2\log_2 \log_2 x$. It is optimal for distributions $P(x) \propto 1/(x(\log_2 x)^2)$ and is within a factor $1+o(1)$ of the length of $B(x)$.
+\end{theorem}
+
+\begin{figure}[hbtp]
+    \centering
+    \begin{tikzpicture}[
+            node distance=0mm,
+            bit/.style={draw, minimum size=5mm, inner sep=0pt, anchor=west},
+            lbl/.style={font=\footnotesize, text centered}
+        ]
+        % Example: x = 6 -> B(x) = 110, l = 3. B(l)=B(3)=11. gamma(l)=gamma(3)=011
+        % Nodes
+        \node[bit] (g1) {0};
+        \node[bit, right=of g1] (g2) {1};
+        \node[bit, right=of g2] (g3) {1};
+        \node[bit, right=of g3] (b1) {1};
+        \node[bit, right=of g1] (b2) {0}; % <<-- CORREZIONE: posizionato a destra di b1
+
+        % Braces and labels above
+        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (g1.south west) -- (g3.south east)
+        % node [midway, below=6pt, lbl] (lengthlbl) {Length part: $\gamma(l=3)$};
+        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (b1.south west) -- (b2.south east)
+        % node [midway, below=6pt, lbl] (valuelbl) {Value part: $l-1$ bits (\texttt{10})};
+
+    \end{tikzpicture}
+    \caption{Elias $\delta$ code for $x=6$. $B(6)=\texttt{110}$, length $l=3$. First, encode $l=3$ using $\gamma$: $\gamma(3)=\texttt{011}$. Then, append the $l-1=2$ trailing bits (\texttt{10}). Result: $\delta(6)=\texttt{01110}$ (5 bits).}
+    \label{fig:delta_code_example}
+\end{figure}
+
+\noindent As with the unary code, decoding Elias codes often involves bit shifts, potentially impacting performance for very large integers compared to byte-aligned or word-aligned codes.
 
 \subsection{Rice Code}
+Elias codes offer universality but can be suboptimal if integers cluster around values far from powers of two. Rice codes \cite{rice1979some} (a special case of Golomb codes) address this by introducing a parameter $k > 0$, chosen based on the expected distribution of integers. For an integer $x \ge 1$, the Rice code $R_k(x)$ is determined by calculating the quotient $q = \lfloor (x-1) / 2^k \rfloor$ and the remainder $r = (x-1) \pmod{2^k}$. The code is then formed by concatenating the unary code of the quotient plus one, $U(q+1)$, followed by the remainder $r$ encoded using exactly $k$ bits (padding with leading zeros if necessary), denoted $B_k(r)$. This structure is efficient when integers often yield small quotients $q$, meaning they are close to (specifically, just above) multiples of $2^k$.
 
-Rice codes \cite{rice1979some} are a family of codes parameterized by a positive integer $k$. Their representation is the concatenation of $(1+x/2^k)$ as a unary code and the binary representation of the integer ($x \mod 2^k$). Rice codes are very efficient when the values iof $x$ are close to $2^k$. When dealing with large values of $x$, the efficiency of the $\gamma$ and $\delta$ codes decreases, and Rice codes become a better alternative providing fast compression and decompression.
+\noindent The total number of bits required for $R_k(x)$ is $(q+1) + k$. Rice codes are optimal for geometric distributions $P(x) = p(1-p)^{x-1}$, provided the parameter $k$ is chosen such that $2^k$ is close to the mean or median of the distribution (specifically, optimal when $2^k \approx -\frac{\ln 2}{\ln(1-p)} \approx 0.69 \times \text{mean}(S)$) \cite{ferragina2023pearls, witten1999managing}. The fixed length of the remainder part facilitates faster decoding compared to Elias codes in certain implementations.
 
-\noindent The fist part takes $1 + \lceil\log_2(x/2^k)\rceil$ bits, and the second part takes $k$ bits (since it's in the range $[0,2^k)$). Thus, the first part is encoded in variable-length unary code, and the second part is encoded in fixed-length binary code. The closer the values of $x$ are to $2^k$, the shorter the first part becomes, making the decoding process faster.
+\begin{figure}[hbtp]
+    \centering
+    \begin{tikzpicture}[
+            node distance=0mm,
+            bit/.style={draw, minimum size=5mm, inner sep=0pt, anchor=west},
+            lbl/.style={font=\footnotesize, text centered}
+        ]
+        % Example: x = 13, k = 3. q = 1. r = 4.
+        % Nodes
+        \node[bit] (u1) {0};
+        \node[bit, right=of u1] (u2) {1};
+        \node[bit, right=of u2] (b1) {1};
+        \node[bit, right=of b1] (b2) {0};
+        \node[bit, right=of b2] (b3) {0};
+
+        % % Braces and labels above
+        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (u1.south west) -- (u2.south east)
+        % node [midway, below=6pt, lbl] (quotientlbl) {Quotient part: $U(q+1)$};
+        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (b1.south west) -- (b3.south east)
+        % node [midway, below=6pt, lbl] (remainderlbl) {Remainder part: $B_k(r)$ ($k=3$)};
+
+        % Detailed labels below
+        %\node[below=2pt of quotientlbl] {$q=1 \Rightarrow U(2)=\texttt{01}$};
+        %\node[below=2pt of remainderlbl] {$r=4 \Rightarrow B_3(4)=\texttt{100}$};
+    \end{tikzpicture}
+    \caption{Rice code for $x=13$ with parameter $k=3$. Calculate $q = \lfloor (13-1) / 2^3 \rfloor = 1$ and $r = (13-1) \pmod 8 = 4$. The code is $U(q+1)=U(2)=\texttt{01}$ followed by $r=4$ in $k=3$ bits, $B_3(4)=\texttt{100}$. Result: $R_3(13)=\texttt{01100}$ (5 bits).}
+    \label{fig:rice_code_example}
+\end{figure}
 
 \subsection{Elias-Fano Code}
 
-\todo[inline]{Add a detailed section about Elias Fano since it will be crucial in the implementation of the succinct DAG \cite{ferragina2023pearls}}.
+The Elias-Fano representation, developed independently by Elias \cite{Elias1975} and Fano \cite{Fano1971}, offers an elegant and highly effective method for compressing monotonically increasing sequences of integers. It stands out for achieving near-optimal space usage, often just slightly above the information-theoretic minimum, while crucially supporting efficient random access and search operations. This combination makes it particularly valuable in applications like the storage and querying of inverted indexes in search engines \cite{ferragina2023pearls, EFVenturini2014}.
+
+\paragraph{Representation Structure}
+Consider a strictly increasing sequence $S = \{s_0, s_1, \ldots, s_{n-1}\}$ of $n$ non-negative integers drawn from a universe $[0, u)$, where $u > n$. Each integer $s_i$ requires $b = \lceil \log_2 u \rceil$ bits for its standard binary representation. The Elias-Fano encoding partitions these $b$ bits into two parts, determined by the parameter $l = \lfloor \log_2 (u/n) \rfloor$:
+\begin{itemize}
+    \item The \emph{lower bits}, $L(s_i)$, comprising the $l$ least significant bits of $s_i$.
+    \item The \emph{upper bits}, $H(s_i)$, comprising the $h = b - l$ most significant bits.
+\end{itemize}
+The encoding then materializes these parts into two distinct structures:
+\begin{enumerate}
+    \item \emph{Lower Bits Array ($L$):} This is a sequence formed by the direct concatenation of all lower parts: $L(s_0)L(s_1)\ldots L(s_{n-1})$. Its total size is precisely $n \cdot l = n \lfloor \log_2 (u/n) \rfloor$ bits.
+    \item \emph{Upper Bits Bitvector ($H$):} This bitvector captures the distribution of the upper bits using negated unary codes. For each possible value $j$ (from $0$ to $2^h-1$) that the upper bits can take, let $c_j$ be the count of elements $s_i$ in $S$ such that $H(s_i) = j$. The bitvector $H$ is constructed by concatenating the unary code $1^{c_j}0$ for each $j$. This results in a bitvector of length $n + 2^h$, containing exactly $n$ ones and $2^h$ zeros.
+\end{enumerate}
+The size bound $n + 2^h \le 2n$ typically holds when $n < u/2$, making the total space requirement highly efficient \cite{ferragina2023pearls}.
+
+\begin{theorem}[Elias-Fano Space Complexity {\cite[Thm 11.5]{ferragina2023pearls}, \cite{pibiri_et_al}}] \label{thm:ef_space}
+    The Elias-Fano encoding of a monotonically increasing sequence $S$ of $n$ integers in the range $[0, u)$ requires $n \lfloor \log_2 (u/n) \rfloor + n + 2^h$ bits, where $h = \lceil \log_2 u \rceil - \lfloor \log_2 (u/n) \rfloor$. This is bounded by $n \log_2(u/n) + 2n$ bits, which is less than 2 bits per integer above the information-theoretic minimum. The encoding can be constructed in $O(n)$ time.
+\end{theorem}
+
+% --- Figure Example ---
+\begin{figure}[hbtp]
+    \centering
+    \footnotesize
+    \vspace{0.5em}
+    \begin{tabular}{c | c | c c} \hline
+        $i$ & $s_i$ & $H(s_i)$ (val, 3b) & $L(s_i)$ (val, 2b) \\ \hline
+        0   & 1     & 0 (\texttt{000})   & 1 (\texttt{01})    \\
+        1   & 4     & 1 (\texttt{001})   & 0 (\texttt{00})    \\
+        2   & 7     & 1 (\texttt{001})   & 3 (\texttt{11})    \\
+        3   & 18    & 4 (\texttt{100})   & 2 (\texttt{10})    \\
+        4   & 24    & 6 (\texttt{110})   & 0 (\texttt{00})    \\
+        5   & 26    & 6 (\texttt{110})   & 2 (\texttt{10})    \\
+        6   & 30    & 7 (\texttt{111})   & 2 (\texttt{10})    \\
+        7   & 31    & 7 (\texttt{111})   & 3 (\texttt{11})    \\ \hline
+    \end{tabular} \\
+    \vspace{0.5em}
+    $L = \texttt{0100111000101011}$ ($16$ bits) \\
+    $H = \texttt{1011000100110110}$ ($16$ bits)
+    \caption{Elias-Fano encoding example for the sequence $S = \{1, 4, 7, 18, 24, 26, 30, 31\}$. Parameters: $n=8$, universe $u=32$, total bits $b=5$, lower bits $l=2$, upper bits $h=3$.}
+    \label{fig:ef_code_example}
+\end{figure}
+% --- End Figure ---
+
+\paragraph{Query Operations}
+To enable efficient queries, the upper bits bitvector $H$ is typically augmented with auxiliary data structures supporting \emph{rank} and \emph{select} operations (\autoref{sec:bitvectors}). These structures add only $o(n)$ bits to the total space \cite{ferragina2023pearls}. Given these auxiliary structures, the primary operations can be implemented efficiently:
+
+\emph{Access(i)}: To retrieve the $i$-th element $s_i$ (0-indexed), its lower bits $L(s_i)$ are read directly from $L$ starting at position $i \cdot l$. The upper bits $H(s_i)$ are determined by finding the position $p$ of the $(i+1)$-th '1' in $H$ using $p = \texttt{select}_1(H, i+1)$, and then calculating the number of preceding '0's, which equals $H(s_i) = p - (i+1)$. The element is reconstructed as $s_i = (H(s_i) \ll l) \lor L(s_i)$. This entire process takes $O(1)$ time \cite{pibiri_et_al}.
+
+\emph{Search Operations (Successor/Predecessor)}: Queries like \texttt{Successor(x)} (or \texttt{NextGEQ(x)}), which finds the smallest $s_i \ge x$, are also supported. First, the upper bits $H(x)$ of the query value $x$ are determined. Using $\texttt{select}_0(H, H(x))$ and $\texttt{select}_0(H, H(x)+1)$, we can find the range of indices $[p_1, p_2)$ in $S$ corresponding to elements $s_i$ whose upper bits $H(s_i)$ are equal to $H(x)$. A search (e.g., binary search or a specialized search) is then performed within the corresponding segment $L[p_1 \cdot l \dots p_2 \cdot l - 1]$ of the lower bits array to find the first $L(s_i)$ such that the reconstructed value $s_i$ is $\ge x$. The predecessor query works symmetrically. These search operations typically run in $O(1 + \log(u/n))$ time \cite{pibiri_et_al, ferragina2023pearls}.
+
+% \paragraph{Concluding Remarks}
+% The Elias-Fano code provides a compact representation for monotone integer sequences, achieving space close to the optimum while offering fast $O(1)$ random access and efficient logarithmic-time search capabilities. Its space efficiency is notably dependent on the ratio $u/n$ (the average gap between elements) rather than the specific distribution or clustering pattern of the integers. While this ensures good worst-case performance, it means Elias-Fano does not automatically leverage local data density. This characteristic distinguishes it from distribution-sensitive codes (like interpolative coding) and has motivated the development of techniques like partitioned Elias-Fano \cite{EFVenturini2014} and dynamic Elias-Fano structures \cite{pibiri_et_al} to address scenarios requiring either better compression for clustered data or support for dynamic updates.
