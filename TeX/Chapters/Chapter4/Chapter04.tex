@@ -361,30 +361,18 @@ Using $\textsc{GetValue}$, we can reconstruct the entire $\mathcal{O}$-set for a
     \end{algorithmic}
 \end{algorithm}
 
-
 \subsection{Computing the Rank Query}
 \label{subsec:computing_rank}
 
-With the ability to reconstruct $\mathcal{O}_N$ for any query vertex $N$, we can now implement the Rank query as defined in Definition \ref{def:rank_dag}.
+With the ability to reconstruct $\mathcal{O}_N$ for any query vertex $N$, we can now implement the Rank query as defined in Definition \ref{def:rank_dag}. The process involves generating initial intervals based on $\mathcal{O}_N$ and then merging them into a minimal disjoint set. Algorithm \ref{alg:rank_dag} outlines this process.
 
 \begin{algorithm}
-    \caption{$\mathrm{Rank}_G(N)$: Compute the Rank query for vertex $N$}
-    \label{alg:rank_dag}
-    \small % Reduce font size for the pseudocode
+    \caption{$\textsc{MergeIntervals}(Intervals)$: Merge sorted intervals}
+    \label{alg:merge_intervals}
+    \small
     \begin{algorithmic}[1]
-        \Require Vertex ID $N$.
-        \Ensure A minimal set of disjoint intervals $\mathcal{R}_N$ representing $S_N$.
-        \State $\mathcal{O}_N \gets \textsc{GetOSet}(N)$
-        \State $w_N \gets \mathcal{W}[N]$
-        \State Initialize an empty list $Intervals$
-        \For{each $x \in \mathcal{O}_N$}
-        \State $l \gets \max(0, x - w_N + 1)$
-        \State $r \gets x$
-        \If{$l \le r$} \Comment{Ensure interval is valid}
-        \State Append the interval $[l, r]$ to $Intervals$
-        \EndIf
-        \EndFor
-        \State Sort $Intervals$ based on the start point $l$.
+        \Require A list $Intervals$ of intervals $[l, r]$, sorted by $l$.
+        \Ensure A minimal list $MergedIntervals$ of disjoint intervals covering the same union.
         \State Initialize an empty list $MergedIntervals$
         \If{$Intervals$ is not empty}
         \State $current\_interval \gets Intervals[0]$
@@ -403,4 +391,24 @@ With the ability to reconstruct $\mathcal{O}_N$ for any query vertex $N$, we can
     \end{algorithmic}
 \end{algorithm}
 
-Algorithm \ref{alg:rank_dag} first reconstructs the necessary $\mathcal{O}$-set. It then generates the initial set of intervals based on Definition \ref{def:rank_dag}. Finally, it performs a standard greedy interval merging process: after sorting the intervals by their start points, it iterates through them, merging any interval that overlaps with or is immediately adjacent to the current merged interval. This produces the minimal set of disjoint intervals covering the same set of integers $S_N$.
+\begin{algorithm}
+    \caption{$\mathrm{Rank}_G(N)$: Compute the Rank query for vertex $N$}
+    \label{alg:rank_dag}
+    \small % Reduce font size for the pseudocode
+    \begin{algorithmic}[1]
+        \Require Vertex ID $N$.
+        \Ensure A minimal set of disjoint intervals $\mathcal{R}_N$ representing $S_N$.
+        \State $\mathcal{O}_N \gets \textsc{GetOSet}(N)$
+        \State $w_N \gets \mathcal{W}[N]$
+        \State Initialize an empty list $Intervals$
+        \For{each $x \in \mathcal{O}_N$}
+        \State $l \gets \max(0, x - w_N + 1)$
+        \State $r \gets x$
+        \State Append the interval $[l, r]$ to $Intervals$
+        \EndFor
+        \State $MergedIntervals \gets \textsc{MergeIntervals}(Intervals)$
+        \State \Return $MergedIntervals$
+    \end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{alg:rank_dag} first reconstructs the necessary $\mathcal{O}$-set for the query vertex $N$. It then generates an initial set of potentially overlapping intervals based on Definition \ref{def:rank_dag}. Since these intervals are already sorted by construction, it calls Algorithm \ref{alg:merge_intervals} to perform a standard greedy interval merging process. This subroutine iterates through the sorted intervals, merging any interval that overlaps with or is immediately adjacent to the current merged interval, ultimately producing the minimal set of disjoint intervals $\mathcal{R}_N$ covering the target set $S_N$.
