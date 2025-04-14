@@ -94,7 +94,7 @@ We now establish a relationship between the size of the $\mathcal{O}$-set of a v
     \begin{tikzpicture}[
         node distance=1.5cm and 1cm, % Restored original node distance
         base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
-        root_node/.style={base_node, fill=red, text=white}, % Restored original root node style
+        root_node/.style={base_node, fill=red!60, text=black}, % Pastel red fill
         data_label/.style={font=\tiny\sffamily, text=black}, % Restored original data label style
         edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black} % Restored original edge style
         ]
@@ -303,9 +303,119 @@ This ensures that the length of the offset sequence $\mathcal{I}_v$ ($|\mathcal{
 
 In this way, using the heuristic introduced in \ref{subsec:successor_selection}, we aim to reduce the potential complexity associated with an implicit node $v$. By choosing a successor $\sigma(v)$ whose $\mathcal{O}$-set is as small as possible among the immediate options, we anticipate that the offset sequence $\mathcal{I}_v$, which references data related to $\mathcal{O}_{\sigma(v)}$, might involve smaller indices or exhibit properties more amenable to compression. This is a greedy strategy focused on local optimization.
 
+\subsection*{Example of the Structure}
+\label{subsec:structure_example}
 
+To concretely illustrate the succinct representation, we revisit the DAG introduced in \autoref{fig:dag_example}. Its representation according to the principles outlined in \autoref{subsec:structure_components} is shown in \autoref{fig:succinct_dag_example}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm and 1cm, % Restored original node distance
+        base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
+        root_node/.style={base_node, fill=red!60, text=black}, % Pastel red fill
+        implicit_node/.style={base_node}, % Standard style for implicit nodes
+        explicit_node/.style={base_node, fill=green!40, text=black}, % Style for explicit nodes
+        data_label/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt}, % Adjusted data label style slightly
+        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!30}, % Normal edges faint
+        successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Highlighted successor edge
+        ]
+
+        % Nodes with weights and associated data (Offset I or O-set O)
+        \node[root_node, label={[data_label, red!80!black, yshift=-0.3cm]below:{$\mathcal{I}_0=(0)$}}] (0) at (0, 2) {0};
+        \node[implicit_node, label={[data_label, yshift=-0.3cm]below:{$\mathcal{I}_1=(0)$}}] (1) at (1.5, 0) {1};
+        \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_3=(1)$}}] (3) at (1.5, 4) {3};
+        \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_6=(1, 2)$}}] (6) at (3.5, 1.5) {6};
+        \node[implicit_node, label={[data_label, yshift=-0.3cm]below:{$\mathcal{I}_7=(1)$}}] (7) at (4.5, 0) {7};
+        \node[implicit_node, label={[data_label, xshift=-0.8cm, yshift=0.2cm]above right:{$\mathcal{I}_2=(0, 1, 2)$}}] (2) at (5.5, 4) {2};
+        \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_9=(1, 2, 3)$}}] (9) at (6.5, 2) {9};
+        \node[explicit_node, label={[data_label, align=left, xshift=0.4cm]right:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (8) at (11.5, 3) {8};
+        \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (5) at (9, 0.5) {5};
+        \node[implicit_node, label={[data_label, xshift=-0.9cm, yshift=0.2cm]above right:{$\mathcal{I}_{10}=(1, 5, 6)$}}] (10) at (8.5, 5) {10};
+
+        % Faint original edges
+        \draw [edge_style] (0) -- (1); \draw [edge_style] (0) -- (3);
+        \draw [edge_style] (1) -- (6); \draw [edge_style] (1) -- (7);
+        \draw [edge_style] (3) -- (2); \draw [edge_style] (3) -- (6);
+        \draw [edge_style] (6) -- (2); \draw [edge_style] (6) -- (9);
+        \draw [edge_style] (7) -- (5); \draw [edge_style] (7) -- (9);
+        \draw [edge_style] (2) -- (10);
+        \draw [edge_style] (9) -- (5); \draw [edge_style] (9) -- (8);
+        \draw [edge_style] (10) -- (8);
+        \draw [edge_style] (5) -- (8);
+
+        % Highlighted successor edges
+        \draw [successor_edge] (0) -- (1); \draw [successor_edge] (1) -- (7);
+        \draw [successor_edge] (3) -- (6); \draw [successor_edge] (6) -- (2);
+        \draw [successor_edge] (7) -- (9); \draw [successor_edge] (2) -- (10);
+        \draw [successor_edge] (9) -- (5); \draw [successor_edge] (5) -- (8);
+        \draw [successor_edge] (10) -- (8);
+
+    \end{tikzpicture}
+    \caption{Illustration of the succinct DAG representation for the graph in \autoref{fig:dag_example}. Nodes are colored by type (root is red, implicit is standard black, explicit is green). Labels show the stored data: $\mathcal{O}_v$ for the explicit node (8) and the offset sequence $\mathcal{I}_v$ for implicit nodes. Highlighted blue edges indicate the chosen successor $\sigma(v)$ for each implicit node.}
+    \label{fig:succinct_dag_example}
+\end{figure}
+
+The construction follows these steps. First, nodes are partitioned into explicit ($V_E$) and implicit ($V_I$) sets. Since node 8 is the only sink, $V_E=\{8\}$ (green node). All other nodes are implicit. Second, for each implicit node $v$, a successor $\sigma(v)$ is chosen from its direct successors $Succ(v)$ such that $|\mathcal{O}_{\sigma(v)}|$ is minimized, as per \ref{def:sigma_function}. These successor choices are indicated by the thick blue edges in the figure.
+
+Third, the associated data $\mathcal{D}[v]$ is determined. For the explicit node $v=8$, the complete $\mathcal{O}$-set, $\mathcal{O}_8=\{21, 23, ..., 31\}$, is stored. For every implicit node $v$, the offset sequence $\mathcal{I}_v$ is stored instead. This sequence provides the indices needed to reconstruct $\mathcal{O}_v$ by referring to the $\mathcal{O}$-set of its designated successor, $\mathcal{O}_{\sigma(v)}$, using the rule $x_k = y_{j_k} - w(\sigma(v))$, where $x_k$ is the $k$-th element of $\mathcal{O}_v$ and $y_{j_k}$ is the element at index $j_k = \mathcal{I}_v[k]$ in $\mathcal{O}_{\sigma(v)}$. For example, node 3 has $\sigma(3)=6$. Its $\mathcal{O}$-set is $\mathcal{O}_3=\{3\}$. The successor's weight is $w(6)=6$ and its $\mathcal{O}$-set is $\mathcal{O}_6=\{7, 9\}$. To find $\mathcal{I}_3[0]$, we solve $3 = y_{j_0} - 6$, yielding $y_{j_0}=9$. Since 9 is at index 1 in $\mathcal{O}_6$, we store $\mathcal{I}_3=(1)$. The offset sequences for all other implicit nodes are computed similarly and shown in their labels in \autoref{fig:succinct_dag_example}.
+
+To see how this structure is used in practice, consider the query process to retrieve the value $\mathcal{O}_7[0]$, i.e., the first element of $\mathcal{O}_7$. This corresponds to executing $\textsc{GetValue}(7, 0)$. The operation involves traversing the successor path starting from node 7 until the explicit node 8 is reached, as visualized in \autoref{fig:query_path_node7}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.6cm and 1.1cm, % Base distance, actual positions set via coordinates
+        base_node/.style={circle, draw=black, thick, minimum size=9mm, inner sep=0pt, font=\sffamily},
+        implicit_node/.style={base_node},
+        explicit_node/.style={base_node, fill=green!40, text=black},
+        % Define specific label styles for reuse
+        node_label_above/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, above, yshift=1mm},
+        node_label_below/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, below, yshift=-2mm},
+        node_label_inside/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=0pt, align=center}, % Changed color to match others
+        % Edge labels
+        step_label/.style={font=\sffamily\scriptsize, text=black, above, midway, sloped, yshift=1mm, inner sep=1pt}, % Added inner sep
+        weight_label/.style={font=\sffamily\scriptsize, text=red!80!black, below, midway, sloped, yshift=-1mm, inner sep=1pt}, % Added inner sep
+        annotation/.style={font=\sffamily\tiny, text=black, align=center}, % Consistent annotation style
+        result_label/.style={font=\sffamily\scriptsize\bfseries, text=purple!80},
+        successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Pastel blue
+        ]
+
+        % Nodes involved in the query path with adjusted coordinates and labels to match the image
+        \node[implicit_node, label={[node_label_inside]:{$\mathcal{I}_7=(1)$}}] (N7) at (0,0) {7};
+        \node[implicit_node, label={[node_label_above]:{$\mathcal{I}_9=(1, 2, 3)$}}] (N9) at (3,1.5) {9};
+        \node[implicit_node, label={[node_label_below, yshift=-8mm]:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (N5) at (5.5,-0.5) {5};
+        \node[explicit_node, label={[node_label_above]:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (N8) at (8.5,1.5) {8};
+
+        % % Annotations adjusted based on new node positions to match the image layout
+        \node[annotation, anchor=south] at ([yshift=-0.5cm]N7.south) {index $k=0$, $sum=0$};
+        \node[annotation, anchor=north] at ([yshift=0.8cm]N9.north) {index $k=1$, $sum=9$};
+        \node[annotation, anchor=south] at ([yshift=-0.8cm]N5.south) {index $k=2$, $sum=14$};
+        \node[annotation, anchor=east] at ([xshift=1.6cm, yshift=-0.7cm]N8.east) {index $k=7$, $sum=22$};
+
+        % Successor Edges for the path with sloped labels
+        \draw [successor_edge] (N7) -- node[step_label] {Use $\mathcal{I}_7[0]=\mathbf{1}$}
+        node[weight_label] {$+ w(9)=9$} (N9);
+        \draw [successor_edge] (N9) -- node[step_label] {Use $\mathcal{I}_9[1]=\mathbf{2}$}
+        node[weight_label] {$+ w(5)=5$} (N5);
+        \draw [successor_edge] (N5) -- node[step_label] {Use $\mathcal{I}_5[2]=\mathbf{7}$}
+        node[weight_label] {$+ w(8)=8$} (N8);
+
+        \node[annotation, below=1.1cm of N8, xshift=0.4cm] (Calc) {Retrieve $\mathcal{O}_8[7] = 30$. \\ Final Result = $30 - sum = 30 - 22 = \mathbf{8}$.}; % Slightly adjusted vertical position
+        \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
+
+    \end{tikzpicture}
+    \caption{Visualisation of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$. The path followed is $7 \to 9 \to 5 \to 8$. Offset indices $\mathcal{I}_7[0]=1$, $\mathcal{I}_9[1]=2$, and $\mathcal{I}_5[2]=7$ are used successively. Weights $w(9)=9$, $w(5)=5$, and $w(8)=8$ are accumulated ($sum = 9+5+8=22$). The base value $\mathcal{O}_8[7]=30$ is retrieved from the explicit node, and the final result is $30 - 22 = 8$.}
+    \label{fig:query_path_node7} % Keep the same label if it replaces the previous figure
+\end{figure}
+
+The query trace depicted begins at node 7 with index $k=0$ and an accumulated sum of 0. It follows the successor $\sigma(7)=9$, uses the offset $\mathcal{I}_7[0]=1$ to determine the index for the next step, and adds $w(9)=9$ to the sum. The process continues to node $\sigma(9)=5$, using offset $\mathcal{I}_9[1]=2$ and adding $w(5)=5$ to the sum (now 14). Then it proceeds to node $\sigma(5)=8$, using offset $\mathcal{I}_5[2]=7$ and adding $w(8)=8$ (sum becomes 22). Node 8 is explicit, so the traversal stops. The value at the final index $k=7$ is retrieved from $\mathcal{O}_8$, which is $\mathcal{O}_8[7]=30$. Finally, the accumulated sum is subtracted: $30 - 22 = 8$. This correctly reconstructs the value $\mathcal{O}_7[0]$. This mechanism allows deriving path information for any implicit node by leveraging the explicitly stored data and the chain of offsets and weights.
+
+
+% The next section would typically be the Query Algorithms section
 \section{Query Algorithms}
 \label{sec:query_algorithms}
+
 
 Based on the succinct representation described in \autoref{sec:succinct_dag_representation}, we now detail the algorithms for reconstructing the $\mathcal{O}$-set of a vertex and computing the Rank query. The core idea is to leverage the successor information $\Sigma$ and the associated data $\mathcal{D}$ (either $\mathcal{O}$-sets for explicit nodes or offset sequences $\mathcal{I}$ for implicit nodes) to retrieve path weight information on demand.
 
@@ -412,3 +522,24 @@ With the ability to reconstruct $\mathcal{O}_N$ for any query vertex $N$, we can
 \end{algorithm}
 
 Algorithm \ref{alg:rank_dag} first reconstructs the necessary $\mathcal{O}$-set for the query vertex $N$. It then generates an initial set of potentially overlapping intervals based on Definition \ref{def:rank_dag}. Since these intervals are already sorted by construction, it calls Algorithm \ref{alg:merge_intervals} to perform a standard greedy interval merging process. This subroutine iterates through the sorted intervals, merging any interval that overlaps with or is immediately adjacent to the current merged interval, ultimately producing the minimal set of disjoint intervals $\mathcal{R}_N$ covering the target set $S_N$.
+
+\subsubsection*{Example: Rank Query Computation \label{subsubsec:rank_query_example_node2}}
+
+Let's trace the execution of Algorithm \ref{alg:rank_dag} to compute $\mathrm{Rank}_G(N)$ for the only node with weight $2$, in the representation already shown in \autoref{fig:dag_example} and \autoref{fig:succinct_dag_example}.
+
+First, the algorithm requires the $\mathcal{O}$-set for node 2. It calls $\textsc{GetOSet}(2)$ (Algorithm \ref{alg:get_o_set}), which in turn relies on $\textsc{GetValue}(2, k)$ (Algorithm \ref{alg:get_value}) for $k=0, 1, \dots, |\mathcal{O}_2|-1$. $\textsc{GetValue}$ traverses the successor path determined by $\sigma$. For node 2, the successor path is $2 \to 10 \to 8$. Following this path, applying the stored offset indices $\mathcal{I}_2, \mathcal{I}_{10}$, accumulating weights $w(10)$ and $w(8)$, and finally retrieving the base value from the explicit node $\mathcal{O}_8$, yields the set $\mathcal{O}_2 = \{5, 9, 11\}$.
+
+Next, the weight of the query node is retrieved: $w_N = w(2) = 2$.
+
+The algorithm then proceeds to generate the initial set of intervals. Each element $x$ from $\mathcal{O}_2$ maps to an interval $[\max(0, x - w_2 + 1), x]$:
+\begin{align*}
+    x=5 \quad  & \longrightarrow \quad [\max(0, 5 - 2 + 1), 5] = [4, 5]     \\
+    x=9 \quad  & \longrightarrow \quad [\max(0, 9 - 2 + 1), 9] = [8, 9]     \\
+    x=11 \quad & \longrightarrow \quad [\max(0, 11 - 2 + 1), 11] = [10, 11]
+\end{align*}
+This yields the initial list $Intervals = \{ [4, 5], [8, 9], [10, 11] \}$.
+
+Finally, $\textsc{MergeIntervals}$ (\ref{alg:merge_intervals}) is applied to this sorted list.
+The process starts with $[4, 5]$. The next interval $[8, 9]$ does not overlap or touch $[4, 5]$ (since $8 > 5+1$). Thus, $[4, 5]$ is added to the result set.
+The current interval becomes $[8, 9]$. The next interval is $[10, 11]$. Since $10 \le 9 + 1$, these intervals are merged: the new current interval becomes $[8, \max(9, 11)] = [8, 11]$.
+As there are no more intervals, the last current interval $[8, 11]$ is added to the result set. The final result returned by $\mathrm{Rank}_G(2)$ is the minimal set of disjoint intervals $\mathcal{R}_2 = \{ [4, 5], [8, 11] \}$
