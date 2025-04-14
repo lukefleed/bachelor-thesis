@@ -1,11 +1,11 @@
 \section{Rank and Select on Degenerate Strings}
-\label{sec:degenerate_strings_combined_alt} % Changed label
+\label{sec:degenerate_strings} % Changed label
 
 The concepts of \Rank{} and \Select{} queries, fundamental tools in string processing and succinct data structures as explored earlier in this chapter (\autoref{sec:rank_select_bitvectors_alt}, \autoref{sec:wavelet_trees_alt}), can be extended to the domain of \emph{degenerate strings}. This representation is often used to model uncertainty or variability in sequences, particularly in biological contexts.
 
 Recall that a standard \emph{string} $S$ of length $n$ over a finite non-empty alphabet $\Sigma$ is a sequence $S = s_1 s_2 \dots s_n$ where each $s_i \in \Sigma$. A degenerate string generalizes this:
 
-\begin{definition}[Degenerate String {\cite[cf.][]{fischer1974string}}] \label{def:degenerate_string_combined_alt}
+\begin{definition}[Degenerate String {\cite[cf.][]{fischer1974string}}] \label{def:degenerate_string}
     A \emph{degenerate string} is a sequence $X = X_1 X_2 \dots X_n$, where each $X_i$ is a subset of the alphabet $\Sigma$ (i.e., $X_i \subseteq \Sigma$). The value $n$ is termed the \emph{length} of $X$. The \emph{size} of $X$, denoted by $N$, is defined as $N = \sum_{i=1}^{n} |X_i|$. We denote the number of empty sets ($\emptyset$) among $X_1, \dots, X_n$ by $n_0$.
 \end{definition}
 
@@ -13,7 +13,7 @@ Degenerate strings were introduced by Fischer and Paterson \cite{fischer1974stri
 
 Alanko et al. \cite{SubsetWT} introduced the counterparts of rank and select for degenerate strings:
 
-\begin{definition}[Subset Rank and Select {\cite{SubsetWT}}] \label{def:subset_rank_select_combined_alt}
+\begin{definition}[Subset Rank and Select {\cite{SubsetWT}}] \label{def:subset_rank_select}
     Given a degenerate string $X = X_1 \dots X_n$ over alphabet $\Sigma$, a character $c \in \Sigma$, an index $i \in \{1, \dots, n\}$, and a rank $j \in \mathbb{N}^+$, we define:
     \begin{itemize}
         \item $\Drank_X(i, c)$: Returns the number of sets among the first $i$ sets $X_1, \dots, X_i$ that contain the symbol $c$. Formally, $|\{k \mid 1 \le k \le i \text{ and } c \in X_k\}|$.
@@ -35,7 +35,7 @@ A naive solution involves storing a bitvector $B_c$ of length $n$ for each $c \i
 
 \subsection{The Subset Wavelet Tree Approach}
 
-To address the space issue, Alanko et al. \cite{SubsetWT} introduced the \emph{Subset Wavelet Tree (SWT)}, generalizing the standard Wavelet Tree (\autoref{sec:wavelet_trees_alt}) to degenerate strings.
+To address the space issue, Alanko et al. \cite{SubsetWT} introduced the \emph{Subset Wavelet Tree (SWT)}, generalizing the standard Wavelet Tree (\autoref{sec:wavelet_trees}) to degenerate strings.
 
 \paragraph{Structure} The SWT is a balanced binary tree over $\Sigma$. Each node $v$ represents an alphabet partition $A_v$ (root is $\Sigma$), with children representing halves of $A_v$. A sequence $Q_v$ at node $v$ contains subsets $X_k$ from the original string that intersect with $A_v$ (plus empty sets at the root). Each node $v$ stores two bitvectors, $L_v$ and $R_v$, of length $|Q_v|$, preprocessed for rank/select:
 \begin{itemize}
@@ -45,14 +45,14 @@ To address the space issue, Alanko et al. \cite{SubsetWT} introduced the \emph{S
 Often, $L_v$ and $R_v$ are combined into a base-4/base-3 sequence requiring specialized rank support.
 
 \paragraph{Queries}
-$\Drank_X(i, c)$ is answered by traversing from the root to the leaf for $c$. At node $v$, if $c$ is in the left partition, update $i \leftarrow \Rank_{L_v}(i, 1)$ and go left; otherwise, update $i \leftarrow \Rank_{R_v}(i, 1)$ and go right. The final $i$ is the result (Algorithm~\ref{alg:subset-rank-SWT_combined_alt}).
+$\Drank_X(i, c)$ is answered by traversing from the root to the leaf for $c$. At node $v$, if $c$ is in the left partition, update $i \leftarrow \Rank_{L_v}(i, 1)$ and go left; otherwise, update $i \leftarrow \Rank_{R_v}(i, 1)$ and go right. The final $i$ is the result (Algorithm~\ref{alg:subset-rank-SWT}).
 
-$\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the root. Moving from child $v$ to parent $u$, if $v$ is the left child, update $j \leftarrow \Select_{L_u}(j, 1)$; otherwise, update $j \leftarrow \Select_{R_u}(j, 1)$. The final $j$ is the result (Algorithm~\ref{alg:subset-select-SWT_combined_alt}).
+$\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the root. Moving from child $v$ to parent $u$, if $v$ is the left child, update $j \leftarrow \Select_{L_u}(j, 1)$; otherwise, update $j \leftarrow \Select_{R_u}(j, 1)$. The final $j$ is the result (Algorithm~\ref{alg:subset-select-SWT}).
 
 
 \begin{algorithm}[hbtp]
     \caption{Subset-Rank Query using SWT {\cite[cf.][]{SubsetWT}}}
-    \label{alg:subset-rank-SWT_combined_alt}
+    \label{alg:subset-rank-SWT}
     \begin{algorithmic}[1] % Using algorithmic environment
         \Require Character $c$ from $[1, \sigma]$, index $i$
         \Ensure The number of subsets $X_k$ such that $k \leq i$ and $c \in X_k$
@@ -78,7 +78,7 @@ $\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the roo
 
 \begin{algorithm}[hbtp]
     \caption{Subset-Select Query using SWT {\cite[cf.][]{SubsetWT}}}
-    \label{alg:subset-select-SWT_combined_alt}
+    \label{alg:subset-select-SWT}
     \begin{algorithmic}[1] % Using algorithmic environment
         \Require Character $c$ from $[1, \sigma]$, rank $j$
         \Ensure The index $k$ such that $X_k$ is the $j$-th set containing $c$
@@ -100,14 +100,14 @@ $\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the roo
 
 \paragraph{Complexity} With constant-time rank/select on node bitvectors, SWT queries take $O(\log \sigma)$ time. The general space complexity is $2n(\sigma - 1) + o(n\sigma)$ bits. For \emph{balanced} degenerate strings ($n=N$), this improves.
 
-\begin{theorem}[SWT Space Complexity for Balanced Strings {\cite{SubsetWT}}] \label{thm:swt_space_balanced_combined_alt}
+\begin{theorem}[SWT Space Complexity for Balanced Strings {\cite{SubsetWT}}] \label{thm:swt_space_balanced}
     The subset wavelet tree of a balanced degenerate string takes $2n \log \sigma + o(n \log \sigma)$ bits of space and supports $\Drank$ and $\Dselect$ queries in $O(\log \sigma)$ time.
 \end{theorem}
 The $o(n \log \sigma)$ term covers the overhead for rank/select structures on the node bitvectors. Practical performance hinges on efficient rank (especially rank-pair queries \cite{SubsetWT}) on the internal base-3/4 sequences.
 
 
 \subsection{Improved Reductions and Bounds}
-\label{sec:degenerate_string_better_combined_alt}
+\label{sec:degenerate_string_better}
 
 While the SWT offered a valuable first step, Bille et al. \cite{bille2023rank} revisited the subset rank-select problem, achieving significant theoretical and practical advances by focusing on reductions to standard rank-select operations on regular strings.
 
