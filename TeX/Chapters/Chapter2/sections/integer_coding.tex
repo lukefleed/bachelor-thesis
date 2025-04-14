@@ -3,7 +3,7 @@
 
 \noindent This chapter examines methods for representing a sequence of positive integers, $S = \{x_1, x_2, \ldots, x_n\}$, potentially containing repetitions, as a compact sequence of bits \cite{ferragina2023pearls}. The primary objective is to minimize the total bits used. A key requirement is that the resulting binary sequence must be \emph{self-delimiting}: the concatenation of individual integer codes must be unambiguously decodable, allowing a decoder to identify the boundaries between consecutive codes.
 
-\noindent The practical importance of efficient integer coding affects both storage space and processing speed in numerous applications. For example, \emph{search engines} maintain large indexes mapping terms to lists of document identifiers (IDs). These \emph{posting lists} can contain billions of integer IDs. Efficient storage is vital. A common approach involves sorting the IDs and encoding the differences (gaps) between consecutive IDs using variable-length integer codes, assigning shorter codes to smaller, more frequent gaps \cite{ferragina2023pearls, witten1999managing}.
+\noindent The practical importance of efficient integer coding affects both storage space and processing speed in numerous applications. For example, \emph{search engines} maintain large indexes mapping terms to lists of document identifiers (IDs). These \emph{posting lists} can contain billions of integer IDs. Efficient storage is vital. A common approach involves sorting the IDs and encoding the differences (gaps) between consecutive IDs using variable-length integer codes, assigning shorter codes to smaller, more frequent gaps \cite{ferragina2023pearls, witten1999managing}. The engineering considerations for building practical data structures based on these principles, such as providing random access capabilities, are discussed in detail in \autoref{app:compressed_intvec_engineering}, which describes a library developed as part of this work.
 
 \noindent Another significant application occurs in the final stage of many \emph{data compression algorithms}. Techniques such as LZ77, Move-to-Front (MTF), Run-Length Encoding (RLE), or Burrows-Wheeler Transform (BWT) often generate intermediate outputs as sequences of integers, where smaller values typically appear more frequently. An effective integer coding scheme is then needed to convert this intermediate sequence into a compact final bitstream \cite{ferragina2023pearls}. Similarly, compressing natural language text might involve mapping words or characters to integer token IDs and subsequently compressing the resulting ID sequence using integer codes \cite{ferragina2023pearls}.
 
@@ -57,23 +57,11 @@ The decoding process mirrors this structure: read bits until the terminating '1'
             bit/.style={draw, minimum size=5mm, inner sep=0pt, anchor=west},
             lbl/.style={font=\footnotesize, text centered}
         ]
-        % Example: x = 6 -> B(x) = 110, l = 3
-        % Nodes
         \node[bit] (u1) {0};
         \node[bit, right=of u1] (u2) {0};
         \node[bit, right=of u2] (u3) {1};
         \node[bit, right=of u3] (b1) {1};
         \node[bit, right=of b1] (b2) {0};
-
-        % Braces and labels above
-        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (u1.south west) -- (u3.south east)
-        % node [midway, below=6pt, lbl] (lengthlbl) {Length part: $U(l=3)$};
-        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (b1.south west) -- (b2.south east)
-        % node [midway, below=6pt, lbl] (valuelbl) {Value part: $l-1$ bits (\texttt{10})};
-
-        % Align labels properly below
-        %\node[below=2pt of lengthlbl] {Unary code of length $l=3$};
-        %\node[below=2pt of valuelbl] {Trailing bits of $x=6=\texttt{110}$};
     \end{tikzpicture}
     \caption{Elias $\gamma$ code for $x=6$. Binary $B(6)=\texttt{110}$, length $l=3$. The code consists of $U(3)=\texttt{001}$ followed by the $l-1=2$ trailing bits (\texttt{10}). Result: $\gamma(6)=\texttt{00110}$ (5 bits).}
     \label{fig:gamma_code_example}
@@ -128,54 +116,49 @@ Elias codes offer universality but can be suboptimal if integers cluster around 
             bit/.style={draw, minimum size=5mm, inner sep=0pt, anchor=west},
             lbl/.style={font=\footnotesize, text centered}
         ]
-        % Example: x = 13, k = 3. q = 1. r = 4.
-        % Nodes
         \node[bit] (u1) {0};
         \node[bit, right=of u1] (u2) {1};
         \node[bit, right=of u2] (b1) {1};
         \node[bit, right=of b1] (b2) {0};
         \node[bit, right=of b2] (b3) {0};
-
-        % % Braces and labels above
-        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (u1.south west) -- (u2.south east)
-        % node [midway, below=6pt, lbl] (quotientlbl) {Quotient part: $U(q+1)$};
-        % \draw [decorate, decoration={brace, amplitude=4pt, mirror, raise=4pt}] (b1.south west) -- (b3.south east)
-        % node [midway, below=6pt, lbl] (remainderlbl) {Remainder part: $B_k(r)$ ($k=3$)};
-
-        % Detailed labels below
-        %\node[below=2pt of quotientlbl] {$q=1 \Rightarrow U(2)=\texttt{01}$};
-        %\node[below=2pt of remainderlbl] {$r=4 \Rightarrow B_3(4)=\texttt{100}$};
     \end{tikzpicture}
     \caption{Rice code for $x=13$ with parameter $k=3$. Calculate $q = \lfloor (13-1) / 2^3 \rfloor = 1$ and $r = (13-1) \pmod 8 = 4$. The code is $U(q+1)=U(2)=\texttt{01}$ followed by $r=4$ in $k=3$ bits, $B_3(4)=\texttt{100}$. Result: $R_3(13)=\texttt{01100}$ (5 bits).}
     \label{fig:rice_code_example}
+
 \end{figure}
 
 \subsection{Elias-Fano Code}
 
-The Elias-Fano representation, developed independently by Elias \cite{Elias1975} and Fano \cite{Fano1971}, offers an elegant and highly effective method for compressing monotonically increasing sequences of integers. It stands out for achieving near-optimal space usage, often just slightly above the information-theoretic minimum, while crucially supporting efficient random access and search operations. This combination makes it particularly valuable in applications like the storage and querying of inverted indexes in search engines \cite{ferragina2023pearls, EFVenturini2014}.
+The Elias-Fano representation, conceived independently by Peter Elias \cite{Elias1975} and Robert M. Fano \cite{Fano1971}, provides an elegant and practically effective method for compressing monotonically increasing sequences of integers. A key advantage of this technique is its ability to achieve near-optimal space occupancy, often requiring only a small overhead above the information-theoretic minimum, while simultaneously supporting efficient random access and search operations directly on the compressed form \cite{ferragina2023pearls, pibiri_et_al}. This makes it highly suitable for applications such as inverted index compression in modern search engines \cite{vigna2013quasi, EFVenturini2014}.
 
 \paragraph{Representation Structure}
-Consider a strictly increasing sequence $S = \{s_0, s_1, \ldots, s_{n-1}\}$ of $n$ non-negative integers drawn from a universe $[0, u)$, where $u > n$. Each integer $s_i$ requires $b = \lceil \log_2 u \rceil$ bits for its standard binary representation. The Elias-Fano encoding partitions these $b$ bits into two parts, determined by the parameter $l = \lfloor \log_2 (u/n) \rfloor$:
-\begin{itemize}
-    \item The \emph{lower bits}, $L(s_i)$, comprising the $l$ least significant bits of $s_i$.
-    \item The \emph{upper bits}, $H(s_i)$, comprising the $h = b - l$ most significant bits.
-\end{itemize}
-The encoding then materializes these parts into two distinct structures:
-\begin{enumerate}
-    \item \emph{Lower Bits Array ($L$):} This is a sequence formed by the direct concatenation of all lower parts: $L(s_0)L(s_1)\ldots L(s_{n-1})$. Its total size is precisely $n \cdot l = n \lfloor \log_2 (u/n) \rfloor$ bits.
-    \item \emph{Upper Bits Bitvector ($H$):} This bitvector captures the distribution of the upper bits using negated unary codes. For each possible value $j$ (from $0$ to $2^h-1$) that the upper bits can take, let $c_j$ be the count of elements $s_i$ in $S$ such that $H(s_i) = j$. The bitvector $H$ is constructed by concatenating the unary code $1^{c_j}0$ for each $j$. This results in a bitvector of length $n + 2^h$, containing exactly $n$ ones and $2^h$ zeros.
-\end{enumerate}
-The size bound $n + 2^h \le 2n$ typically holds when $n < u/2$, making the total space requirement highly efficient \cite{ferragina2023pearls}.
+Let's consider a sequence of $n$ non-negative increasing integers:
 
-\begin{theorem}[Elias-Fano Space Complexity {\cite[Thm 11.5]{ferragina2023pearls}, \cite{pibiri_et_al}}] \label{thm:ef_space}
-    The Elias-Fano encoding of a monotonically increasing sequence $S$ of $n$ integers in the range $[0, u)$ requires $n \lfloor \log_2 (u/n) \rfloor + n + 2^h$ bits, where $h = \lceil \log_2 u \rceil - \lfloor \log_2 (u/n) \rfloor$. This is bounded by $n \log_2(u/n) + 2n$ bits, which is less than 2 bits per integer above the information-theoretic minimum. The encoding can be constructed in $O(n)$ time.
+$$S = \{s_0, s_1, \ldots, s_{n-1}\}$$
+
+where $0 \le s_0 < s_1 < \ldots < s_{n-1} < u$. The universe size is $u$, and we typically assume $u > n$. Each integer $s_i$ can be represented using $b = \lceil \log_2 u \rceil$ bits. The Elias-Fano encoding strategy involves partitioning these $b$ bits into two segments, based on a parameter $l$. The choice $l = \lfloor \log_2 (u/n) \rfloor$ minimizes the total space requirement \cite{Elias1975, ferragina2023pearls} (if $u \le n$, we set $l=0$). The two parts are:
+\begin{itemize}
+    \item The \emph{lower bits}, $L(s_i)$, consisting of the $l$ least significant bits of $s_i$.
+    \item The \emph{upper bits}, $H(s_i)$, consisting of the remaining $h = b - l$ most significant bits.
+\end{itemize}
+The representation then comprises two main components:
+\begin{enumerate}
+    \item \emph{Lower Bits Array ($L$):} This array is formed by concatenating the $l$-bit lower parts of all integers in the sequence: $L = L(s_0)L(s_1) \ldots L(s_{n-1})$. The total size of this array is exactly $n \cdot l$ bits.
+    \item \emph{Upper Bits Bitvector ($H$):} This bitvector encodes the distribution of the upper bits. For each possible value $j$ (from $0$ to $2^h-1$) that the upper bits can assume, let $c_j$ be the number of elements $s_i$ in $S$ for which $H(s_i) = j$. The bitvector $H$ is constructed by concatenating, for $j = 0, 1, \ldots, 2^h-1$, a sequence of $c_j$ ones followed by a single zero ($1^{c_j}0$). This structure results in a bitvector of length exactly $n + 2^h$, containing $n$ ones (one for each element in $S$) and $2^h$ zeros (one acting as a delimiter for each possible upper bit value).
+\end{enumerate}
+The space bound $n + 2^h \le 2n$ holds if $2^h \le n$, which corresponds to $u/n \le n$. When $u/n$ is small (dense sequences), $l$ is small and $h$ is large; when $u/n$ is large (sparse sequences), $l$ is large and $h$ is small.
+
+% --- Theorem Environment ---
+\begin{theorem}[Elias-Fano Space Complexity {\cite[Thm 11.5]{ferragina2023pearls}, \cite{pibiri_et_al}}] \label{thm:ef_space_revised}
+    The Elias-Fano encoding of a strictly increasing sequence $S$ of $n$ integers in the range $[0, u)$ requires $n \lfloor \log_2 (u/n) \rfloor + n + 2^h$ bits, where $h = \lceil \log_2 u \rceil - \lfloor \log_2 (u/n) \rfloor$. This is upper bounded by $n \log_2(u/n) + 2n$ bits, which is provably less than 2 bits per integer above the information-theoretic lower bound. The representation can be constructed in $O(n)$ time.
 \end{theorem}
 
-% --- Figure Example ---
-\begin{figure}[hbtp]
+Figure \ref{fig:ef_code_example_revised} illustrates the Elias-Fano encoding for the sequence $S = \{1, 4, 7, 18, 24, 26, 30, 31\}$. In this example, we have $n=8$ integers in the universe $u=32$. The total number of bits needed to represent any number in the universe is $b=\lceil \log_2 32 \rceil = 5$. Since $u/n = 32/8 = 4$, the number of lower bits is $l = \lfloor \log_2 4 \rfloor = 2$, and the number of upper bits is $h=b-l=5-2=3$. The lower bits array $L$ is formed by concatenating the $l=2$ least significant bits of each $s_i$. The upper bits bitvector $H$ is formed by counting the occurrences $c_j$ of each upper bit value $j \in [0, 2^h-1)$ and concatenating $1^{c_j}0$ for each $j$. For instance, $H(s_0)=0$ occurs once ($c_0=1$), $H(s_1)=H(s_2)=1$ occurs twice ($c_1=2$), $H=2$ and $H=3$ never occur ($c_2=0, c_3=0$), $H(s_3)=4$ occurs once ($c_4=1$), $H=5$ never occurs ($c_5=0$), $H(s_4)=H(s_5)=6$ occurs twice ($c_6=2$), and $H(s_6)=H(s_7)=7$ occurs twice ($c_7=2$). Concatenating $1^10$ (for $H=0$), $1^20$ (for $H=1$), $1^00$ (for $H=2$), $1^00$ (for $H=3$), $1^10$ (for $H=4$), $1^00$ (for $H=5$), $1^20$ (for $H=6$), and $1^20$ (for $H=7$) yields the final bitvector $H$.
+
+% --- Figure Environment ---
+\begin{figure}[hbtp] % Use [htbp] for placement suggestion: here, top, bottom, page
     \centering
-    \footnotesize
-    \vspace{0.5em}
+    \footnotesize % Make font smaller for the table
     \begin{tabular}{c | c | c c} \hline
         $i$ & $s_i$ & $H(s_i)$ (val, 3b) & $L(s_i)$ (val, 2b) \\ \hline
         0   & 1     & 0 (\texttt{000})   & 1 (\texttt{01})    \\
@@ -186,21 +169,34 @@ The size bound $n + 2^h \le 2n$ typically holds when $n < u/2$, making the total
         5   & 26    & 6 (\texttt{110})   & 2 (\texttt{10})    \\
         6   & 30    & 7 (\texttt{111})   & 2 (\texttt{10})    \\
         7   & 31    & 7 (\texttt{111})   & 3 (\texttt{11})    \\ \hline
-    \end{tabular} \\
-    \vspace{0.5em}
-    $L = \texttt{0100111000101011}$ ($16$ bits) \\
-    $H = \texttt{1011000100110110}$ ($16$ bits)
-    \caption{Elias-Fano encoding example for the sequence $S = \{1, 4, 7, 18, 24, 26, 30, 31\}$. Parameters: $n=8$, universe $u=32$, total bits $b=5$, lower bits $l=2$, upper bits $h=3$.}
-    \label{fig:ef_code_example}
+    \end{tabular} \\ % Use \\ for line break after tabular
+    \vspace{0.5em} % Add some vertical space
+    $L = \texttt{0100111000101011}$ ($n \cdot l = 8 \times 2 = 16$ bits) \\
+    $H = \texttt{1011000100110110}$ ($n + 2^h = 8 + 2^3 = 16$ bits)
+    \caption[Elias-Fano encoding example]{Elias-Fano encoding example for the sequence $S = \{1, 4, 7, 18, 24, 26, 30, 31\}$ with parameters $n=8$, $u=32$, $l=2$, $h=3$. The table shows the decomposition of each $s_i$ into its upper $H(s_i)$ and lower $L(s_i)$ bits. Below the table are the resulting concatenated lower bits array $L$ and the upper bits bitvector $H$.}
+    \label{fig:ef_code_example_revised} % Ensure label is unique
 \end{figure}
-% --- End Figure ---
 
 \paragraph{Query Operations}
-To enable efficient queries, the upper bits bitvector $H$ is typically augmented with auxiliary data structures supporting \emph{rank} and \emph{select} operations (\autoref{sec:bitvectors}). These structures add only $o(n)$ bits to the total space \cite{ferragina2023pearls}. Given these auxiliary structures, the primary operations can be implemented efficiently:
+A significant advantage of the Elias-Fano representation is its support for direct queries on the compressed data. This requires augmenting the upper bits bitvector $H$ with auxiliary data structures that enable constant-time calculation of \emph{rank} and \emph{select} queries (see Section~\ref{sec:bitvectors} for details). These structures typically add a $o(n)$ bits to the overall space complexity. With these in place, the core operations are:
 
-\emph{Access(i)}: To retrieve the $i$-th element $s_i$ (0-indexed), its lower bits $L(s_i)$ are read directly from $L$ starting at position $i \cdot l$. The upper bits $H(s_i)$ are determined by finding the position $p$ of the $(i+1)$-th '1' in $H$ using $p = \texttt{select}_1(H, i+1)$, and then calculating the number of preceding '0's, which equals $H(s_i) = p - (i+1)$. The element is reconstructed as $s_i = (H(s_i) \ll l) \lor L(s_i)$. This entire process takes $O(1)$ time \cite{pibiri_et_al}.
+\emph{Access(i)}: This operation retrieves the $i$-th element $s_i$ (using 0-based indexing for $i$, $0 \le i < n$).
+\begin{enumerate}
+    \item The lower $l$ bits, $L(s_i)$, are directly read from the array $L$ starting at bit position $i \cdot l$.
+    \item The position $p$ in $H$ corresponding to the end of the unary code for $s_i$ is found using $p = \texttt{select}_1(H, i+1)$. The $\texttt{select}_1$ operation finds the position of the $(i+1)$-th bit set to $1$.
+    \item The value of the upper $h$ bits, $H(s_i)$, is determined by counting the number of preceding zeros in $H$ up to position $p$. This count is precisely $H(s_i) = p - (i+1)$, as there are $i+1$ ones and $H(s_i)$ zeros up to that point. Alternatively, $H(s_i) = \texttt{rank}_0(H, p)$.
+    \item The original integer is reconstructed by combining the upper and lower parts: $s_i = (H(s_i) \ll l) \lor L(s_i)$, where $\ll$ denotes the bitwise left shift and $\lor$ denotes the bitwise OR.
+\end{enumerate}
+Since reading from $L$ and performing rank/select on $H$ take constant time, \emph{Access(i)} operates in $O(1)$ time \cite{pibiri_et_al}.
 
-\emph{Search Operations (Successor/Predecessor)}: Queries like \texttt{Successor(x)} (or \texttt{NextGEQ(x)}), which finds the smallest $s_i \ge x$, are also supported. First, the upper bits $H(x)$ of the query value $x$ are determined. Using $\texttt{select}_0(H, H(x))$ and $\texttt{select}_0(H, H(x)+1)$, we can find the range of indices $[p_1, p_2)$ in $S$ corresponding to elements $s_i$ whose upper bits $H(s_i)$ are equal to $H(x)$. A search (e.g., binary search or a specialized search) is then performed within the corresponding segment $L[p_1 \cdot l \dots p_2 \cdot l - 1]$ of the lower bits array to find the first $L(s_i)$ such that the reconstructed value $s_i$ is $\ge x$. The predecessor query works symmetrically. These search operations typically run in $O(1 + \log(u/n))$ time \cite{pibiri_et_al, ferragina2023pearls}.
+\emph{Successor(x)} (or \emph{NextGEQ(x)}): This operation finds the smallest element $s_i$ in $S$ such that $s_i \ge x$, given a query value $x \in [0, u)$.
+\begin{enumerate}
+    \item Determine the upper $h$ bits $H(x)$ and lower $l$ bits $L(x)$ of the query value $x$.
+    \item Identify the range of indices $[p_1, p_2)$ in $S$ corresponding to elements whose upper bits are equal to $H(x)$. The starting index $p_1$ is the number of elements in $S$ with upper bits strictly less than $H(x)$. This can be found by locating the $H(x)$-th zero in $H$ using $pos_0 = \texttt{select}_0(H, H(x)+1)$ (using 1-based index for select); then $p_1 = pos_0 - H(x)$. The ending index $p_2$ (exclusive) is similarly found using the $(H(x)+1)$-th zero: $pos'_0 = \texttt{select}_0(H, H(x)+1+1)$; then $p_2 = pos'_0 - (H(x)+1)$.
+    \item Perform a search (e.g., binary search, or linear scan if $p_2 - p_1$ is small) over the lower bits $L[p_1 \cdot l \dots p_2 \cdot l - 1]$. The goal is to find the smallest index $k \in [p_1, p_2)$ such that the reconstructed value $(H(x) \ll l) \lor L(s_k)$ is greater than or equal to $x$.
+    \item If such a $k$ is found within the range $[p_1, p_2)$, then $s_k$ is the successor.
+    \item If no such element exists in the range (i.e., all elements with upper bits $H(x)$ are smaller than $x$), the successor must be the first element with upper bits greater than $H(x)$. This element is simply $s_{p_2}$, which can be retrieved using \emph{Access($p_2$)} (if $p_2 < n$).
+\end{enumerate}
+The dominant cost is the search over the lower bits. Since there can be up to roughly $u/n$ elements sharing the same upper bits in the worst case, the search step takes $O(\log(u/n))$ time using binary search. The select operations take $O(1)$ time. Thus, \emph{Successor(x)} takes $O(1 + \log(u/n))$ time \cite{pibiri_et_al, ferragina2023pearls}.
 
-% \paragraph{Concluding Remarks}
-% The Elias-Fano code provides a compact representation for monotone integer sequences, achieving space close to the optimum while offering fast $O(1)$ random access and efficient logarithmic-time search capabilities. Its space efficiency is notably dependent on the ratio $u/n$ (the average gap between elements) rather than the specific distribution or clustering pattern of the integers. While this ensures good worst-case performance, it means Elias-Fano does not automatically leverage local data density. This characteristic distinguishes it from distribution-sensitive codes (like interpolative coding) and has motivated the development of techniques like partitioned Elias-Fano \cite{EFVenturini2014} and dynamic Elias-Fano structures \cite{pibiri_et_al} to address scenarios requiring either better compression for clustered data or support for dynamic updates.
+\emph{Predecessor(x)}: Finding the largest element $s_i \le x$ follows a symmetric logic, searching within the same index range $[p_1, p_2)$ identified using $H(x)$. If the search within the lower bits $L[p_1 \cdot l \dots p_2 \cdot l - 1]$ yields a suitable candidate $s_k \le x$, that is the answer (specifically, the largest such $s_k$). If all elements in the range $[p_1, p_2)$ are greater than $x$, or if the range is empty ($p_1=p_2$), the predecessor must be the last element with upper bits less than $H(x)$, which is $s_{p_1-1}$ (if $p_1 > 0$). This can be retrieved using \emph{Access($p_1-1$)}. The time complexity is also $O(1 + \log(u/n))$.
