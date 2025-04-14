@@ -1,15 +1,9 @@
-% Let's start by addressing the following problem: consider a dictionary $\mathcal{D}$ of $n$ strings drawn from an alphabet $\Sigma$. We can represent the whole dictionary as a single string $T[1,m]$\footnote{Without any separator between strings} by concatenating all the strings in $\mathcal{D}$, where $m$ is the total length of the dictionary. The problem is to support the following queries:
-% \begin{itemize}
-%     \item \texttt{Access\_string(i)}: return the $i$-th string in $\mathcal{D}$.
-%     \item \texttt{Which\_string(x)}: retrieve the starting position of the string in $T$ including
-%     the symbol $T[x]$.
-% \end{itemize}
-% The classic approach to solve this problem is via an array of pointers A[1, n] to $\mathcal{D}$'s strings, implemented by means of their offsets in $T[1, m]$, thus using $\theta(n \log n)$ bits overall. So the operation \texttt{Access\_string(i)} boils down to returning $A[i]$, whereas \texttt{Which\_string(x)} boils down to finding the predecessor of $x$ in $A$. The first operation takes constant time, while the second one takes $O(\log n)$ time via binary search.
+In the preceding chapters, we explored foundational concepts related to data compression and information theory. We now transition to the domain of \emph{compressed data structures}, which are designed to store data in a compact format while still permitting efficient query operations directly on the compressed representation. This paradigm often leads to what is sometimes termed \emph{pointer-less programming}, where traditional memory pointers are eschewed in favor of structures built upon bit sequences (bitvectors) augmented with operations that implicitly handle navigation and access \cite{ferragina2023pearls}.
 
-\todo[fancyline]{Change this introduction, I don't like it}In the previous chapter, we introduced various methods for compressing data. Now we introduce the concept of compressed data structures: data structures that store data in a compressed form, allowing for efficient access to the data. This will lead to the introduction of the so called \emph{pointer-less programming}, where we ditch the traditional pointers and instead use compressed data structures built upon binary arrays that allow for efficient access to the data. In this chapter, we will introduce the concept of bitvectors, and show how they can be compressed to support rank and select queries in constant time. We will then introduce wavelet trees, a data structure that generalizes the concept of bitvectors to support rank and select queries on arbitrary alphabets.
+This chapter introduces the \emph{bitvector} as a fundamental building block in this area. We will formally define the core operations associated with bitvectors, namely \texttt{rank} and \texttt{select}, and investigate techniques to support these operations efficiently, often in constant time, while maintaining low space overhead (succinctness). Subsequently, we will delve into methods for compressing bitvectors themselves, particularly exploiting skewed distributions of bits, and discuss practical considerations for implementing these structures effectively. We will also briefly touch upon generalizations like wavelet trees for handling larger alphabets later in the thesis. The efficient implementation of rank and select on bitvectors is crucial, as they underpin numerous advanced compressed data structures used throughout computer science \cite{navarro2016compact}.
 
 
-\section{Bitvectors}\todo[]{Maybe call this section "RRR: A succint data structure for rank and select" or something like that} \label{sec:bitvectors}
+\section{Bitvectors} \label{sec:bitvectors}
 Consider the following problem \cite{ferragina2023pearls}: imagine a dictionary $\mathcal{D}$ containing $n$ strings from an alphabet $\Sigma$. We can merge all strings in $\mathcal{D}$ into a single string $T[1,m]$, without any separators between them, where $m$ is the total length of the dictionary. The task is to handle the following queries:
 \begin{itemize}
     \item \texttt{Read(i)}: retrieve the $i$-th string in $\mathcal{D}$.
@@ -17,9 +11,9 @@ Consider the following problem \cite{ferragina2023pearls}: imagine a dictionary 
 \end{itemize}
 The conventional solution involves employing an array of pointers $A[1, n]$ to the strings in $\mathcal{D}$, represented by their offsets in $T[1, m]$, requiring $\Theta(n \log n)$ bits. Consequently, \texttt{Read(i)} simply returns $A[i]$, while \texttt{Which\_string(x)} involves locating the predecessor of $x$ in $A$. The first operation is instantaneous, whereas the second one necessitates $O(\log n)$ time using binary search.
 
-\noindent We can address the problem by employing a compressed representation of the offsets in $A$ via a binary array $B[1,m]$ of $m$ bits, where $B[i] = 1$ if and only if $i$ is the starting position of a string in $T$. In this case then $\texttt{Access\_string(i)}$ searches for the $i$-th $1$ in $B$, while $\texttt{Which\_string(x)}$ counts the number of $1$s in the prefix $B[1,x]$.
+We can address the problem by employing a compressed representation of the offsets in $A$ via a binary array $B[1,m]$ of $m$ bits, where $B[i] = 1$ if and only if $i$ is the starting position of a string in $T$. In this case then $\texttt{Access\_string(i)}$ searches for the $i$-th $1$ in $B$, while $\texttt{Which\_string(x)}$ counts the number of $1$s in the prefix $B[1,x]$.
 
-\noindent In modern literature this two operations are well known as \textit{rank} and \textit{select} queries, respectively.
+In modern literature this two operations are well known as \textit{rank} and \textit{select} queries, respectively.
 \begin{definition}[Rank and Select]\label{def:rankselect}
     Given $B[1,n]$ a binary array of $n$ bits (a bitvector), we define the following operations:
     \begin{itemize}
@@ -33,7 +27,7 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
 \end{example}
 \missingfigure[]{Example of a bitvector $B[1, 20]$ with the rank and select operations.}
 
-\noindent As stated before, bitvectors are the fundamental piece in the implementation of compressed data structures. Therefore, an efficient implementation is crucial. In the following sections, our aim is to built structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations. We will see that will often encounter skewed distributions of $0$s and $1$s in $B$, and we will exploit this property to achieve higher order compression.
+As stated before, bitvectors are the fundamental piece in the implementation of compressed data structures. Therefore, an efficient implementation is crucial. In the following sections, our aim is to built structures of size $o(n)$ bits that can be added on top either the bit array or the compressed representation of $B$ to facilitate rank and select operations. We will see that will often encounter skewed distributions of $0$s and $1$s in $B$, and we will exploit this property to achieve higher order compression.
 
 \begin{remark}
     If we try to compress bitvectors with the techniques seen in \autoref{ch:Chapter2}, we would need to encode each bit individually, requiring at least $n$ bits.
@@ -43,7 +37,7 @@ The conventional solution involves employing an array of pointers $A[1, n]$ to t
 
 In their seminal paper \cite{RRR2002} Raman et al. introduced a hierarchical succinct data structure that supports the rank operation in constant time, while only using only extra $o(n)$  bits of space. The structure is based on the idea of splitting the binary array $B[1, n]$ into big and small blocks of fixed length, and then encoding the number of bits set to $1$ in each block.
 
-\noindent More precisely, the structure is composed of three levels: in the first one we (logically) split $B[1, n]$ into blocks of size $Z$ each, where at the beginning of each superblock we store the number (\emph{class number}) of bits set to $1$ in the corresponding block, i.e the output of the query $rank_1(i)$ for $i$ being the starting position of the block. In the second level, we split the superblocks into blocks of size $z$ bits each\footnote{For simplicity, we assume that $z$ divides $Z$} with the same meta-information stored at the beginning of each block. Finally the third level is a lookup table that is indexed by the small blocks and queried positions. In other words, for each possible small block and each possible position within that block, the lookup table stores the result of the $rank_1$ operation. This pre-computed information allows for constant time retrieval of the $rank_1$ operation results, as the result can be directly looked up in the table instead of having to be computed each time. This is the key to the efficiency of the data structure. In this way, the $i-th$ block, of size $Z$, can be accessed as
+More precisely, the structure is composed of three levels: in the first one we (logically) split $B[1, n]$ into blocks of size $Z$ each, where at the beginning of each superblock we store the number (\emph{class number}) of bits set to $1$ in the corresponding block, i.e the output of the query $rank_1(i)$ for $i$ being the starting position of the block. In the second level, we split the superblocks into blocks of size $z$ bits each\footnote{For simplicity, we assume that $z$ divides $Z$} with the same meta-information stored at the beginning of each block. Finally the third level is a lookup table that is indexed by the small blocks and queried positions. In other words, for each possible small block and each possible position within that block, the lookup table stores the result of the $rank_1$ operation. This pre-computed information allows for constant time retrieval of the $rank_1$ operation results, as the result can be directly looked up in the table instead of having to be computed each time. This is the key to the efficiency of the data structure. In this way, the $i-th$ block, of size $Z$, can be accessed as
 \[
     B[i \cdot Z + 1, (i+1) \cdot Z]
 \]
@@ -113,7 +107,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
     \caption{The RRR Rank data structure. The first level is composed of blocks of size $Z$, the second level of blocks of size $z$, and the third level is an entry of the lookup table.} \label{fig:RRR}
 \end{figure}
 
-\noindent Let's focus on the third level: the lookup table. Along with the value of the absolute and relative ranks, we also store an offset that serves as an index\footnote{I we imagine that the blocks are sorted lexically, the offset is position of the block in that order} into the table. To be precise, this table is a table of tables: one for each possible value of $r_i$ and $r_{i,j}$. The table $T$ is then indexed by the values of $r_i$ and $r_{i,j}$. For every possibile value of $r_i$ and $r_{i,j}$, the sub-table stores an array of prefix sums. Thus, since we have $\binom{Z}{z}$ possible values for $r_i$ and $r_{i,j}$ (and consequently entries in the considered sub-table), the lookup table has a size of $\binom{Z}{z}\log Z$ bits. In Table \ref{tab:lookup} we show an example of a lookup table for the RRR data structure.
+Let's focus on the third level: the lookup table. Along with the value of the absolute and relative ranks, we also store an offset that serves as an index\footnote{I we imagine that the blocks are sorted lexically, the offset is position of the block in that order} into the table. To be precise, this table is a table of tables: one for each possible value of $r_i$ and $r_{i,j}$. The table $T$ is then indexed by the values of $r_i$ and $r_{i,j}$. For every possibile value of $r_i$ and $r_{i,j}$, the sub-table stores an array of prefix sums. Thus, since we have $\binom{Z}{z}$ possible values for $r_i$ and $r_{i,j}$ (and consequently entries in the considered sub-table), the lookup table has a size of $\binom{Z}{z}\log Z$ bits. In Table \ref{tab:lookup} we show an example of a lookup table for the RRR data structure.
 
 \begin{table}[h]
     \centering
@@ -136,7 +130,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
     \caption{Example of a lookup table $T$ for the RRR data structure. The table stores the result of the rank operation for all possible small blocks with $z = 3$. The cell $T[b, r_{i,j}]$ stores the result of the rank operation for the block $b$ inside the $i-th$ superblock and the $j-th$ small block.} \label{tab:lookup}
 \end{table}
 
-\noindent We can now state the following theorem \cite{ferragina2023pearls}:
+We can now state the following theorem \cite{ferragina2023pearls}:
 
 \begin{theorem} \label{th:rank}
     The space occupancy of the Rank data structure is $o(n)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, n]$. The Rank algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
@@ -154,25 +148,24 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
     \end{align}
 \end{proof}
 
-\noindent The current explanation of this data structure only clarifies how to respond to rank queries for indices located at the end of a block (or superblock). This can be achieved efficiently, taking constant time, either by directly accessing the value in the lookup table or by calculating the cumulative rank of preceding blocks along with the relative rank within the current block.
+The $o(n)$ space complexity highlighted in Theorem~\ref{th:rank} signifies that the auxiliary structures consume asymptotically less space than the bitvector itself. Significant research effort has been dedicated to minimizing the constant factors hidden within this $o(n)$ term and understanding the inherent space-time tradeoffs. Works such as \cite{grossi2009haste} explore techniques to further reduce this redundancy, striving for implementations that are both theoretically efficient and practically performant, often achieving space bounds closer to the information-theoretic minimum $B(n,m)$ (the space needed just to represent the bitvector) plus a smaller redundancy term, especially for certain ranges of $n$ and $m$.
 
-\noindent However, we also need to address the non-trivial case where the index $i$ is located in the middle of a block\footnote{For the sake of simplicity, we will assume that $B[x]$ is included in the $j-th$ small block of the $i-th$ superblock}. Differently from the previous case, if we want to compute the $rank_1$ operation over an arbitrary position $x$, we would need to compute $r_i + r_{i,j} + \texttt{popcount}(B_{i,j}[1,x])$, where the last term is an operation that counts the number of bits set to $1$ in the prefix $B_{i,j}[1,x]$. While the first two terms can be computed in constant time, the last term requires $O(\log n)$ time\footnote{It actually grows log-logarithmically with the size of the small blocks} in the worst case.
+The current explanation of this data structure only clarifies how to respond to rank queries for indices located at the end of a block (or superblock). This can be achieved efficiently, taking constant time, either by directly accessing the value in the lookup table or by calculating the cumulative rank of preceding blocks along with the relative rank within the current block.
 
-\begin{remark}
-    If $z$ (the size of the small blocks) can be stored in a single memory word, the \texttt{popcount} operation can be executed efficiently using bit manipulation operations like \texttt{std::popcount} in C++\footnote{https://en.cppreference.com/w/cpp/numeric/popcount}. This approach ensures constant time execution, especially when $z$ occupies only a few memory words, allowing for the utilization of SIMD (single instruction, multiple data) operations for faster performance. \cite{ferragina2023pearls}
-\end{remark}
+However, we also need to address the non-trivial case where the index $i$ is located in the middle of a block\footnote{For the sake of simplicity, we will assume that $B[x]$ is included in the $j-th$ small block of the $i-th$ superblock}. Differently from the previous case, if we want to compute the $rank_1$ operation over an arbitrary position $x$, we would need to compute $r_i + r_{i,j} + \texttt{popcount}(B_{i,j}[1,x])$, where the last term is an operation that counts the number of bits set to $1$ in the prefix $B_{i,j}[1,x]$. While the first two terms can be computed in constant time, the last term requires $O(\log n)$ time\footnote{It actually grows log-logarithmically with the size of the small blocks} in the worst case.
 
-\noindent If the size of the small blocks doesn't fit in a single memory word, we can pre-process in our lookup table (the third level of the data structure) all the results of the \texttt{popcount} operation for all possible blocks and then use this table to answer rank queries in constant time (as shown in table \ref{tab:lookup}). Let's denote this table as $T$ and see how to use it to answer rank queries in constant time. In order to retrive the result of $\texttt{popcount}(B_{i,j}[1,x])$ we can access the table $T$ at the position $T[B_{i,j}, o]$. Where $o$ is the offset of the bit $B[x]$ in $B_{i,j}$, and $B_{i,j}$. The offset $o$ can be computed as $o = 1 + ((x-1) \mod z)$. Thus we only need to perform three atomic operations, two memory accesses and one addition, to retrieve the result of the rank operation in constant time.
+% \begin{remark}
+%     If $z$ (the size of the small blocks) can be stored in a single memory word, the \texttt{popcount} operation can be executed efficiently using bit manipulation operations like the \texttt{count\_ones()} method in Rust\footnote{\url{https://doc.rust-lang.org/std/primitive.u64.html\#method.count\_ones}}. This approach ensures constant time execution, especially when $z$ occupies only a few memory words, allowing for the utilization of SIMD (single instruction, multiple data) operations for faster performance. \cite{ferragina2023pearls}
+% \end{remark}
 
-\noindent Storing this table requires $O(\sqrt{n} \log \log n)$ bits\footnote{We have $2^z$ rows and $z$ columns and each cell stores a value in $[0, z]$.}, which is asymptotically sub-linear in the size of the binary array $B[1, n]$ and allows the \texttt{popcount} operation in a block of $O(\log n)$ bits in constant time. Thus, if we consider the word length as $\log n$ and still maintain the $o(n)$ space occupancy stated in \ref{th:rank}
+If the size of the small blocks doesn't fit in a single memory word, we can pre-process in our lookup table (the third level of the data structure) all the results of the \texttt{popcount} operation for all possible blocks and then use this table to answer rank queries in constant time (as shown in table \ref{tab:lookup}). Let's denote this table as $T$ and see how to use it to answer rank queries in constant time. In order to retrive the result of $\texttt{popcount}(B_{i,j}[1,x])$ we can access the table $T$ at the position $T[B_{i,j}, o]$. Where $o$ is the offset of the bit $B[x]$ in $B_{i,j}$, and $B_{i,j}$. The offset $o$ can be computed as $o = 1 + ((x-1) \mod z)$. Thus we only need to perform three atomic operations, two memory accesses and one addition, to retrieve the result of the rank operation in constant time.
 
-\todo[inline, color=blue!30]{TBD: Do I talk about \cite{grossi2009haste}?}
+Storing this table requires $O(\sqrt{n} \log \log n)$ bits\footnote{We have $2^z$ rows and $z$ columns and each cell stores a value in $[0, z]$.}, which is asymptotically sub-linear in the size of the binary array $B[1, n]$ and allows the \texttt{popcount} operation in a block of $O(\log n)$ bits in constant time. Thus, if we consider the word length as $\log n$ and still maintain the $o(n)$ space occupancy stated in \ref{th:rank}
 
-\begin{remark}[Pratical Considerations]\todo[fancyline]{Improve this, I think there are errors}
-    Optimizing memory access can significantly boost performance: thus aligning block and superblock lengths to word or byte boundaries is crucial. For instance, setting the superblock length ($Z$) to $256$ allows storing the second level as an array of $\lceil n/z \rceil$ bytes, resulting in a total space usage of $1.375 \cdot n$ for both $z = 32$ and $z = 64$. To further minimize space overhead, introducing another level with super-superblocks of length $2^{16}$ can bring down the total space usage to below $1.313 \cdot n$ for $z = 32$ and $1.189 \cdot n$ for $z = 64$. To reduce cache misses, interleaving the secondo and the third level ensures that the accessed entries from both arrays fit in the same cache line, enhancing performance. For example, with $z = 64$, choosing $n/Z = 8$ allows storing two w-bit words per superblock, minimizing space usage to $1.250 \cdot n$. \cite{navarro2016compact}
-\end{remark}
+% Replacement for Rank Practical Considerations Remark (incorporating Broadword/rank9)
 
-% \noindent Algorithm \ref{alg:rank} shows the Rank algorithm, which takes as input the binary array $B$ and an index $i$, and returns the rank of the bit at index $i$ in $B$. For the sake of simplicity, we will use some C++ methods from the standard library: in particular, we will use the method \texttt{std::popcount}\footnote{https://en.cppreference.com/w/cpp/numeric/popcount} that returns the number of bits set to $1$ in a given integer.
+
+% Algorithm \ref{alg:rank} shows the Rank algorithm, which takes as input the binary array $B$ and an index $i$, and returns the rank of the bit at index $i$ in $B$. For the sake of simplicity, we will use some C++ methods from the standard library: in particular, we will use the method \texttt{std::popcount}\footnote{https://en.cppreference.com/w/cpp/numeric/popcount} that returns the number of bits set to $1$ in a given integer.
 
 % \begin{algorithm}[h]
 %     \begin{algorithmic}[1]
@@ -191,7 +184,7 @@ We will denote with $r_i$ and call it \emph{absolute rank} the number of bits se
 % \end{algorithm}
 
 
-\subsection{Select}
+\subsection{Select} \label{subsec:select}
 The $select$ operation can be seen as the inverse of the rank operation, i.e given a binary array $B$ and an integer $i$, the $select$ operation returns the index of the $i$-th occurrence of a bit $b$ in $B$. More formally, we have that:
 \[
     rank_c(B, select_c(B, i)) = i
@@ -204,15 +197,15 @@ The implementation of the select operation heavily relies on the three level dat
     In the following, $Z$ will represent, as before, the size in bits of the big blocks containing $K$ bits set to $1$, where $K = \log n$. We will use always the same notation $Z$ even if the size of the blocks is variable, clarifying the context in which it is used.
 \end{remark}
 
-\noindent Since $K \leq Z$, we can easily derive that space occupance of all the starting positions of the blocks $O(\frac{n}{K} \log n) = o(n)$ bits. The first step of our search in then clear: since each block contains $K$ bits set to $1$, we can find the block containing the $i$-th occurrence of $1$ in $B$ by computing $i/K$.
+Since $K \leq Z$, we can easily derive that space occupance of all the starting positions of the blocks $O(\frac{n}{K} \log n) = o(n)$ bits. The first step of our search in then clear: since each block contains $K$ bits set to $1$, we can find the block containing the $i$-th occurrence of $1$ in $B$ by computing $i/K$.
 
-\noindent The second step is to find the $i$-th occurrence of $1$ in the block. This could be done by scanning the block from the beginning and counting the number of bits set to $1$ until we reach the $i$-th occurrence, but this would require $O(K)$ time making it highly un-efficient for our purposes. To address this issue, we introduce the second level of the select data structure where we divide the big blocks into smaller blocks and categorize them into two types: \emph{dense} and \emph{sparse} blocks. A big block is considered \emph{dense} if $Z \leq K^2$ and \emph{sparse} otherwise. When dealing with a sparse block, we can store the positions of the bits set to $1$ in the block in a separate array, allowing us to access the $i$-th occurrence of $1$ in constant time. Due to it's small number of bits set to $1$, we can store the positions in $O(\frac{n}{K^2}K \log n) = O(\frac{n}{\log^2n} \log n) = o(n)$ bits.
+The second step is to find the $i$-th occurrence of $1$ in the block. This could be done by scanning the block from the beginning and counting the number of bits set to $1$ until we reach the $i$-th occurrence, but this would require $O(K)$ time making it highly un-efficient for our purposes. To address this issue, we introduce the second level of the select data structure where we divide the big blocks into smaller blocks and categorize them into two types: \emph{dense} and \emph{sparse} blocks. A big block is considered \emph{dense} if $Z \leq K^2$ and \emph{sparse} otherwise. When dealing with a sparse block, we can store the positions of the bits set to $1$ in the block in a separate array, allowing us to access the $i$-th occurrence of $1$ in constant time. Due to it's small number of bits set to $1$, we can store the positions in $O(\frac{n}{K^2}K \log n) = O(\frac{n}{\log^2n} \log n) = o(n)$ bits.
 
-\noindent Dealing with the dense blocks is not as straightforward as with the sparse ones. In this case, we can't afford to store the positions of the bits set to $1$ in the block, as it would require too much space. We introduce then the third level of the select data structure, where we split the dense blocks into smaller blocks of length\footnote{The same assumptions made before apply as well: $z$ can vary but we will use the same notation for simplicity and clarify the context in which it is used idf necessary} $z$, each containing $k = (\log \log m)^2$ bits set to $1$. Thus storing all the starting positions of the smalls blocks and relative beginning of the dense blocks requires $O(\frac{n}{k} \log K^2) = O(\frac{n}{(\log \log n)^2} \log \log^4 n) = o(n)$ bits\footnote{
+Dealing with the dense blocks is not as straightforward as with the sparse ones. In this case, we can't afford to store the positions of the bits set to $1$ in the block, as it would require too much space. We introduce then the third level of the select data structure, where we split the dense blocks into smaller blocks of length\footnote{The same assumptions made before apply as well: $z$ can vary but we will use the same notation for simplicity and clarify the context in which it is used idf necessary} $z$, each containing $k = (\log \log m)^2$ bits set to $1$. Thus storing all the starting positions of the smalls blocks and relative beginning of the dense blocks requires $O(\frac{n}{k} \log K^2) = O(\frac{n}{(\log \log n)^2} \log \log^4 n) = o(n)$ bits\footnote{
     We exploited the fact that each small block has at least length $k$ and the length of its enclosing dense block is at most $K^2$.
 }.
 
-\noindent The only remaining issue is to keep track of the positions of the bits set to $1$ in the small blocks. We can follow the idea introduced for the big blocks and divide them into \emph{dense} and \emph{sparse} small blocks. The sparse small blocks are those with length less then $k^2 = (\log \log m)^4$, and we can store the positions of the bits set to $1$ in the block relative to the beginning of its enclosing block in
+The only remaining issue is to keep track of the positions of the bits set to $1$ in the small blocks. We can follow the idea introduced for the big blocks and divide them into \emph{dense} and \emph{sparse} small blocks. The sparse small blocks are those with length less then $k^2 = (\log \log m)^4$, and we can store the positions of the bits set to $1$ in the block relative to the beginning of its enclosing block in
 \[
     O\left(\frac{n}{k^2} k \log K^2 \right) = O\left(\frac{n}{(\log \log n)^2} \log \log^4 n\right) = o(n)
 \]
@@ -226,9 +219,9 @@ bits\footnote{
     The value $(\log log m)^4$ can be very small for practical values of $m$, thus we could avoid dividing the small blocks into dense and sparse blocks and just scan the block from the beginning to find the $i$-th occurrence of $1$.
 \end{remark}
 
-\noindent In \ref{alg:select} are outlined the steps of the $select_1$ (the $select_0$ works in the same way) algorithm, which takes as input the binary array $B$ and an index $i$, and returns the index of the $i$-th occurrence of a bit $b$ in $B$.
-\clearpage
-\begin{algorithm}[ht!]
+In algorithm \ref{alg:select} are outlined the steps of the $select_1$ (the $select_0$ works in the same way) algorithm, which takes as input the binary array $B$ and an index $i$, and returns the index of the $i$-th occurrence of a bit $b$ in $B$.
+
+\begin{algorithm}[hbtp]
     \caption{$Select_1$ Algorithm} \label{alg:select}
     \begin{algorithmic}
         \Function{$Select_1$}{$B, i$}
@@ -258,7 +251,7 @@ bits\footnote{
     \end{algorithmic}
 \end{algorithm}
 
-\noindent As for the rank data structure, we can state the following theorem:
+As for the rank data structure, we can state the following theorem:
 
 \begin{theorem} \label{th:select}
     The space occupancy of the Select data structure is $o(n)$ bits, and thus it is asymptotically sublinear in the size of the binary array $B[1, n]$. The Select algorithm takes constant time in the worst case, and accesses the array $B$ only in read-mode
@@ -266,8 +259,32 @@ bits\footnote{
 \begin{proof}
     Follows from the previous discussion.
 \end{proof}
+For dense small blocks whose size $z$ is very small (e.g., $z \le k^2 = (\log \log m)^4$), direct scanning can indeed be faster than accessing the precomputed table $T$.
 
-\vspace{0.6cm}
 
+\subsection{Compressing Sparse Bitvectors with Elias-Fano} \label{subsec:elias_fano_compression}
 
-\todo[inline, color=blue!30]{TBD: Do I talk also about how to compress via Elias Fano? When the numbers of $1s$ in B is much smaller than $n$, where I can achieve $n\mathcal{H}_0(B) + O(m)$ bits of space occupancy. This approach poses a much lower overhead over the entropy. It supports $Select$ in constant time, while $access$ and $Rank$ in $O(\log \frac{n}{m})$ \cite{navarro2016compact,ferragina2023pearls}. On a further note, in \cite{FERRAGINA2007115} Ferragina and Venturini achieved higher order compression for general strings, supporting access in constant time (so adding rank and select for bitvectors are natural extensions), do I talk about this as well?}
+The rank and select structures discussed before (\ref{subsec:rank}, \ref{subsec:select}) operate on the plain bitvector $B[1,n]$, achieving a total space occupancy of $n + o(n)$ bits. However, in many practical scenarios, the bitvector $B$ exhibits a skewed distribution, containing significantly fewer 1s than 0s (or vice-versa). Let $m = rank_1(n)$ be the total number of set bits. When $m \ll n$, storing the full $n$-bit vector is inefficient.
+
+In such sparse settings, we can leverage compression techniques that exploit the low density of set bits. The Elias-Fano representation, previously introduced in Section~\ref{sec:elias_fano_code}, provides a highly effective method for this task. Recall that Elias-Fano encodes a monotonically increasing sequence of $m$ integers up to a maximum value $n$. We can represent the bitvector $B$ by encoding the sequence of indices $\{ i \mid B[i]=1 \}$.
+
+As detailed by Vigna \cite{vigna2013quasi} in the context of quasi-succinct indices for information retrieval, the Elias-Fano representation achieves a space complexity of approximately $m \log_2(n/m) + O(m)$ bits. This is remarkably close to the information-theoretic lower bound for representing a subset of size $m$ from a universe of size $n$, often expressed as $n\mathcal{H}_0(B) + O(m)$ bits, where $\mathcal{H}_0(B)$ is the empirical zero-order entropy of the bitvector $B$. The crucial advantage is that the space depends primarily on $m$, the number of set bits, rather than the full length $n$, leading to significant compression when $m$ is small.
+
+This compressed representation directly supports efficient operations. The $select_1(i)$ operation, finding the position of the $i$-th set bit, can typically be implemented in constant time on average, often leveraging auxiliary pointers within the Elias-Fano structure as engineered in \cite{vigna2013quasi}. However, this space efficiency comes at the cost of potentially slower $rank_1$ and $access$ (checking the value of $B[i]$) operations compared to the $n+o(n)$ structures. These operations usually involve decoding parts of the Elias-Fano structure and may take $O(\log(n/m))$ time or depend on the specific implementation details \cite{navarro2016compact}. Therefore, Elias-Fano presents a compelling space-time trade-off, offering near-optimal compression for sparse bitvectors at the expense of rank and access time complexity. The choice between plain bitvector structures and Elias-Fano depends critically on the sparsity of the data and the required query performance profile.
+
+\subsection{Practical Implementation Considerations} \label{subsec:practical_considerations}
+
+While the asymptotic analysis guarantees $O(1)$ query time and $o(n)$ extra space for the rank and select structures presented earlier, achieving high performance in practice requires careful consideration of architectural factors and constant overheads hidden in the $o(n)$ term. Memory latency, cache efficiency, and instruction-level parallelism often dominate the actual running time on modern processors \cite{ferragina2023pearls}.
+
+A particularly effective approach for optimizing rank and select implementations leverages \emph{broadword programming} (also known as \textsc{Swar} - \textsc{Simd} Within A Register). This technique treats machine registers as small parallel processors, performing operations on multiple data fields packed within a single word using standard arithmetic and logical instructions. Vigna \cite{vigna2008broadword} applied these techniques to rank and select queries, leading to highly efficient practical implementations.
+
+The \texttt{rank9} structure proposed by Vigna \cite{vigna2008broadword} exemplifies this approach. It employs a two-level hierarchy, similar in concept to the structure in Section~\ref{subsec:rank}, but critically relies on broadword algorithms for the final rank computation within a machine word (specifically, sideways addition or population count). Instead of large precomputed lookup tables for small blocks, \texttt{rank9} uses carefully designed constants and bitwise operations (detailed in Algorithm 1 of \cite{vigna2008broadword}) to compute the rank within a 64-bit word quickly. This typically involves storing relative counts for sub-blocks (e.g., seven 9-bit counts within a 64-bit word) in the second level. The advantages include:
+\begin{itemize}
+    \item Speed: Exploits fast register operations and avoids large table lookups, often outperforming other methods in practice.
+    \item Space Efficiency: Requires relatively low space overhead, typically around 25\% on top of the original bitvector $B$, mainly for storing the cumulative rank counts.
+    \item Branch Avoidance: Broadword algorithms are generally branch-free, which benefits performance on modern pipelined processors by avoiding potential misprediction penalties.
+\end{itemize}
+
+Similarly, Vigna \cite{vigna2008broadword} developed broadword algorithms for selection within a word (Algorithm 2 in the paper). The companion \texttt{select9} structure integrates these intra-word selection capabilities with a multi-level inventory scheme. The objective of \texttt{select9} is to support high-performance selection queries, often achieving near constant-time execution, through hierarchical indexing combined with efficient broadword search for the final location. This capability involves an additional space cost, typically measured at approximately 37.5\% relative to the \texttt{rank9} structure.
+
+Furthermore, a major bottleneck in rank/select operations is often memory access latency. To mitigate this, \emph{interleaving} the auxiliary data structures is highly recommended. For instance, storing a first-level (superblock) rank count immediately followed by its corresponding second-level (sub-block) counts increases the probability that all necessary auxiliary information for a query resides within the same cache line. This simple layout optimization can dramatically reduce cache misses compared to storing different levels of the hierarchy in separate arrays.
