@@ -3,89 +3,107 @@
 
 The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on Rank and Select operations over sequences (\autoref{ch:Chapter3}). These tools are fundamental for achieving space-efficient representations while maintaining fast query capabilities, proving invaluable in areas like text indexing and computational genomics.
 
-This chapter ventures into generalizing these concepts to node-weighted directed acyclic graphs (DAGs). We address the challenge of representing a DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena, from evolutionary pathways in biology, where weights might represent mutations or time, to task dependencies in project management, where weights signify durations or costs.
+This chapter extends these concepts to node-weighted directed acyclic graphs (DAGs). We address the challenge of representing a DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena. For example, in bioinformatics, pangenome graphs can be interpreted through this lens: if each node corresponds to a DNA sequence (a string over {A, C, G, T}), we can conceptualize four distinct weighted DAGs. In the DAG associated with character \emph{A}, the weight $w(v)$ of a node $v$ would be the number of \emph{A}s in its sequence; similarly for \emph{C}, \emph{G}, and \emph{T}.
 
 Our primary focus is on generalizing the Rank query to this graph setting; the Select query, while definable, will not be treated further in this work. For a given vertex $N$, the Rank query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
 
-The combinatorial complexity of paths in a DAG—potentially exponential in the number of vertices—renders naive approaches based on explicit path enumeration or storage infeasible for large graphs. This motivates the development of a \emph{succinct} data structure. We introduce a novel representation strategy that partitions the vertices into two categories: \emph{explicit} vertices, for which path weight information is stored directly, and \emph{implicit} vertices, whose information is derived indirectly through references to other vertices via a carefully defined \emph{successor} relationship.
+The combinatorial complexity of paths in a DAG — potentially exponential in the number of vertices — makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. We introduce a novel representation strategy that partitions the vertices into two categories: \emph{explicit} vertices, for which path weight information is stored directly, and \emph{implicit} vertices, whose information is derived indirectly through references to other vertices via a carefully defined \emph{successor} relationship.
 
 \section{Mathematical Framework}
 \label{sec:dag_formal_defs}
 
+To develop our data structure and associated algorithms, we first establish the necessary mathematical definitions and properties concerning weighted DAGs and path weights.
+
 \subsection*{Weighted Directed Acyclic Graphs}
 \label{subsec:dag_def}
 
-We begin with the formal definition of the object of study.
+We begin with the formal definition of the combinatorial structure central to this chapter.
 
 \begin{definition}[Weighted DAG]
     \label{def:weighted_dag}
     A node-weighted Directed Acyclic Graph (weighted DAG) is a triple $G = (V, E, w)$, where:
     \begin{itemize}
-        \item $V$ is a finite set of vertices, typically identified with $\{0, 1, \dots, n-1\}$ where $n = |V|$.
+        \item $V$ is a finite set of vertices. We typically identify $V$ with the set $\{0, 1, \dots, n-1\}$ where $n = |V|$, thereby implicitly defining a total order on the vertices.
         \item $E \subseteq V \times V$ is a set of directed edges such that the graph $(V, E)$ contains no directed cycles.
-        \item $w: V \to \mathbb{N}_0$ is a weight function assigning a non-negative integer $w(v)$ to each vertex $v \in V$.
+        \item $w: V \to \mathbb{N}_0$ is a weight function assigning a non-negative integer $w(v)$ to each vertex $v \in V$, where $\mathbb{N}_0 = \{0, 1, 2, \dots\}$.
     \end{itemize}
-    We denote the set of direct predecessors of $v$ as $Pred(v) = \{u \in V \mid (u, v) \in E\}$ and direct successors as $Succ(v) = \{u \in V \mid (v, u) \in E\}$. A vertex $v$ with $Succ(v) = \emptyset$ is called a \emph{sink} vertex.
+    For a vertex $v \in V$, we denote the set of its direct predecessors as $Pred(v) = \{u \in V \mid (u, v) \in E\}$ and the set of its direct successors as $Succ(v) = \{u \in V \mid (v, u) \in E\}$. A vertex $v$ with $Succ(v) = \emptyset$ is termed a \emph{sink} vertex.
 \end{definition}
+
+This definition provides the fundamental object of study. We will often rely on the acyclic property, which guarantees the existence of topological orderings of the vertices.
 
 \begin{assumption}[Unique Source]
     \label{ass:unique_source}
-    Without loss of generality, we assume $G$ possesses a unique source vertex $s \in V$ with $Pred(s) = \emptyset$. If multiple sources exist, a virtual source $s'$ with $w(s')=0$ can be added, with edges $(s', v)$ directed to all original sources $v$. We assume $s=0$ and $w(s)=0$.
+    Without loss of generality, we assume that the DAG $G$ possesses a unique source vertex $s \in V$ characterized by $Pred(s) = \emptyset$. If multiple sources exist in the original graph, a standard preprocessing step involves introducing a virtual source vertex $s'$ with $w(s')=0$ and adding edges $(s', v)$ for all original source vertices $v$. Throughout this work, we assume such a transformation has been applied if necessary, and we identify the unique source with vertex $s=0$, setting $w(s)=0$.
 \end{assumption}
+
+Having defined the graph structure, we now define paths and their associated weights, which are central to the queries we aim to support.
 
 \begin{definition}[Paths and Path Weights]
     \label{def:paths_weights}
-    A path $P$ from vertex $u$ to vertex $v$ in $G$ is a sequence $P = (v_0, v_1, \dots, v_k)$ such that $v_0 = u$, $v_k = v$, and $(v_{j-1}, v_j) \in E$ for all $1 \le j \le k$. Let $Path(s, v)$ denote the set of all paths from the unique source $s$ to $v$. The cumulative weight relevant for our Rank query, denoted $W'(P)$, for a path $P=(v_0=s, \dots, v_k=v)$ is defined as the sum of weights excluding the source:
+    A path $P$ from a vertex $u$ to a vertex $v$ in $G$ is a sequence of vertices $P = (v_0, v_1, \dots, v_k)$ such that $v_0 = u$, $v_k = v$, and $(v_{j-1}, v_j) \in E$ for all $1 \le j \le k$. The length of the path $P$ is $k$, the number of edges. Let $Path(s, v)$ denote the set of all paths originating from the unique source $s$ and terminating at $v$. The cumulative weight relevant for our Rank query, denoted $W'(P)$, for a path $P=(v_0=s, \dots, v_k=v)$ is defined as the sum of the weights of the vertices along the path, excluding the source vertex:
     \[ W'(P) = \sum_{j=1}^{k} w(v_j). \]
-    If $k=0$ (i.e., $P=(s)$), then $W'(P)=0$.
+    If the path consists only of the source vertex (i.e., $k=0$ and $P=(s)$), its weight is defined as $W'(P)=0$.
 \end{definition}
 
 \subsection{Path Weight Aggregation}
 \label{subsec:o_set_def}
 
-To represent the set of all possible cumulative path weights ending at a vertex, we introduce the $\mathcal{O}$-set.
+A key challenge lies in efficiently representing the potentially vast collection of path weights terminating at each vertex. We introduce a set associated with each vertex to capture precisely this information.
 
 \begin{definition}[$\mathcal{O}$-Set]
     \label{def:o_set}
-    For each vertex $v \in V$ in a weighted DAG $G=(V, E, w)$ with source $s$, the \emph{$\mathcal{O}$-set}, denoted $\mathcal{O}_v \subseteq \mathbb{N}_0$, is defined recursively. Assuming a topological ordering of $V$:
+    For each vertex $v \in V$ in a weighted DAG $G=(V, E, w)$ with source $s$, the \emph{$\mathcal{O}$-set}, denoted $\mathcal{O}_v \subseteq \mathbb{N}_0$, is defined recursively. Let us assume a topological ordering of the vertices in $V$. The sets are constructed as follows:
     \begin{itemize}
         \item For the source vertex $v = s$:
               \[ \mathcal{O}_s = \{0\}. \]
         \item For any other vertex $v \neq s$:
               \[ \mathcal{O}_v = \bigcup_{u \in Pred(v)} \{ y + w(v) \mid y \in \mathcal{O}_u \}. \]
     \end{itemize}
-    The definition implies that $\mathcal{O}_v$ contains the unique values obtained through this process. We consider $\mathcal{O}_v$ as the sorted sequence of these unique values.
 \end{definition}
+This definition implies that $\mathcal{O}_v$ contains only the distinct values generated by this union process. We consider $\mathcal{O}_v$ to be the set of these unique values, represented as a sorted sequence.
+
+The following proposition establishes the semantic meaning of the $\mathcal{O}$-set, confirming that it correctly captures the set of all possible path weights (as defined in \ref{def:paths_weights}) ending at a vertex.
 
 \begin{proposition}[Semantic Interpretation of $\mathcal{O}$-Set]
     \label{prop:o_set_correctness}
-    For any vertex $v \in V$, the set $\mathcal{O}_v$ contains exactly the set of cumulative weights $\{ W'(P) \mid P \in Path(s, v) \}$
+    For any vertex $v \in V$, the set $\mathcal{O}_v$ is precisely the set of cumulative path weights from the source $s$ to $v$:
+    \[ \mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}. \]
 \end{proposition}
 \begin{proof}
     The proof proceeds by induction on the vertices $v \in V$, ordered according to a topological sort of $G$.
-    \textit{Base Case:} For $v=s$, the only path is $P=(s)$, for which $W'(P)=0$. By Definition \ref{def:o_set}, $\mathcal{O}_s = \{0\}$. The proposition holds for $s$.
-    \textit{Inductive Step:} Assume the proposition holds for all vertices $u$ preceding $v$ in the topological order, specifically for all $u \in Pred(v)$. We need to show $\mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}$.
+    \textit{Base Case:} For the source vertex $v=s$, the only path in $Path(s, s)$ is the trivial path $P=(s)$. According to Definition \ref{def:paths_weights}, $W'(P)=0$. By Definition \ref{def:o_set}, $\mathcal{O}_s = \{0\}$. Thus, the proposition holds for $s$.
+    \textit{Inductive Step:} Assume the proposition holds for all vertices $u$ that strictly precede $v$ in the topological order. In particular, this assumption holds for all $u \in Pred(v)$, since the existence of an edge $(u, v)$ implies $u$ precedes $v$ in any topological sort. We must show that $\mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}$.
 
-    ($\subseteq$) Let $x \in \mathcal{O}_v$. By Definition \ref{def:o_set}, $x = y + w(v)$ for some $u \in Pred(v)$ and some $y \in \mathcal{O}_u$. By the inductive hypothesis, $y = W'(P')$ for some path $P' = (v_0=s, \dots, v_{k-1}=u) \in Path(s, u)$. Consider the path $P = (v_0, \dots, v_{k-1}, v_k=v)$ obtained by appending $v$ to $P'$. This is a valid path in $Path(s, v)$. Its weight is $W'(P) = \sum_{j=1}^{k} w(v_j) = (\sum_{j=1}^{k-1} w(v_j)) + w(v_k) = W'(P') + w(v) = y + w(v) = x$. Thus, $x$ is the weight of a path in $Path(s, v)$.
+    ($\subseteq$) Let $x \in \mathcal{O}_v$. By Definition \ref{def:o_set}, since $v \neq s$, there must exist a predecessor $u \in Pred(v)$ and a value $y \in \mathcal{O}_u$ such that $x = y + w(v)$. By the inductive hypothesis applied to $u$, $y = W'(P')$ for some path $P' = (v_0=s, \dots, v_{k-1}=u) \in Path(s, u)$. Consider the path $P = (v_0, \dots, v_{k-1}, v_k=v)$ formed by appending the edge $(u, v)$ to $P'$. This is a valid path in $Path(s, v)$. Its weight according to Definition \ref{def:paths_weights} is
+    \begin{align*}
+        W'(P) & = \sum_{j=1}^{k} w(v_j) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
+              & = W'(P') + w(v) = y + w(v) = x.
+    \end{align*}
+    Therefore, any element $x \in \mathcal{O}_v$ corresponds to the weight of some path in $Path(s, v)$.
 
-    ($\supseteq$) Let $P = (v_0=s, \dots, v_k=v)$ be an arbitrary path in $Path(s, v)$. Since $v \neq s$, $k \ge 1$. Let $u = v_{k-1}$ be the direct predecessor of $v$ on this path, so $u \in Pred(v)$. Let $P' = (v_0, \dots, v_{k-1})$ be the subpath ending at $u$. $P' \in Path(s, u)$. By the inductive hypothesis, its weight $W'(P') = \sum_{j=1}^{k-1} w(v_j)$ is in $\mathcal{O}_u$. Let $y = W'(P')$. By Definition \ref{def:o_set}, the value $y + w(v)$ must be an element of $\mathcal{O}_v$. But $y + w(v) = W'(P') + w(v_k) = \sum_{j=1}^{k} w(v_j) = W'(P)$. Thus, the weight $W'(P)$ is in $\mathcal{O}_v$.
+    ($\supseteq$) Let $P = (v_0=s, \dots, v_k=v)$ be an arbitrary path in $Path(s, v)$. Since $v \neq s$, the path must have length $k \ge 1$. Let $u = v_{k-1}$ be the vertex immediately preceding $v$ on this path; thus, $u \in Pred(v)$. Let $P' = (v_0, \dots, v_{k-1})$ be the subpath of $P$ ending at $u$. $P'$ is a path in $Path(s, u)$. By the inductive hypothesis, the weight $W'(P') = \sum_{j=1}^{k-1} w(v_j)$ must be an element of $\mathcal{O}_u$. Let $y = W'(P')$. By Definition \ref{def:o_set}, the value $y + w(v)$ is included in the construction of $\mathcal{O}_v$. We observe that
+    \begin{align*}
+        y + w(v) & = W'(P') + w(v_k) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
+                 & = \sum_{j=1}^{k} w(v_j) = W'(P).
+    \end{align*}
+    Thus, the weight $W'(P)$ of any path in $Path(s, v)$ is contained in $\mathcal{O}_v$.
 
-    Since both inclusions hold, $\mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}$.
+    Since both inclusions hold, we conclude that $\mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}$.
 \end{proof}
 
-We now establish a relationship between the size of the $\mathcal{O}$-set of a vertex and its successors, which is crucial to the correctness of the structure.
+An important property related to the sizes of these $\mathcal{O}$-sets is monotonicity along edges, which plays a role in the design of our succinct structure.
 
 \begin{lemma}[$\mathcal{O}$-Set Cardinality Monotonicity along Edges]
     \label{lem:o_set_cardinality_monotonicity}
     Let $v \in V$ and let $u \in Succ(v)$ be any direct successor of $v$. Then, the cardinality of the $\mathcal{O}$-set of $v$ is less than or equal to the cardinality of the $\mathcal{O}$-set of $u$, i.e., $|\mathcal{O}_v| \le |\mathcal{O}_u|$.
 \end{lemma}
 \begin{proof}
-    Consider the definition of $\mathcal{O}_u$:
+    From Definition \ref{def:o_set}, the $\mathcal{O}$-set for $u$ is given by
     \[ \mathcal{O}_u = \bigcup_{p \in Pred(u)} \{ y + w(u) \mid y \in \mathcal{O}_p \}. \]
-    Since $u \in Succ(v)$, it follows that $v \in Pred(u)$. Therefore, the term corresponding to the predecessor $v$ is included in the union:
-    \[ \{ y + w(u) \mid y \in \mathcal{O}_v \} \subseteq \mathcal{O}_u. \]
-    Let $S_v = \{ y + w(u) \mid y \in \mathcal{O}_v \}$. This set $S_v$ is formed by adding a constant $w(u)$ to each element of $\mathcal{O}_v$. Since $w(u) \ge 0$, the mapping $f: \mathcal{O}_v \to S_v$ defined by $f(y) = y + w(u)$ is injective. If $w(u)>0$, it's strictly injective. If $w(u)=0$, $S_v=\mathcal{O}_v$. In either case, the number of unique elements in $S_v$ is exactly equal to the number of unique elements in $\mathcal{O}_v$, so $|S_v| = |\mathcal{O}_v|$.
-    Because $S_v$ is a subset of the elements considered for $\mathcal{O}_u$, and $\mathcal{O}_u$ contains only unique values resulting from the union, the number of unique values in $\mathcal{O}_u$ must be at least the number of unique values in $S_v$.
+    Since $u$ is a successor of $v$, it follows that $v$ is a predecessor of $u$, i.e., $v \in Pred(u)$. Therefore, the set $S_v = \{ y + w(u) \mid y \in \mathcal{O}_v \}$ contributes to the union forming $\mathcal{O}_u$. Specifically, $S_v \subseteq \bigcup_{p \in Pred(u)} \{ y + w(u) \mid y \in \mathcal{O}_p \}$.
+    Consider the mapping $f: \mathcal{O}_v \to S_v$ defined by $f(y) = y + w(u)$. Since $w(u) \ge 0$, this mapping is injective. If $y_1 \neq y_2$, then $y_1 + w(u) \neq y_2 + w(u)$. Consequently, the number of distinct elements in $S_v$ is exactly equal to the number of distinct elements in $\mathcal{O}_v$, so $|S_v| = |\mathcal{O}_v|$.
+    The set $\mathcal{O}_u$ is formed by taking the union of sets like $S_v$ for all predecessors $p \in Pred(u)$ and retaining only the unique values. Since the elements generated from $v$'s contribution (namely, $S_v$) are a subset of the elements considered for $\mathcal{O}_u$, the total number of unique elements in $\mathcal{O}_u$ must be at least the number of unique elements contributed by $v$.
     Therefore, $|\mathcal{O}_u| \ge |S_v| = |\mathcal{O}_v|$.
 \end{proof}
 
@@ -134,179 +152,180 @@ We now establish a relationship between the size of the $\mathcal{O}$-set of a v
         \draw [edge_style] (5) -- (8);
 
     \end{tikzpicture}
-    \caption{Example of a node-weighted DAG (restored original style). Each node $v$ contains its weight $w(v)$. The label associated with each node represents its calculated $\mathcal{O}$-set, $\mathcal{O}_v$.}
-    \label{fig:dag_example} % Keeping the same label for consistency
+    \caption{Example of a node-weighted DAG. Each node $v$ contains its weight $w(v)$. The label associated with each node represents its calculated $\mathcal{O}$-set, $\mathcal{O}_v$, considered as a sorted sequence.}
+    \label{fig:dag_example}
 \end{figure}
 
 \begin{example}[$\mathcal{O}$-Set Calculation]
     \label{ex:o_set_calc}
-    Consider the weighted DAG in \autoref{fig:dag_example}. Each node $v$ is labelled with its weight $w(v)$ inside the circle, and its corresponding $\mathcal{O}$-set, calculated according to Definition \ref{def:o_set}, is shown as a label (in blue). Let's trace the calculation for several nodes, assuming a topological order starting from the source node 0.
+    Consider the weighted DAG shown in \autoref{fig:dag_example}. Each node $v$ is labelled with its weight $w(v)$ inside the circle. The label associated with each node displays its corresponding $\mathcal{O}$-set, calculated according to \ref{def:o_set}. Let us trace the computation for several nodes, respecting a topological order.
 
-    \begin{itemize}
-        \item \textbf{Node 0 (Source):} $w(0)=0$. By definition, $\mathcal{O}_0 = \{0\}$.
-        \item \textbf{Node 1:} $Pred(1)=\{0\}$, $w(1)=1$.
-              \[ \mathcal{O}_1 = \{ y + w(1) \mid y \in \mathcal{O}_0 \} = \{ 0 + 1 \} = \{1\}. \]
-        \item \textbf{Node 3:} $Pred(3)=\{0\}$, $w(3)=3$.
-              \[ \mathcal{O}_3 = \{ y + w(3) \mid y \in \mathcal{O}_0 \} = \{ 0 + 3 \} = \{3\}. \]
-        \item \textbf{Node 6:} $Pred(6)=\{1, 3\}$, $w(6)=6$.
-              \begin{align*}
-                  \mathcal{O}_6 & = \left( \{ y + w(6) \mid y \in \mathcal{O}_1 \} \right) \cup \left( \{ z + w(6) \mid z \in \mathcal{O}_3 \} \right) \\
-                                & = \{ 1 + 6 \} \cup \{ 3 + 6 \}                                                                                       \\
-                                & = \{7\} \cup \{9\} = \{7, 9\}.
-              \end{align*}
-        \item \textbf{Node 7:} $Pred(7)=\{1\}$, $w(7)=7$.
-              \[ \mathcal{O}_7 = \{ y + w(7) \mid y \in \mathcal{O}_1 \} = \{ 1 + 7 \} = \{8\}. \]
-        \item \textbf{Node 2:} $Pred(2)=\{3, 6\}$, $w(2)=2$.
-              \begin{align*}
-                  \mathcal{O}_2 & = \left( \{ y + w(2) \mid y \in \mathcal{O}_3 \} \right) \cup \left( \{ z + w(2) \mid z \in \mathcal{O}_6 \} \right) \\
-                                & = \{ 3 + 2 \} \cup \{ (7+2), (9+2) \}                                                                                \\
-                                & = \{5\} \cup \{9, 11\} = \{5, 9, 11\}.
-              \end{align*}
-
-        \item \textbf{Node 9:} $Pred(9)=\{6, 7\}$, $w(9)=9$.
-              \begin{align*}
-                  \mathcal{O}_9 & = \left( \{ y + w(9) \mid y \in \mathcal{O}_6 \} \right) \cup \left( \{ z + w(9) \mid z \in \mathcal{O}_7 \} \right) \\
-                                & = \{ (7+9), (9+9) \} \cup \{ 8 + 9 \}                                                                                \\
-                                & = \{16, 18\} \cup \{17\} = \{16, 17, 18\}.
-              \end{align*}
-
-              % \item \textbf{Node 5:} $Pred(5)=\{7, 9\}$, $w(5)=5$.
-              %       \begin{align*}
-              %           \mathcal{O}_5 & = \left( \{ y + w(5) \mid y \in \mathcal{O}_7 \} \right) \cup \left( \{ z + w(5) \mid z \in \mathcal{O}_9 \} \right) \\
-              %                         & = \{ 8 + 5 \} \cup \{ (16+5), (17+5), (18+5) \}                                                                      \\
-              %                         & = \{13\} \cup \{21, 22, 23\} = \{13, 21, 22, 23\}.
-              %       \end{align*}
-
-              % \item \textbf{Node 10:} $Pred(10)=\{2\}$, $w(10)=10$. Using the correctly calculated $\mathcal{O}_2 = \{5, 9, 11\}$:
-              %       \[ \mathcal{O}_{10} = \{ y + w(10) \mid y \in \mathcal{O}_2 \} = \{ (5+10), (9+10), (11+10) \} = \{15, 19, 21\}. \]
-
-              % \item \textbf{Node 8:} $Pred(8)=\{5, 9, 10\}$, $w(8)=8$. Using the correct predecessor $\mathcal{O}$-sets:
-              %       \begin{align*}
-              %           \mathcal{O}_8 = & \left( \{ y + w(8) \mid y \in \mathcal{O}_5 \} \right) \cup \left( \{ z + w(8) \mid z \in \mathcal{O}_9 \} \right) \\
-              %                           & \cup \left( \{ a + w(8) \mid a \in \mathcal{O}_{10} \} \right)                                                     \\
-              %           =               & \{ (13+8), (21+8), (22+8), (23+8) \}                                                                               \\
-              %                           & \cup \{ (16+8), (17+8), (18+8) \}                                                                                  \\
-              %                           & \cup \{ (15+8), (19+8), (21+8) \}                                                                                  \\
-              %           =               & \{ 21, 29, 30, 31 \} \cup \{ 24, 25, 26 \} \cup \{ 23, 27, 29 \}                                                   \\
-              %           =               & \{ 21, 23, 24, 25, 26, 27, 29, 30, 31 \} \text{ (sorted unique values)}
-              %       \end{align*}
-
-    \end{itemize}
-    This example illustrates the recursive computation of $\mathcal{O}$-sets. Each set captures the distinct cumulative weights achievable via paths from the source to that specific node. The process follows the topological ordering, propagating and transforming path weights from predecessors according to \ref{def:o_set}.
+    % \begin{itemize}
+    %     \item \emph{Node 0 (Source):} $w(0)=0$. By definition, $\mathcal{O}_0 = \{0\}$.
+    %     \item \emph{Node 1:} $Pred(1)=\{0\}$, $w(1)=1$.
+    %           \[ \mathcal{O}_1 = \{ y + w(1) \mid y \in \mathcal{O}_0 \} = \{ 0 + 1 \} = \{1\}. \]
+    %     \item \emph{Node 3:} $Pred(3)=\{0\}$, $w(3)=3$.
+    %           \[ \mathcal{O}_3 = \{ y + w(3) \mid y \in \mathcal{O}_0 \} = \{ 0 + 3 \} = \{3\}. \]
+    %     \item \emph{Node 6:} $Pred(6)=\{1, 3\}$, $w(6)=6$.
+    %           \begin{align*}
+    %               \mathcal{O}_6 & = \left( \{ y + w(6) \mid y \in \mathcal{O}_1 \} \right) \cup \left( \{ z + w(6) \mid z \in \mathcal{O}_3 \} \right) \\
+    %                             & = \{ 1 + 6 \} \cup \{ 3 + 6 \}                                                                                       \\
+    %                             & = \{7\} \cup \{9\} = \{7, 9\}.
+    %           \end{align*}
+    %     \item \emph{Node 7:} $Pred(7)=\{1\}$, $w(7)=7$.
+    %           \[ \mathcal{O}_7 = \{ y + w(7) \mid y \in \mathcal{O}_1 \} = \{ 1 + 7 \} = \{8\}. \]
+    %     \item \emph{Node 2:} $Pred(2)=\{3, 6\}$, $w(2)=2$.
+    %           \begin{align*}
+    %               \mathcal{O}_2 & = \left( \{ y + w(2) \mid y \in \mathcal{O}_3 \} \right) \cup \left( \{ z + w(2) \mid z \in \mathcal{O}_6 \} \right) \\
+    %                             & = \{ 3 + 2 \} \cup \{ (7+2), (9+2) \}                                                                                \\
+    %                             & = \{5\} \cup \{9, 11\} = \{5, 9, 11\}.
+    %           \end{align*}
+    %     \item \emph{Node 9:} $Pred(9)=\{6, 7\}$, $w(9)=9$.
+    %           \begin{align*}
+    %               \mathcal{O}_9 & = \left( \{ y + w(9) \mid y \in \mathcal{O}_6 \} \right) \cup \left( \{ z + w(9) \mid z \in \mathcal{O}_7 \} \right) \\
+    %                             & = \{ (7+9), (9+9) \} \cup \{ 8 + 9 \}                                                                                \\
+    %                             & = \{16, 18\} \cup \{17\} = \{16, 17, 18\}.
+    %           \end{align*}
+    %     \item \emph{Node 5:} $Pred(5)=\{7, 9\}$, $w(5)=5$.
+    %           \begin{align*}
+    %               \mathcal{O}_5 & = \left( \{ y + w(5) \mid y \in \mathcal{O}_7 \} \right) \cup \left( \{ z + w(5) \mid z \in \mathcal{O}_9 \} \right) \\
+    %                             & = \{ 8 + 5 \} \cup \{ (16+5), (17+5), (18+5) \}                                                                      \\
+    %                             & = \{13\} \cup \{21, 22, 23\} = \{13, 21, 22, 23\}.
+    %           \end{align*}
+    %     \item \emph{Node 10:} $Pred(10)=\{2\}$, $w(10)=10$. Using $\mathcal{O}_2 = \{5, 9, 11\}$:
+    %           \[ \mathcal{O}_{10} = \{ y + w(10) \mid y \in \mathcal{O}_2 \} = \{ (5+10), (9+10), (11+10) \} = \{15, 19, 21\}. \]
+    %     \item \emph{Node 8:} $Pred(8)=\{5, 9, 10\}$, $w(8)=8$. Using the previously computed $\mathcal{O}$-sets:
+    %           \begin{align*}
+    %               \mathcal{O}_8 = & \left( \{ y + w(8) \mid y \in \mathcal{O}_5 \} \right) \cup \left( \{ z + w(8) \mid z \in \mathcal{O}_9 \} \right) \\
+    %                               & \cup \left( \{ a + w(8) \mid a \in \mathcal{O}_{10} \} \right)                                                     \\
+    %               =               & \{ (13+8), (21+8), (22+8), (23+8) \}                                                                               \\
+    %                               & \cup \{ (16+8), (17+8), (18+8) \}                                                                                  \\
+    %                               & \cup \{ (15+8), (19+8), (21+8) \}                                                                                  \\
+    %               =               & \{ 21, 29, 30, 31 \} \cup \{ 24, 25, 26 \} \cup \{ 23, 27, 29 \}                                                   \\
+    %               =               & \{ 21, 23, 24, 25, 26, 27, 29, 30, 31 \} \quad \text{(sorted unique values)}
+    %           \end{align*}
+    % \end{itemize}
 \end{example}
 
 \subsection{The Rank Query}
 \label{subsec:rank_dag_def}
 
-We formally define the Rank query using the $\mathcal{O}$-set.
+Having defined the $\mathcal{O}$-set, which precisely captures the set of all possible cumulative path weights terminating at a given vertex $N$, we now introduce the Rank query. This query builds upon the $\mathcal{O}$-set to provide a richer description related to the path weights.
+
+Intuitively, each value $x \in \mathcal{O}_N$ represents the total accumulated weight along some path from the source $s$ ending exactly at $N$. We can think of the weight $w(N)$ of the node $N$ itself as the contribution or cost associated with the final step or "activity" performed at $N$. The Rank query, $\mathrm{Rank}_G(N)$, aims to capture not just the final cumulative weights $x \in \mathcal{O}_N$, but rather the set of all possible cumulative values that could be considered "active" or relevant \emph{during} the activity represented by node $N$.
+
+Specifically, for a path $P$ reaching $N$ with total weight $W'(P)=x$, the query considers the range of cumulative values from the point just before incorporating $N$'s full weight up to the final value $x$. This corresponds mathematically to the integer interval $[\max(0, x - w(N) + 1), x]$. This interval represents all possible integer cumulative weights observed during the \emph{processing} of node $N$ along that specific path. The Rank query then aggregates these intervals over all possible paths ending at $N$.
+
+This intuition leads to the following formal definition:
 
 \begin{definition}[Rank Query on Weighted DAG]
     \label{def:rank_dag}
-    Given a vertex $N \in V$ in a weighted DAG $G=(V, E, w)$, the Rank query, denoted $\mathrm{Rank}_G(N)$, returns a representation of a set of integers derived from $\mathcal{O}_N$. The target set is
+    Given a vertex $N \in V$ in a weighted DAG $G=(V, E, w)$, the Rank query, denoted $\mathrm{Rank}_G(N)$, returns a representation of a specific set of integers derived from the $\mathcal{O}$-set $\mathcal{O}_N$. The target set, $S_N \subseteq \mathbb{N}_0$, is defined as the union of intervals generated from each element $x \in \mathcal{O}_N$:
     \[ S_N = \bigcup_{x \in \mathcal{O}_N} \{ z \in \mathbb{N}_0 \mid \max(0, x - w(N) + 1) \le z \le x \}. \]
-    The query returns a minimal collection
-
-    $$\mathcal{R}_N = \{[l_1, r_1], [l_2, r_2], \dots, [l_p, r_p]\}$$
-
-    of disjoint, closed integer intervals such that
-    $$\bigcup_{k=1}^{p} [l_k, r_k] = S_N$$
-
-    and $r_k < l_{k+1}-1$ for all $k=1, \dots, p-1$.
+    The query result is specified as a minimal collection of disjoint, closed integer intervals,
+    \[ \mathcal{R}_N = \{[l_1, r_1], [l_2, r_2], \dots, [l_p, r_p]\} \]
+    such that their union equals $S_N$,
+    \[ \bigcup_{k=1}^{p} [l_k, r_k] = S_N \]
+    and the intervals are maximally merged, meaning $r_k < l_{k+1}-1$ for all $k=1, \dots, p-1$
 \end{definition}
 
 \begin{remark}
-    The transformation from $\mathcal{O}_N$ to $S_N$ is specific to the application motivating this query. The definition formalizes the computation: generate the raw interval $[\max(0, x - w(N) + 1), x]$ for each $x \in \mathcal{O}_N$, then merge these intervals greedily after sorting them by start point. Intervals $[l_1, r_1]$ and $[l_2, r_2]$ (with $l_1 \le l_2$) are merged if $l_2 \le r_1 + 1$.
+    As motivated above, the transformation from $\mathcal{O}_N$ to the set $S_N$ via the interval generation rule $\{ z \mid \max(0, x - w(N) + 1) \le z \le x \}$ formalizes the idea of capturing the range of values associated with the final node $N$ for each possible incoming path weight $x$. The length of the generated interval is typically $w(N)$ (unless $x < w(N)-1$, in which case it starts from 0), ending precisely at $x$. This mathematical formulation directly implements the intuition of considering values accumulated during the phase associated with node $N$. The subsequent union and merging into disjoint intervals provide a canonical and compact representation of the overall set $S_N$.
 \end{remark}
 
 \begin{example}[Rank Query Calculation with Disjoint Result]
     \label{ex:rank_calc_disjoint}
-    Let's compute the Rank query for node $N=2$ in the DAG shown in \autoref{fig:dag_example}. From Example \ref{ex:o_set_calc}, we know:
+    Let us compute the Rank query for vertex $N=2$ in the DAG shown in \autoref{fig:dag_example}. From Example \ref{ex:o_set_calc}, we have:
     \begin{itemize}
         \item The weight of node 2 is $w(2) = 2$.
-        \item The $\mathcal{O}$-set for node 2 is $\mathcal{O}_2 = \{ 5, 9, 11 \}$.
+        \item The $\mathcal{O}$-set for node 2 is $\mathcal{O}_2 = \{ 5, 9, 11 \}$. These are the possible total weights of paths ending at node 2.
     \end{itemize}
-    Following Definition \ref{def:rank_dag}, we first generate an interval $[\max(0, x - w(2) + 1), x]$ for each $x \in \mathcal{O}_2$:
+    Applying Definition \ref{def:rank_dag}, we associate an interval with each $x \in \mathcal{O}_2$, representing the values active during the processing of node 2:
     \begin{itemize}
-        \item For $x=5$: $[\max(0, 5 - 2 + 1), 5] = [\max(0, 4), 5] = [4, 5]$
-        \item For $x=9$: $[\max(0, 9 - 2 + 1), 9] = [\max(0, 8), 9] = [8, 9]$
-        \item For $x=11$: $[\max(0, 11 - 2 + 1), 11] = [\max(0, 10), 11] = [10, 11]$
+        \item For path weight $x=5$: Interval is $[\max(0, 5 - 2 + 1), 5] = [4, 5]$. These are the values active while accumulating the weight $w(2)=2$ to reach 5.
+        \item For path weight $x=9$: Interval is $[\max(0, 9 - 2 + 1), 9] = [8, 9]$.
+        \item For path weight $x=11$: Interval is $[\max(0, 11 - 2 + 1), 11] = [10, 11]$.
     \end{itemize}
-    The initial set of intervals is:
-    $$ \{ [4, 5], [8, 9], [10, 11] \} $$
-    Next, we merge overlapping or adjacent intervals using the condition $l_2 \le r_1 + 1$. The final minimal collection of disjoint intervals is:
-    $$ \mathrm{Rank}_G(2) = \{ [4, 5], [8, 11] \}. $$
-    This set represents $S_2 = \{4, 5\} \cup \{8, 9, 10, 11\}$, correctly reflecting the disjoint nature arising from the gaps in the initial intervals generated from $\mathcal{O}_2$.
+    The target set $S_2$ is the union of these intervals: $S_2 = [4, 5] \cup [8, 9] \cup [10, 11]$.
+    We merge these intervals to obtain the minimal disjoint representation $\mathcal{R}_2$. The intervals are already sorted by starting point.
+    \begin{itemize}
+        \item Compare $[4, 5]$ and $[8, 9]$. Since $8 > 5 + 1$, they remain separate.
+        \item Compare $[8, 9]$ and $[10, 11]$. Since $10 \le 9 + 1$, they are merged into $[8, \max(9, 11)] = [8, 11]$.
+    \end{itemize}
+    The final minimal collection of disjoint intervals is:
+    \[ \mathrm{Rank}_G(2) = \{ [4, 5], [8, 11] \}. \]
+    This collection represents the set $S_2 = \{4, 5\} \cup \{8, 9, 10, 11\}$, which encompasses all possible integer cumulative weights that could be considered active during the processing phase associated with node 2, across all possible paths leading to it.
 \end{example}
-
-
 \section{The Succinct DAG Representation}
 \label{sec:succinct_dag_representation}
 
-Direct storage of all $\mathcal{O}$-sets is often infeasible. We outline a representation strategy aiming for succinctness, based on partitioning nodes and using indirect references.
+As established, the $\mathcal{O}$-sets can grow significantly in size, rendering their explicit storage for all vertices prohibitive for large graphs. This section details our proposed succinct representation strategy, designed to mitigate this space complexity while still enabling efficient query evaluation. The core idea is to partition the vertices and utilize indirect references guided by a successor relationship.
 
 \subsection*{Successor Selection Heuristic}
 \label{subsec:successor_selection}
 
-To enable the implicit representation, we define a successor function $\sigma$ for non-sink nodes.
+For an implicit representation of path information, we define a function $\sigma$ that designates a specific successor for each non-sink vertex. This choice is guided by a simple heuristic aimed at minimizing the overall space required for storing the succinct representation.
 
 \begin{definition}[Successor Function $\sigma$]
     \label{def:sigma_function}
-    For each vertex $v \in V$ that is not a sink ($Succ(v) \neq \emptyset$), we select a designated successor $\sigma(v) \in Succ(v)$ using the following heuristic:
+    For each vertex $v \in V$ that is not a sink (i.e., $Succ(v) \neq \emptyset$), we select a designated successor $\sigma(v) \in Succ(v)$ according to the following heuristic rule:
     \[ \sigma(v) \in \underset{u \in Succ(v)}{\operatorname{argmin}} \{ |\mathcal{O}_u| \}. \]
 \end{definition}
-Ties are broken consistently, for example, by choosing the successor with the smallest vertex ID among those minimizing the $\mathcal{O}$-set size. The function $\sigma$ is defined only for non-sink vertices.
+In case of ties (multiple successors minimize the $\mathcal{O}$-set cardinality) we select the successor with the smallest vertex ID among the candidates. The function $\sigma$ is thus well-defined for all non-sink vertices.
 
 \subsection*{Node Partitioning}
 \label{subsec:node_partitioning}
 
-The choice of $\sigma$ informs the partitioning of vertices into explicit and implicit sets.
+The successor function $\sigma$ induces a natural partitioning of the graph's vertices, which dictates how path information is stored or derived for each vertex.
 
 \begin{definition}[Explicit and Implicit Vertices]
     \label{def:explicit_implicit}
     The set of vertices $V$ is partitioned into two disjoint sets:
     \begin{itemize}
-        \item $V_E$: The set of \emph{explicit} vertices. These are the sink vertices of $G$:
+        \item $V_E$: The set of \emph{explicit} vertices. This set comprises all sink vertices of the graph $G$:
               \[ V_E = \{ v \in V \mid Succ(v) = \emptyset \}. \]
-        \item $V_I$: The set of \emph{implicit} vertices. These are all non-sink vertices:
+        \item $V_I$: The set of \emph{implicit} vertices. This set includes all non-sink vertices:
               \[ V_I = V \setminus V_E = \{ v \in V \mid Succ(v) \neq \emptyset \}. \]
     \end{itemize}
-    Explicit vertices serve as base cases in the query process, where path information ($\mathcal{O}$-sets) is stored directly. Implicit vertices rely on their designated successor $\sigma(v)$ to reconstruct their path information.
 \end{definition}
+Vertices in $V_E$ serve as base cases in our representation; their associated path weight information ($\mathcal{O}$-sets) is stored directly. For vertices in $V_I$, this information is represented implicitly, relying on references to their designated successor $\sigma(v)$ as defined above.
 
 \subsection{Structure Components}
 \label{subsec:structure_components}
 
-We represent the DAG $G=(V,E,w)$ using three components, typically realized as arrays indexed by vertex ID ($0$ to $n-1$), facilitating a Structure of Arrays (SoA) layout \footnote{The SoA organization allows separate processing and potential compression of weights, structural links, and path data, and can offer performance benefits due to data locality.}:
+We now outline the main components of our data structure designed to represent the weighted DAG $G=(V,E,w)$ succinctly. These components are typically implemented as arrays indexed by vertex ID (from $0$ to $n-1$), enabling a Structure of Arrays (SoA) memory layout \footnote{The SoA organization can be advantageous for cache performance and allows for independent compression strategies for different data types (weights, pointers, path data).}.
 
 \begin{enumerate}
-    \item \textbf{Weights $\mathcal{W}$:} Stores the weight $w(v)$ for each vertex $v$. Conceptually, $\mathcal{W}[v] = w(v)$.
-    \item \textbf{Successor Information $\Sigma$:} Stores information guiding the traversal from implicit nodes. For certain nodes $v$, $\Sigma[v]$ will identify a designated successor vertex $\sigma(v)$. For others, it will mark them as explicit endpoints.
-    \item \textbf{Associated Data $\mathcal{D}$:} Holds the core path information. For a vertex $v$, $\mathcal{D}[v]$ conceptually stores either its full $\mathcal{O}$-set (if $v$ is explicit) or an "offset sequence" $\mathcal{I}_v$ (if $v$ is implicit) that allows reconstructing $\mathcal{O}_v$ by referring to the data associated with $\sigma(v)$.
+    \item \emph{Weights $\mathcal{W}$:} An array storing the weight $w(v)$ for each vertex $v \in V$. Conceptually, $\mathcal{W}[v] = w(v)$.
+    \item \emph{Successor Information $\Sigma$:} An array encoding the successor function $\sigma$ and identifying explicit nodes. For an implicit vertex $v \in V_I$, $\Sigma[v]$ stores the identifier (ID) of its designated successor $\sigma(v)$. For an explicit vertex $v \in V_E$, $\Sigma[v]$ contains a special marker indicating its status.
+    \item \emph{Associated Data $\mathcal{D}$:} An array or structure holding the core path weight information, structured differently depending on whether a vertex is explicit or implicit. For a vertex $v$, $\mathcal{D}[v]$ conceptually stores either its full $\mathcal{O}$-set (if $v \in V_E$) or an offset sequence $\mathcal{I}_v$ (if $v \in V_I$) that enables reconstruction of $\mathcal{O}_v$ via reference to the data associated with $\sigma(v)$ (and eventually all its successors up to a node in $V_E$).
 \end{enumerate}
-% The SoA organization allows separate processing and potential compression of weights, structural links, and path data, and can offer performance benefits due to data locality.
 
-Based on the partitioning defined in \ref{def:explicit_implicit}, we can describe the data stored in $\mathcal{D}$ for each vertex $v \in V$:
+Let's focus on the content of the Associated Data $\mathcal{D}$ based on the vertex partitioning:
 
-\begin{itemize}
-    \item For $v \in V_E$: $\mathcal{D}[v]$ conceptually stores the sorted sequence $\mathcal{O}_v$. We denote this stored data as $\mathcal{D}_E(v)$.
-    \item For $v \in V_I$: Let $u = \sigma(v)$. $\mathcal{D}[v]$ conceptually stores the \emph{offset sequence} $\mathcal{I}_v$. This sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$ is a monotonically increasing sequence of $m = |\mathcal{O}_v|$ indices. The index $j_k$ indicates that the $k$-th element of $\mathcal{O}_v$, denoted $x_k$, can be derived from the $j_k$-th element of $\mathcal{O}_u$, denoted $y_{j_k}$, via the reconstruction rule $x_k = y_{j_k} - w(u)$. We denote this stored sequence as $\mathcal{D}_I(v)$.
-\end{itemize}
-The successor information $\Sigma[v]$ stores the ID of $\sigma(v)$ if $v \in V_I$, and a special marker if $v \in V_E$.
+\paragraph{Explicit Vertex Data ($\mathcal{D}_E$)}
+For $v \in V_E$ (Explicit Vertex), $\mathcal{D}[v]$ conceptually stores the sorted sequence $\mathcal{O}_v$. We denote this stored data representation as $\mathcal{D}_E(v)$. In practice, $\mathcal{D}_E(v)$ would be implemented using a suitable (potentially compressed) representation of the sequence $\mathcal{O}_v$.
+
+\paragraph{Implicit Vertex Data ($\mathcal{D}_I$)}
+For $v \in V_I$ (Implicit Vertex), let $u = \sigma(v)$ be the designated successor. $\mathcal{D}[v]$ conceptually stores the \emph{offset sequence} $\mathcal{I}_v$. This sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$ is a monotonically increasing sequence of $m = |\mathcal{O}_v|$ indices. The index $j_k$ (stored at position $k$ in $\mathcal{I}_v$) indicates that the $k$-th element of $\mathcal{O}_v$ (let it be $x_k$) can be computed from the $j_k$-th element of $\mathcal{O}_u$ (let it be $y_{j_k}$) using the reconstruction rule: $x_k = y_{j_k} - w(u)$. We denote this stored sequence representation as $\mathcal{D}_I(v)$.
+
+The successor information $\Sigma[v]$ provides the link $u = \sigma(v)$, and the weight $w(u)$ needed for the reconstruction is retrieved from $\mathcal{W}[u]$.
 
 \begin{proposition}
+    \label{prop:o_set_size_guarantee}
     For any implicit node $v \in V_I$, let $u = \sigma(v)$ be its designated successor chosen according to Definition \ref{def:sigma_function}. Then $|\mathcal{O}_v| \le |\mathcal{O}_u|$.
 \end{proposition}
 \begin{proof}
-    This follows directly from Lemma \ref{lem:o_set_cardinality_monotonicity}, as $\sigma(v)$ is one of the successors of $v$.
+    This is a direct consequence of Lemma \ref{lem:o_set_cardinality_monotonicity}. Since $\sigma(v)$ is chosen from the set $Succ(v)$ of direct successors of $v$, the lemma applies, yielding $|\mathcal{O}_v| \le |\mathcal{O}_{\sigma(v)}|$.
 \end{proof}
-This ensures that the length of the offset sequence $\mathcal{I}_v$ ($|\mathcal{O}_v|$) does not exceed the length of the sequence $\mathcal{O}_{\sigma(v)}$ it refers to.
+This inequality guarantees that the length of the offset sequence $\mathcal{I}_v$ (which is $m = |\mathcal{O}_v|$) is no greater than the length of the sequence $\mathcal{O}_u$ (which is $|\mathcal{O}_u|$) from which values are derived. Furthermore, the reconstruction rule $x_k = y_{j_k} - w(u)$ implies that each $x_k \in \mathcal{O}_v$ originates from some element in $\mathcal{O}_u$ (shifted by $-w(u)$). The offset sequence $\mathcal{I}_v$ stores the index $j_k$ in $\mathcal{O}_u$ corresponding to the $k$-th element $x_k$ in $\mathcal{O}_v$.
 
-In this way, using the heuristic introduced in \ref{subsec:successor_selection}, we aim to reduce the potential complexity associated with an implicit node $v$. By choosing a successor $\sigma(v)$ whose $\mathcal{O}$-set is as small as possible among the immediate options, we anticipate that the offset sequence $\mathcal{I}_v$, which references data related to $\mathcal{O}_{\sigma(v)}$, might involve smaller indices or exhibit properties more amenable to compression. This is a greedy strategy focused on local optimization.
+The heuristic choice of $\sigma(v)$ (\ref{def:sigma_function}) aims to minimize $|\mathcal{O}_{\sigma(v)}|$. While this is a greedy, local optimization, the intuition is that choosing a successor with a smaller $\mathcal{O}$-set might lead to offset sequences $\mathcal{I}_v$ that are structurally simpler or involve smaller index values, potentially improving the compressibility of the $\mathcal{D}_I(v)$ component.
 
 \subsection*{Example of the Structure}
 \label{subsec:structure_example}
 
-To concretely illustrate the succinct representation, we revisit the DAG introduced in \autoref{fig:dag_example}. Its representation according to the principles outlined in \autoref{subsec:structure_components} is shown in \autoref{fig:succinct_dag_example}.
+To concretely illustrate the succinct representation, let us apply the principles from \autoref{subsec:structure_components} to the example DAG introduced in \autoref{fig:dag_example}. The resulting structure is visualized in \autoref{fig:succinct_dag_example}.
 
 \begin{figure}[htbp]
     \centering
@@ -344,23 +363,51 @@ To concretely illustrate the succinct representation, we revisit the DAG introdu
         \draw [edge_style] (10) -- (8);
         \draw [edge_style] (5) -- (8);
 
-        % Highlighted successor edges
-        \draw [successor_edge] (0) -- (1); \draw [successor_edge] (1) -- (7);
-        \draw [successor_edge] (3) -- (6); \draw [successor_edge] (6) -- (2);
-        \draw [successor_edge] (7) -- (9); \draw [successor_edge] (2) -- (10);
-        \draw [successor_edge] (9) -- (5); \draw [successor_edge] (5) -- (8);
-        \draw [successor_edge] (10) -- (8);
+        % Highlighted successor edges (sigma function)
+        % Assume heuristic choices based on O-set sizes from Fig 1 example:
+        % sigma(0): Succ={1,3}. |O1|=1, |O3|=1. Tie-break: min ID -> sigma(0)=1
+        % sigma(1): Succ={6,7}. |O6|=2, |O7|=1. -> sigma(1)=7
+        % sigma(3): Succ={2,6}. |O2|=3, |O6|=2. -> sigma(3)=6
+        % sigma(6): Succ={2,9}. |O2|=3, |O9|=3. Tie-break: min ID -> sigma(6)=2
+        % sigma(7): Succ={5,9}. |O5|=4, |O9|=3. -> sigma(7)=9
+        % sigma(2): Succ={10}. |O10|=3. -> sigma(2)=10
+        % sigma(9): Succ={5,8}. |O5|=4, |O8|=9. -> sigma(9)=5
+        % sigma(10): Succ={8}. |O8|=9. -> sigma(10)=8
+        % sigma(5): Succ={8}. |O8|=9. -> sigma(5)=8
+        \draw [successor_edge] (0) -- (1); % sigma(0)=1
+        \draw [successor_edge] (1) -- (7); % sigma(1)=7
+        \draw [successor_edge] (3) -- (6); % sigma(3)=6
+        \draw [successor_edge] (6) -- (2); % sigma(6)=2 (Corrected from original text example; assuming tie-break by ID)
+        \draw [successor_edge] (7) -- (9); % sigma(7)=9
+        \draw [successor_edge] (2) -- (10); % sigma(2)=10
+        \draw [successor_edge] (9) -- (5); % sigma(9)=5
+        \draw [successor_edge] (5) -- (8); % sigma(5)=8
+        \draw [successor_edge] (10) -- (8); % sigma(10)=8
 
     \end{tikzpicture}
-    \caption{Illustration of the succinct DAG representation for the graph in \autoref{fig:dag_example}. Nodes are colored by type (root is red, implicit is standard black, explicit is green). Labels show the stored data: $\mathcal{O}_v$ for the explicit node (8) and the offset sequence $\mathcal{I}_v$ for implicit nodes. Highlighted blue edges indicate the chosen successor $\sigma(v)$ for each implicit node.}
+    \caption{Illustration of the succinct DAG representation for the graph in \autoref{fig:dag_example}. Implicit nodes are shown with standard borders, while the explicit sink node (8) is shaded green. The source node (0) is red. Highlighted blue edges indicate the chosen successor $\sigma(v)$ for each implicit node $v$, selected according to Definition \ref{def:sigma_function}. Labels show the stored associated data $\mathcal{D}[v]$: the full $\mathcal{O}$-set for the explicit node 8, and the offset sequence $\mathcal{I}_v$ for all implicit nodes.}
     \label{fig:succinct_dag_example}
 \end{figure}
 
-The construction follows these steps. First, nodes are partitioned into explicit ($V_E$) and implicit ($V_I$) sets. Since node 8 is the only sink, $V_E=\{8\}$ (green node). All other nodes are implicit. Second, for each implicit node $v$, a successor $\sigma(v)$ is chosen from its direct successors $Succ(v)$ such that $|\mathcal{O}_{\sigma(v)}|$ is minimized, as per \ref{def:sigma_function}. These successor choices are indicated by the thick blue edges in the figure.
+The construction proceeds in three main steps:
 
-Third, the associated data $\mathcal{D}[v]$ is determined. For the explicit node $v=8$, the complete $\mathcal{O}$-set, $\mathcal{O}_8=\{21, 23, ..., 31\}$, is stored. For every implicit node $v$, the offset sequence $\mathcal{I}_v$ is stored instead. This sequence provides the indices needed to reconstruct $\mathcal{O}_v$ by referring to the $\mathcal{O}$-set of its designated successor, $\mathcal{O}_{\sigma(v)}$, using the rule $x_k = y_{j_k} - w(\sigma(v))$, where $x_k$ is the $k$-th element of $\mathcal{O}_v$ and $y_{j_k}$ is the element at index $j_k = \mathcal{I}_v[k]$ in $\mathcal{O}_{\sigma(v)}$. For example, node 3 has $\sigma(3)=6$. Its $\mathcal{O}$-set is $\mathcal{O}_3=\{3\}$. The successor's weight is $w(6)=6$ and its $\mathcal{O}$-set is $\mathcal{O}_6=\{7, 9\}$. To find $\mathcal{I}_3[0]$, we solve $3 = y_{j_0} - 6$, yielding $y_{j_0}=9$. Since 9 is at index 1 in $\mathcal{O}_6$, we store $\mathcal{I}_3=(1)$. The offset sequences for all other implicit nodes are computed similarly and shown in their labels in \autoref{fig:succinct_dag_example}.
+\begin{enumerate}
+    \item \emph{Partitioning:} Vertices are partitioned into explicit sinks $V_E = \{ v \mid Succ(v) = \emptyset \}$ and implicit non-sinks $V_I = V \setminus V_E$. In the example (\autoref{fig:succinct_dag_example}), $V_E=\{8\}$.
 
-To see how this structure is used in practice, consider the query process to retrieve the value $\mathcal{O}_7[0]$, i.e., the first element of $\mathcal{O}_7$. This corresponds to executing $\textsc{GetValue}(7, 0)$. The operation involves traversing the successor path starting from node 7 until the explicit node 8 is reached, as visualized in \autoref{fig:query_path_node7}.
+    \item \emph{Successor Selection:} For each $v \in V_I$, a successor $\sigma(v)$ is chosen from $Succ(v)$ to minimize $|\mathcal{O}_{\sigma(v)}|$. The selected successors are shown as blue edges in \autoref{fig:succinct_dag_example}. For example, $\sigma(0)=1$, $\sigma(1)=7$, $\sigma(3)=6$, etc.
+    \item \emph{Associated Data Determination:} The data $\mathcal{D}[v]$ depends on the vertex type:
+          For $v \in V_E$, the full $\mathcal{O}$-set is stored: $\mathcal{D}[v] = \mathcal{D}_E(v) = \mathcal{O}_v$. E.g., $\mathcal{D}[8] = \mathcal{O}_8$ in the figure.
+
+          For $v \in V_I$, the offset sequence $\mathcal{I}_v$ is stored: $\mathcal{D}[v] = \mathcal{D}_I(v) = \mathcal{I}_v$. Let $u = \sigma(v)$. The sequence $\mathcal{I}_v = (j_0, \dots, j_{m-1})$ where $m=|\mathcal{O}_v|$, provides the indices $j_k$ such that the $k$-th element $x_k$ of $\mathcal{O}_v$ is reconstructed from the $j_k$-th element $y_{j_k}$ of $\mathcal{O}_u$ via the rule $x_k = y_{j_k} - w(u)$.
+
+          For example, consider $v=3$. We have $\sigma(3)=6$, $w(6)=6$, $\mathcal{O}_3=\{3\}$ (so $x_0=3$), and $\mathcal{O}_6=\{7, 9\}$ (so $y_0=7, y_1=9$). We need $j_0$ such that $x_0 = y_{j_0} - w(6)$, i.e., $3 = y_{j_0} - 6$. This gives $y_{j_0}=9$, which corresponds to index $j_0=1$ in $\mathcal{O}_6$. Thus, $\mathcal{I}_3 = (1)$.
+
+          The offset sequences for all implicit nodes are computed similarly and displayed as labels in \autoref{fig:succinct_dag_example}.
+\end{enumerate}
+
+This structure stores $\mathcal{O}$-sets only for sinks, relying on successor paths and offset sequences for implicit nodes, enabling query evaluation via traversal as shown in \autoref{fig:query_path_node7}.
+
+This representation avoids storing the full $\mathcal{O}$-sets for implicit nodes. Instead, it stores references (via $\sigma$) and transformations (via $\mathcal{I}_v$ and weights $\mathcal{W}$). Queries for implicit nodes require traversing the successor path until an explicit node is reached, as illustrated next.
 
 \begin{figure}[htbp]
     \centering
@@ -405,26 +452,23 @@ To see how this structure is used in practice, consider the query process to ret
         \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
 
     \end{tikzpicture}
-    \caption{Visualisation of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$. The path followed is $7 \to 9 \to 5 \to 8$. Offset indices $\mathcal{I}_7[0]=1$, $\mathcal{I}_9[1]=2$, and $\mathcal{I}_5[2]=7$ are used successively. Weights $w(9)=9$, $w(5)=5$, and $w(8)=8$ are accumulated ($sum = 9+5+8=22$). The base value $\mathcal{O}_8[7]=30$ is retrieved from the explicit node, and the final result is $30 - 22 = 8$.}
+    \caption{Visualization of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$ using the succinct representation. The query follows the successor path $7 \to 9 \to 5 \to 8$. At each step from an implicit node $v$ to its successor $u=\sigma(v)$, the current index $k_{current}$ is updated using the stored offset $k_{next} = \mathcal{I}_v[k_{current}]$, and the weight $w(u)$ is added to an accumulator. The path starts with $k=0$ at node 7. It proceeds to node 9 using index $\mathcal{I}_7[0]=1$, accumulating $w(9)=9$. Then to node 5 using index $\mathcal{I}_9[1]=2$, accumulating $w(5)=5$ (total sum 14). Then to node 8 using index $\mathcal{I}_5[2]=7$, accumulating $w(8)=8$ (total sum 22). Node 8 is explicit, so the value at the final index 7, $\mathcal{O}_8[7]=30$, is retrieved. The result is obtained by subtracting the total accumulated weight: $30 - 22 = 8$. This correctly reconstructs $\mathcal{O}_7[0]$.}
     \label{fig:query_path_node7} % Keep the same label if it replaces the previous figure
 \end{figure}
 
-The query trace depicted begins at node 7 with index $k=0$ and an accumulated sum of 0. It follows the successor $\sigma(7)=9$, uses the offset $\mathcal{I}_7[0]=1$ to determine the index for the next step, and adds $w(9)=9$ to the sum. The process continues to node $\sigma(9)=5$, using offset $\mathcal{I}_9[1]=2$ and adding $w(5)=5$ to the sum (now 14). Then it proceeds to node $\sigma(5)=8$, using offset $\mathcal{I}_5[2]=7$ and adding $w(8)=8$ (sum becomes 22). Node 8 is explicit, so the traversal stops. The value at the final index $k=7$ is retrieved from $\mathcal{O}_8$, which is $\mathcal{O}_8[7]=30$. Finally, the accumulated sum is subtracted: $30 - 22 = 8$. This correctly reconstructs the value $\mathcal{O}_7[0]$. This mechanism allows deriving path information for any implicit node by leveraging the explicitly stored data and the chain of offsets and weights.
+The example in \autoref{fig:query_path_node7} illustrates how a specific value from an implicit node's $\mathcal{O}$-set can be reconstructed. The query for $\mathcal{O}_7[0]$ triggers a traversal along the $\sigma$-defined path $7 \to 9 \to 5 \to 8$. During this traversal, the offset sequences ($\mathcal{I}_7, \mathcal{I}_9, \mathcal{I}_5$) are used to update the target index within the respective successor's $\mathcal{O}$-set representation, and the weights of the successors ($w(9), w(5), w(8)$) are accumulated. Once the explicit node (8) is reached, the value at the final computed index (7) is retrieved from the stored $\mathcal{O}_8$. Subtracting the accumulated weight sum (22) from this base value (30) yields the desired result (8).
 
-
-% The next section would typically be the Query Algorithms section
 \section{Query Algorithms}
 \label{sec:query_algorithms}
 
-
-Based on the succinct representation described in \autoref{sec:succinct_dag_representation}, we now detail the algorithms for reconstructing the $\mathcal{O}$-set of a vertex and computing the Rank query. The core idea is to leverage the successor information $\Sigma$ and the associated data $\mathcal{D}$ (either $\mathcal{O}$-sets for explicit nodes or offset sequences $\mathcal{I}$ for implicit nodes) to retrieve path weight information on demand.
+This section details the algorithms operating on the succinct DAG representation introduced in \autoref{sec:succinct_dag_representation}. We first present the algorithm for reconstructing elements of the $\mathcal{O}$-set for any given vertex, which forms the basis for computing the Rank query.
 
 \subsection{Reconstructing $\mathcal{O}$-Sets}
 \label{subsec:reconstructing_o_sets}
 
-The fundamental operation required for the Rank query is retrieving the $\mathcal{O}$-set for a given vertex $N$. Since $\mathcal{O}$-sets are stored directly only for explicit vertices ($V_E$), we need a method to reconstruct $\mathcal{O}_v$ for implicit vertices ($v \in V_I$). This is achieved by traversing the successor path $v, \sigma(v), \sigma(\sigma(v)), \dots$ until an explicit vertex is reached, accumulating weights and applying offset indices along the way.
+The core operation is to determine the value of the $k$-th element (0-indexed) of $\mathcal{O}_v$ for an arbitrary vertex $v$. If $v$ is explicit ($v \in V_E$), this involves directly accessing the stored representation $\mathcal{D}_E(v)$. If $v$ is implicit ($v \in V_I$), the value must be reconstructed by traversing the successor path defined by $\sigma$ until an explicit vertex is reached, accumulating weights and applying the offset indices stored in the $\mathcal{I}$ sequences along the path.
 
-We define a function, $\textsc{GetValue}(v, k)$, which computes the $k$-th smallest element of $\mathcal{O}_v$ (0-indexed).
+We define the function $\textsc{GetValue}(v, k)$ to perform this task. It relies on accessing the structure components: weights $\mathcal{W}$, successor information $\Sigma$ (to get $\sigma(v)$ and check for explicit nodes), and associated data $\mathcal{D}$ (to retrieve $\mathcal{I}$ sequences or $\mathcal{O}$-sets).
 
 \begin{algorithm}
     \caption{$\textsc{GetValue}(v, k)$: Compute the $k$-th element of $\mathcal{O}_v$}
@@ -432,27 +476,32 @@ We define a function, $\textsc{GetValue}(v, k)$, which computes the $k$-th small
     \small
     \begin{algorithmic}[1]
         \Require Vertex ID $v$, index $k \in \{0, \dots, |\mathcal{O}_v|-1\}$.
-        \Ensure The $k$-th smallest value in $\mathcal{O}_v$.
+        \Ensure The value of the $k$-th smallest element in $\mathcal{O}_v$.
         \State $current\_node \gets v$
         \State $current\_index \gets k$
         \State $weight\_sum \gets 0$
-        \While{$current\_node \in V_I$} \Comment{While the node is implicit}
-        \State $successor \gets \sigma(current\_node)$ \
+        \While{$current\_node \notin V_E$}
+        \State $successor \gets \sigma(current\_node)$
         \State $weight\_sum \gets weight\_sum + \mathcal{W}[successor]$
-        \State $\mathcal{I}_{current\_node} \gets \mathcal{D}_I(current\_node)$ \Comment{Get offset sequence for current node}
+        \State $\mathcal{I}_{current\_node} \gets \mathcal{D}_I(current\_node)$
         \State $next\_index \gets \mathcal{I}_{current\_node}[current\_index]$
         \State $current\_node \gets successor$
         \State $current\_index \gets next\_index$
         \EndWhile
+
         \State $\mathcal{O}_{explicit} \gets \mathcal{D}_E(current\_node)$
         \State $base\_value \gets \mathcal{O}_{explicit}[current\_index]$
         \State \Return $base\_value - weight\_sum$
     \end{algorithmic}
 \end{algorithm}
 
-The correctness of $\textsc{GetValue}(v, k)$ stems from the definition of the offset sequence $\mathcal{I}_v$. By construction, the $k$-th element of $\mathcal{O}_v$, say $x_k$, satisfies $x_k = y_{j_k} - w(u)$, where $u = \sigma(v)$ and $y_{j_k}$ is the $j_k$-th element of $\mathcal{O}_u$, with $j_k = \mathcal{I}_v[k]$. The algorithm iteratively applies this relationship, following the successor chain $v \to u \to \dots \to e$ (where $e \in V_E$) and accumulating the weights $w(u), w(\sigma(u)), \dots, w(e)$. If the final index into $\mathcal{O}_e$ is $J$ and the retrieved value is $Y = \mathcal{O}_e[J]$, the algorithm correctly computes the target value as $Y - \sum_{z \in \{u, \sigma(u), \dots, e\}} w(z)$.
+The correctness of Algorithm \ref{alg:get_value} follows inductively from the definition of the offset sequence $\mathcal{I}_v$. Let $x_k^{(v)}$ denote the $k$-th element of $\mathcal{O}_v$. If $v$ is implicit with successor $u = \sigma(v)$, then by construction $x_k^{(v)} = x_{j_k}^{(u)} - w(u)$, where $j_k = \mathcal{I}_v[k]$. The algorithm iteratively applies this relation: if $v \to u \to \dots \to e$ is the successor path ending at an explicit node $e$, and the indices transform as
+\[ k \to j_k^{(v)} \to j_{j_k^{(v)}}^{(u)} \to \dots \to K \]
+then the algorithm computes
+\[x_K^{(e)} - \sum_{z \in \text{path } v \to e, z \neq v} w(z)\]
+which correctly yields $x_k^{(v)}$. The visualization in \autoref{fig:query_path_node7} provides a concrete example of this process.
 
-Using $\textsc{GetValue}$, we can reconstruct the entire $\mathcal{O}$-set for any vertex $v$. We need a way to determine the size of $\mathcal{O}_v$, denoted $|\mathcal{O}_v|$. This size information must be stored or efficiently computable for each vertex $v$. Let $\textsc{Length}(v)$ be a function returning $|\mathcal{O}_v|$.
+To reconstruct the entire $\mathcal{O}$-set for a vertex $v$, we can repeatedly call $\textsc{GetValue}(v, k)$ for $k=0, 1, \dots, |\mathcal{O}_v|-1$. This requires knowing the size $|\mathcal{O}_v|$. We assume this size information is either stored explicitly for each node or can be efficiently derived (e.g., potentially stored alongside $\mathcal{I}_v$ or $\mathcal{O}_v$ in the $\mathcal{D}$ component). Let $\textsc{Length}(v)$ be an operation that returns $|\mathcal{O}_v|$.
 
 \begin{algorithm}
     \caption{$\textsc{GetOSet}(v)$: Reconstruct the $\mathcal{O}$-set for vertex $v$}
@@ -461,67 +510,73 @@ Using $\textsc{GetValue}$, we can reconstruct the entire $\mathcal{O}$-set for a
     \begin{algorithmic}[1]
         \Require Vertex ID $v$.
         \Ensure The sorted sequence $\mathcal{O}_v$.
-        \State $size \gets \textsc{Length}(v)$
-        \State Initialize an empty list $O\_list$
+        \State $size \gets \textsc{Length}(v)$ \Comment{Obtain the cardinality of $\mathcal{O}_v$}
+        \State Initialize an empty list $O\_list$ of size $size$.
         \For{$k$ from $0$ to $size - 1$}
-        \State $value \gets \textsc{GetValue}(v, k)$
-        \State Append $value$ to $O\_list$
+        \State $value \gets \textsc{GetValue}(v, k)$ \Comment{Compute the $k$-th element}
+        \State $O\_list[k] \gets value$ \Comment{Store in list}
         \EndFor
-        \State \Return $O\_list$ \Comment{The list is inherently sorted}
+        \State \Return $O\_list$ \Comment{The list contains $\mathcal{O}_v$ as a sorted sequence}
     \end{algorithmic}
 \end{algorithm}
 
 \subsection{Computing the Rank Query}
 \label{subsec:computing_rank}
 
-With the ability to reconstruct $\mathcal{O}_N$ for any query vertex $N$, we can now implement the Rank query as defined in Definition \ref{def:rank_dag}. The process involves generating initial intervals based on $\mathcal{O}_N$ and then merging them into a minimal disjoint set. Algorithm \ref{alg:rank_dag} outlines this process.
+Equipped with the capability to reconstruct $\mathcal{O}_N$ for any query vertex $N$ via Algorithm \ref{alg:get_o_set}, we can now implement the Rank query as specified in \ref{def:rank_dag}. The procedure involves two main steps: first, generate the initial set of intervals based on the elements of $\mathcal{O}_N$ and the weight $w(N)$; second, merge these potentially overlapping or adjacent intervals into a minimal set of disjoint intervals.
 
-\begin{algorithm}
+The interval merging step is a standard procedure. Given a list of intervals sorted by their starting points, we can merge them in linear time. Algorithm \ref{alg:merge_intervals} describes this process.
+\begin{algorithm}[htbp]
     \caption{$\textsc{MergeIntervals}(Intervals)$: Merge sorted intervals}
     \label{alg:merge_intervals}
     \small
     \begin{algorithmic}[1]
-        \Require A list $Intervals$ of intervals $[l, r]$, sorted by $l$.
+        \Require A list $Intervals = \{[l_1, r_1], [l_2, r_2], \dots\}$ sorted by start points $l_i$.
         \Ensure A minimal list $MergedIntervals$ of disjoint intervals covering the same union.
-        \State Initialize an empty list $MergedIntervals$
+        \State Initialize an empty list $MergedIntervals$.
         \If{$Intervals$ is not empty}
-        \State $current\_interval \gets Intervals[0]$
+        \State $current\_interval \gets Intervals[0]$.
         \For{$i$ from $1$ to length$(Intervals) - 1$}
-        \State $next\_interval \gets Intervals[i]$
+        \State $next\_interval \gets Intervals[i]$.
         \If{$next\_interval.l \le current\_interval.r + 1$}
         \State $current\_interval.r \gets \max(current\_interval.r, next\_interval.r)$
         \Else
-        \State Append $current\_interval$ to $MergedIntervals$
-        \State $current\_interval \gets next\_interval$
+        \State Append $current\_interval$ to $MergedIntervals$.
+        \State $current\_interval \gets next\_interval$.
         \EndIf
         \EndFor
-        \State Append $current\_interval$ to $MergedIntervals$
+        \State Append $current\_interval$ to $MergedIntervals$.
         \EndIf
-        \State \Return $MergedIntervals$
+        \State \Return $MergedIntervals$.
     \end{algorithmic}
 \end{algorithm}
+
+The overall Rank query algorithm combines $\mathcal{O}$-set reconstruction and interval merging.
 
 \begin{algorithm}
     \caption{$\mathrm{Rank}_G(N)$: Compute the Rank query for vertex $N$}
     \label{alg:rank_dag}
-    \small % Reduce font size for the pseudocode
+    \small
     \begin{algorithmic}[1]
         \Require Vertex ID $N$.
-        \Ensure A minimal set of disjoint intervals $\mathcal{R}_N$ representing $S_N$.
+        \Ensure A minimal set of disjoint intervals $\mathcal{R}_N$ representing $S_N$ (Definition \ref{def:rank_dag}).
         \State $\mathcal{O}_N \gets \textsc{GetOSet}(N)$
         \State $w_N \gets \mathcal{W}[N]$
-        \State Initialize an empty list $Intervals$
+        \State Initialize an empty list $InitialIntervals$.
         \For{each $x \in \mathcal{O}_N$}
         \State $l \gets \max(0, x - w_N + 1)$
         \State $r \gets x$
-        \State Append the interval $[l, r]$ to $Intervals$
+        \State Append the interval $[l, r]$ to $InitialIntervals$.
         \EndFor
-        \State $MergedIntervals \gets \textsc{MergeIntervals}(Intervals)$
-        \State \Return $MergedIntervals$
+        \State Sort $InitialIntervals$ based on the starting point $l$.
+        \State $MergedIntervals \gets \textsc{MergeIntervals}(InitialIntervals)$
+        \State \Return $MergedIntervals$.
     \end{algorithmic}
 \end{algorithm}
 
-Algorithm \ref{alg:rank_dag} first reconstructs the necessary $\mathcal{O}$-set for the query vertex $N$. It then generates an initial set of potentially overlapping intervals based on Definition \ref{def:rank_dag}. Since these intervals are already sorted by construction, it calls Algorithm \ref{alg:merge_intervals} to perform a standard greedy interval merging process. This subroutine iterates through the sorted intervals, merging any interval that overlaps with or is immediately adjacent to the current merged interval, ultimately producing the minimal set of disjoint intervals $\mathcal{R}_N$ covering the target set $S_N$.
+Algorithm \ref{alg:rank_dag} implements the Rank query defined in \ref{def:rank_dag}. It first reconstructs the necessary path weight information ($\mathcal{O}_N$), then applies the specified transformation to generate the initial set of intervals
+\[S_N = \bigcup_{x \in \mathcal{O}_N} [ \max(0, x - w_N + 1), x ]\]
+Finally, it employs the standard interval merging algorithm to produce the canonical representation $\mathcal{R}_N$ as a minimal set of disjoint intervals. Note that the sorting step (line 9) is necessary because intervals generated from consecutive elements in $\mathcal{O}_N$ are not guaranteed to have non-decreasing start points.
 
 \subsubsection*{Example: Rank Query Computation \label{subsubsec:rank_query_example_node2}}
 
@@ -539,7 +594,4 @@ The algorithm then proceeds to generate the initial set of intervals. Each eleme
 \end{align*}
 This yields the initial list $Intervals = \{ [4, 5], [8, 9], [10, 11] \}$.
 
-Finally, $\textsc{MergeIntervals}$ (\ref{alg:merge_intervals}) is applied to this sorted list.
-The process starts with $[4, 5]$. The next interval $[8, 9]$ does not overlap or touch $[4, 5]$ (since $8 > 5+1$). Thus, $[4, 5]$ is added to the result set.
-The current interval becomes $[8, 9]$. The next interval is $[10, 11]$. Since $10 \le 9 + 1$, these intervals are merged: the new current interval becomes $[8, \max(9, 11)] = [8, 11]$.
-As there are no more intervals, the last current interval $[8, 11]$ is added to the result set. The final result returned by $\mathrm{Rank}_G(2)$ is the minimal set of disjoint intervals $\mathcal{R}_2 = \{ [4, 5], [8, 11] \}$
+Finally, $\textsc{MergeIntervals}$ (\ref{alg:merge_intervals}) is applied to this sorted list. The intervals $[8, 9]$ and $[10, 11]$ merge into $[8, 11]$. The interval $[4, 5]$ remains separate. The final result returned by $\mathrm{Rank}_G(2)$ is the minimal set of disjoint intervals $\mathcal{R}_2 = \{ [4, 5], [8, 11] \}$.
