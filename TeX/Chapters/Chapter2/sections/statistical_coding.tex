@@ -108,7 +108,7 @@ While optimal among prefix codes, Huffman coding still assigns an integer number
 
 This theorem highlights that the average Huffman code length is always within one bit of the source entropy. The gap $(L_H - \mathcal{H})$ represents the inefficiency due to the constraint of using integer bit lengths for each symbol's codeword. This gap is significant only when some symbol probabilities are very high (close to 1).
 
-\subsection{Arithmetic Coding}
+\subsection{Arithmetic Coding} \label{subsec:arithmetic_coding}
 
 Introduced conceptually by Peter Elias in the 1960s and later developed into practical algorithms by Rissanen \cite{rissanen1976generalized} and Pasco \cite{pasco1976source} in the 1970s, Arithmetic Coding offers a more powerful approach to statistical compression than Huffman coding. Its key advantage lies in its ability to approach the theoretical entropy limit more closely, often achieving better compression ratios, especially when dealing with skewed probability distributions or when encoding sequences rather than individual symbols.
 

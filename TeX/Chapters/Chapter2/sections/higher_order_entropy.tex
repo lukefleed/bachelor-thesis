@@ -56,16 +56,104 @@ where $S_\omega$ is the string formed by concatenating all symbols that immediat
 
 \begin{remark}
     As $k$ grows large (up to $k=n-1$, and often sooner), the $k$-th order empirical entropy $\mathcal{H}_k(S)$ tends towards zero, given that most long $k$-grams appear only once, making their subsequent symbol perfectly predictable within the sequence $S$. This renders the model ineffective as a lower bound for practical compressors when $k$ is very large relative to $n$. Even before reaching $\mathcal{H}_k(S)=0$, achieving compression close to $n\mathcal{H}_k(S)$ bits becomes practically challenging for high $k$ values. This is due to the necessity of storing or implicitly representing the conditional probabilities (or equivalent coding information) for all $\sigma^k$ possible contexts, which requires significant space overhead ($\approx \sigma^{k+1} \log n$ bits in simple models). In theory, it is commonly assumed that $S$ can be compressed up to $n \mathcal{H}_k(S) + o(n)$ bits for any $k$ such that $k+1 \leq \alpha \log_\sigma n$ for some constant $0 < \alpha < 1$. Under this condition, the overhead for storing the model ($\sigma^{k+1} \log n \leq n^\alpha \log n$) becomes asymptotically negligible compared to the compressed data size ($o(n)$ bits) \cite{navarro2016compact}.
-    % Corrected log base and notation consistency. Clarified the overhead concept.
 \end{remark}
 
 \begin{definition}[Coarsely Optimal Compression Algorithm] \label{def:coarsely_optimal_compression_algorithm}
     A compression algorithm is \emph{coarsely optimal} if, for every fixed value of $k \ge 0$, there exists a function $f_k(n)$ such that $\lim_{n\to\infty} f_k(n) = 0$, and for all sequences $S$ of length $n$, the compression size achieved by the algorithm is bounded by $n (\mathcal{H}_k(S) + f_k(n))$ bits.
-    % Made definition slightly more formal.
 \end{definition}
 
 \noindent The \emph{Lempel-Ziv} algorithm family, particularly LZ78, serves as a prominent example of coarsely optimal compression techniques, as demonstrated by Plotnik et al. \cite{plotnik1992upper}. These algorithms typically rely on dictionary-based compression. However, as highlighted by Kosaraju and Manzini \cite{kosaraju2000compression}, the notion of coarse optimality does not inherently guarantee practical effectiveness across all scenarios. The additive term $n \cdot f_k(n)$ might still lead to poor performance on some sequences, especially if $f_k(n)$ converges slowly or if the sequence length $n$ is not sufficiently large for the asymptotic behavior to dominate.
-% Corrected cite command, added Kosaraju's first initial. Clarified the limitation.
 
-% \newpage
-% \paragraph{Further Comments on LZ77 and LZ78} \todo[inline, color=blue!30]{TBD if to include this section, but I think it's not relevant for the thesis. If included, it should discuss very briefly the LZ77 and LZ78 algorithms, and the differences between them. \cite{ferragina2023pearls}. And then prove two lemmas: one about the compression ration achieved by LZ78 and the other about LZ77 not being coarsely optimal. \cite{ferragina2023pearls}, end of chapter 13}
+
+\subsection{Source Coding Theorem}
+
+\noindent In \autoref{sec:source_and_codes} we have established the properties of different code types and the fundamental constraint imposed by Kraft's inequality (Theorem \autoref{thm:kraft_inequality}), we now arrive at a cornerstone result in information theory: the Source Coding Theorem. Attributed to Shannon \cite{Shannon1948}, this theorem provides the definitive answer to the question of the ultimate limit of lossless data compression. It establishes that the entropy $\mathcal{H}(X)$ of the source (representing the underlying probability distribution, distinct from the empirical entropy $\mathcal{H}_k(S)$ of a specific string) is not just a theoretical measure of information, but the precise operational limit for the average length of any uniquely decodable code representing that source.
+
+\noindent The theorem consists of two crucial parts: a lower bound on the achievable average length, and a statement about the existence of codes that approach this bound. We will state the theorem for a $K$-ary code alphabet $\mathcal{D}$, using $\mathcal{H}_K(X) = \mathcal{H}(X) / \log K$ to denote the theoretical source entropy measured in $K$-ary units (assuming $\mathcal{H}(X)$ is calculated, for instance, using base 2 logarithms unless otherwise specified).
+
+\begin{theorem}[Source Coding Theorem]\label{thm:source_coding_theorem}
+    Let $X$ be a random variable generating symbols from an alphabet $\Sigma$ with probability mass function $P_X(x)$. Let $\mathcal{D}$ be a code alphabet of size $K \ge 2$.
+    \begin{enumerate}
+        \item \textbf{(Lower Bound)} The expected length $L(C)$ of any uniquely decodable code $C: \Sigma \to \mathcal{D}^*$ for $X$ satisfies
+              \begin{equation}\label{eq:sct_lower_bound}
+                  L(C) \ge \mathcal{H}_K(X) = \frac{\mathcal{H}(X)}{\log K}
+              \end{equation}
+        \item \textbf{(Achievability)} There exists a prefix code $C: \Sigma \to \mathcal{D}^*$ such that its expected length $L(C)$ satisfies
+              \begin{equation}\label{eq:sct_achievability}
+                  L(C) < \mathcal{H}_K(X) + 1
+              \end{equation}
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+    \textbf{Part (i) - Lower Bound:}
+    Let $C$ be any uniquely decodable code with codeword lengths $l(x)$ for $x \in \Sigma$. By Theorem \ref{thm:kraft_inequality}, these lengths must satisfy Kraft's inequality: $S = \sum_{x \in \Sigma} K^{-l(x)} \leq 1$.
+    Let us define an auxiliary probability distribution $Q(x)$ over $\Sigma$ as $Q(x) = K^{-l(x)} / S$. Note that $\sum_{x \in \Sigma} Q(x) = 1$, so $Q$ is a valid probability distribution.
+
+    Now, consider the expected length $L(C)$:
+    \begin{align}
+        L(C) & = \sum_{x \in \Sigma} P_X(x) l(x)                                                                                  \\
+             & = \sum_{x \in \Sigma} P_X(x) \log_K \left( K^{l(x)} \right)                                                        \\
+             & = \sum_{x \in \Sigma} P_X(x) \log_K \left( \frac{S}{Q(x)} \right) \quad \text{(since } K^{-l(x)} = S Q(x) \text{)} \\
+             & = \sum_{x \in \Sigma} P_X(x) \left( \log_K S - \log_K Q(x) \right)                                                 \\
+             & = (\log_K S) \sum_{x \in \Sigma} P_X(x) - \sum_{x \in \Sigma} P_X(x) \log_K Q(x)                                   \\
+             & = \log_K S - \sum_{x \in \Sigma} P_X(x) \log_K Q(x)
+    \end{align}
+    We can relate the last term to the relative entropy (Kullback-Leibler divergence) $D(P_X || Q)$ and the entropy $\mathcal{H}_K(X)$. Recall that:
+    \begin{align*}
+        D(P_X || Q) & = \sum_{x \in \Sigma} P_X(x) \log_K \frac{P_X(x)}{Q(x)}                             \\
+                    & = \sum_{x \in \Sigma} P_X(x) \log_K P_X(x) - \sum_{x \in \Sigma} P_X(x) \log_K Q(x) \\
+                    & = -\mathcal{H}_K(X) - \sum_{x \in \Sigma} P_X(x) \log_K Q(x)
+    \end{align*}
+    Thus, $-\sum P_X(x) \log_K Q(x) = D(P_X || Q) + \mathcal{H}_K(X)$.
+    Substituting this back into the expression for $L(C)$:
+    \begin{equation}
+        L(C) = \log_K S + D(P_X || Q) + \mathcal{H}_K(X)
+    \end{equation}
+    Since $S \le 1$, we have $\log_K S \le \log_K 1 = 0$. Also, the relative entropy is always non-negative, $D(P_X || Q) \ge 0$. Therefore,
+    \begin{equation}
+        L(C) \ge 0 + 0 + \mathcal{H}_K(X) = \mathcal{H}_K(X)
+    \end{equation}
+    This establishes the lower bound \eqref{eq:sct_lower_bound}. This line of proof closely follows \cite{ElementsofInformationTheory}.
+
+    \textbf{Part (ii) - Achievability:}
+    We need to show the existence of a prefix code whose expected length satisfies \eqref{eq:sct_achievability}. Consider choosing codeword lengths $l(x)$ for each $x \in \Sigma$ as:
+    \begin{equation}\label{eq:shannon_length_choice_revised}
+        l(x) = \lceil -\log_K P_X(x) \rceil
+    \end{equation}
+    where $\lceil \cdot \rceil$ denotes the ceiling function (rounding up to the nearest integer). These lengths are positive integers (assuming $P_X(x) \le 1$).
+
+    First, we verify that these lengths satisfy Kraft's inequality. From the definition of the ceiling function, we have:
+    \begin{equation}
+        -\log_K P_X(x) \le l(x) < -\log_K P_X(x) + 1
+    \end{equation}
+    Exponentiating the left inequality with base $K$:
+    \begin{equation}
+        K^{-\log_K P_X(x)} \ge K^{-l(x)} \implies P_X(x) \ge K^{-l(x)}
+    \end{equation}
+    Summing over all $x \in \Sigma$:
+    \begin{equation}
+        \sum_{x \in \Sigma} K^{-l(x)} \le \sum_{x \in \Sigma} P_X(x) = 1
+    \end{equation}
+    Since the chosen lengths satisfy Kraft's inequality, the sufficiency part of Kraft's theorem guarantees that there exists a \emph{prefix} code $C$ with these exact lengths $l(x) = \lceil -\log_K P_X(x) \rceil$. (This existence is often demonstrated constructively, e.g., using code trees or interval mapping \cite{ElementsofInformationTheory,han2002mathematics}).
+
+    Now, let's calculate the expected length $L(C)$ for this prefix code:
+    \begin{align}
+        L(C) & = \sum_{x \in \Sigma} P_X(x) l(x)                                                                                    \\
+             & = \sum_{x \in \Sigma} P_X(x) \lceil -\log_K P_X(x) \rceil                                                            \\
+             & < \sum_{x \in \Sigma} P_X(x) \left( -\log_K P_X(x) + 1 \right) \quad \text{(using } \lceil y \rceil < y + 1 \text{)} \\
+             & = \sum_{x \in \Sigma} -P_X(x) \log_K P_X(x) + \sum_{x \in \Sigma} P_X(x) \cdot 1                                     \\
+             & = \mathcal{H}_K(X) + 1
+    \end{align}
+    Thus, we have shown that there exists a prefix code $C$ with $L(C) < \mathcal{H}_K(X) + 1$, proving the achievability part \eqref{eq:sct_achievability}.
+\end{proof}
+
+\noindent The Source Coding Theorem is a profound result. It states that the source entropy $\mathcal{H}_K(X)$ is the fundamental lower limit on the average number of $K$-ary symbols required per source symbol for reliable (lossless) representation using any uniquely decodable code. Furthermore, it guarantees that we can always find a prefix code (which is easy to decode instantaneously) whose average length is within 1 symbol of this theoretical minimum.
+
+\noindent The gap of "1" in the achievability part arises from the constraint that codeword lengths must be integers, while $-\log_K P_X(x)$ is generally not. This gap can be made arbitrarily small (per source symbol) by encoding blocks of source symbols together. If we consider encoding blocks $X^n = (X_1, \ldots, X_n)$ from an i.i.d. source, the entropy per symbol is $\mathcal{H}(X^n)/n = \mathcal{H}(X)$. Applying the theorem to the block source $\Sigma^n$, we can find a prefix code with expected length $L_n$ such that $\mathcal{H}_K(X^n) \le L_n < \mathcal{H}_K(X^n) + 1$. Dividing by $n$, the average length per original source symbol, $L_n/n$, satisfies:
+\begin{equation}
+    \mathcal{H}_K(X) \le \frac{L_n}{n} < \frac{\mathcal{H}_K(X^n)}{n} + \frac{1}{n} = \mathcal{H}_K(X) + \frac{1}{n}
+\end{equation}
+As the block length $n$ increases, the average codeword length per source symbol approaches the entropy $\mathcal{H}_K(X)$. This demonstrates that the entropy limit is asymptotically achievable. Practical codes like Huffman coding (\autoref{subsec:huffman_coding}) provide methods to construct optimal prefix codes for a given distribution, while techniques like arithmetic coding (\autoref{subsec:arithmetic_coding}) effectively approximate the block coding concept to get very close to the entropy bound even for moderate sequence lengths.
+
+\clearpage

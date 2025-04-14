@@ -1,13 +1,8 @@
 \section{Source and Code} \label{sec:source_and_codes}
 
-% \todo[inline]{Some introduction about the source and coding, maybe with some very simple example like the morse code that uses a single dot to represent the most common symbol.}
-
 \noindent In the previous section, we established information-theoretic limits based on the probabilistic nature of data sources. Now, we turn our attention to the practical mechanisms for achieving data compression: the interplay between a \emph{source} of information and the \emph{code} used to represent it. A source, in this context, can be thought of as any process generating a sequence of symbols drawn from a specific alphabet (e.g., letters of text, pixel values in an image, sensor readings). Source coding, or data compression, is the task of converting this sequence into a different, typically shorter, sequence of symbols from a target coding alphabet (often binary).
 
 \noindent The core principle behind efficient coding is to exploit the statistical properties of the source. Symbols or patterns that occur frequently should ideally be assigned shorter representations (codewords), while less frequent ones can be assigned longer codewords. A classic, intuitive example is Morse code: the most common letter in English text, 'E', is represented by the shortest possible signal, a single dot (`.`), whereas infrequent letters like 'Q' (`--.-`) receive much longer sequences.
-% This section formalizes these ideas, defining different types of codes and their properties, paving the way to understanding how closely we can approach the theoretical limits dictated by entropy.
-
-% We enrich the understanding of entropy by establishing its core role in setting the fundamental limit for information compression. This process involves condensing data by assigning shorter descriptions to more frequent outcomes and longer descriptions to less frequent ones. For example, Morse code uses a single dot to represent the most common symbol. Within this chapter, we ascertain the minimum average description length for a random variable. \cite{ElementsofInformationTheory} % Puoi commentare o rimuovere questo paragrafo se il testo sopra lo copre adeguatamente
 
 \subsection{Codes}
 
@@ -160,24 +155,3 @@ We aim to construct efficient codes, ideally prefix codes (instantaneous codes),
     \end{equation}
     That concludes the proof.
 \end{proof}
-
-\subsection{Source Coding Theorem}
-
-\todo[inline]{Add some introduction from \cite{ElementsofInformationTheory,Shannon1948,KolmogorovComplexity,han2002mathematics}}
-
-\todo[inline]{
-    \begin{theorem}[Source Coding Theorem]\label{thm:source_coding_theorem}
-        TODO from \cite{ElementsofInformationTheory,han2002mathematics}
-    \end{theorem}
-    \begin{proof}
-        TODO from \cite{ElementsofInformationTheory,han2002mathematics}
-    \end{proof}
-}
-
-
-
-
-
-
-
-\clearpage
