@@ -1,16 +1,118 @@
 \chapter{Succinct Weighted DAGs for Path Queries}
 \label{chap:succinct_dags}
 
-The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on Rank and Select operations over sequences (\autoref{ch:Chapter3}). These tools are fundamental for achieving space-efficient representations while maintaining fast query capabilities, proving invaluable in areas like text indexing and computational genomics.
+The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on Rank and Select operations over sequences (\autoref{ch:Chapter3}). These sequence-based tools provide efficient ways to handle queries on linear data.
 
-This chapter extends these concepts to node-weighted directed acyclic graphs (DAGs). We address the challenge of representing a DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena. For example, in bioinformatics, pangenome graphs can be interpreted through this lens: if each node corresponds to a DNA sequence (a string over {A, C, G, T}), we can conceptualize four distinct weighted DAGs. In the DAG associated with character \emph{A}, the weight $w(v)$ of a node $v$ would be the number of \emph{A}s in its sequence; similarly for \emph{C}, \emph{G}, and \emph{T}.
+Building upon this foundation, we now shift our focus to graph structures, specifically directed acyclic graphs (DAGs) where nodes carry weights. A key motivation for this shift comes from revisiting the \emph{degenerate string problem} introduced in \autoref{sec:degenerate_strings}. This problem can be viewed through a different lens, that of graph representation. As we detail below, a degenerate string and a target character can be naturally modeled as a specific type of weighted DAG.
 
-Our primary focus is on generalizing the Rank query to this graph setting; the Select query, while definable, will not be treated further in this work. For a given vertex $N$, the Rank query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
+\subsection*{Degenerate Strings as DAGs}
+\label{subsec:dag_from_degenerate}
+
+Given a degenerate string $X = X_1 X_2 \dots X_n$ over an alphabet $\Sigma$ (as defined in \autoref{sec:degenerate_strings}), we construct a weighted DAG $G_c = (V_c, E_c, w_c)$ for a specified character $c \in \Sigma$. This construction provides a formal mapping from the sequence structure to a graph structure, illustrating how the degenerate string problem can be viewed as a specific instance within a potentially broader graph-based framework.
+
+First, we define the set of vertices $V_c$. Let $s$ be a unique source vertex. For each index $k$ ($1 \le k \le n$) and each character $a \in X_k$, we introduce a unique vertex, denoted abstractly as $v_{k,a}$. The vertex set $V_c$ is the union of the source and all such vertices:
+\[ V_c = \{s\} \cup \{ v_{k,a} \mid 1 \le k \le n, a \in X_k \}. \]
+These vertices $v_{k,a}$ represent the choice of character $a$ at position $k$ of the degenerate string.
+
+The weight function $w_c: V_c \to \mathbb{N}_0$ is defined as follows: the weight of the source vertex $s$ is $w_c(s) = 0$. For any other vertex $v_{k,a} \in V_c \setminus \{s\}$, its weight depends on whether the character $a$ matches the target character $c$:
+\[ w_c(v_{k,a}) = \begin{cases} 1 & \text{if } a = c \\ 0 & \text{if } a \neq c \end{cases}. \]
+This function assigns a positive weight only to vertices corresponding to the specific character $c$ we are focusing on.
+
+The edge set $E_c$ connects the source to the vertices representing the first set $X_1$, and subsequently connects vertices between adjacent positions $k$ and $k+1$:
+\[ E_c = \{ (s, v_{1,a}) \mid a \in X_1 \} \cup \{ (v_{k,a}, v_{k+1,b}) \mid 1 \le k < n, a \in X_k, b \in X_{k+1} \}. \]
+Since edges only connect vertices associated with index $k$ to vertices associated with index $k+1$, the graph $(V_c, E_c)$ contains no directed cycles and is therefore a DAG.
+
+Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate string. The weighted DAG $G_A$ derived from this string for character $c = \emph{A}$, following the construction detailed above, is illustrated in Figure \ref{fig:degenerate_dag_horizontal_v3}. In the figure, the notation $(k,a)$ inside a node identifies the vertex $v_{k,a}$.
+
+% --- Figure for Degenerate String Example (Tabular Style) ---
+\begin{figure}[htbp]
+    \centering
+    \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
+        $X = $                                                                           & $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{C}\\\texttt{G}\end{matrix}\,\Bigg\}$ &
+        $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{T}\end{matrix}\,\Bigg\}$             &
+        $\Bigg\{\,\begin{matrix}\texttt{T}\\\texttt{C}\\\texttt{A}\end{matrix}\,\Bigg\}$ &
+        $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{G}\end{matrix}\,\Bigg\}$                                                                                                                        \\
+                                                                                         & $X_1$                                                                            & $X_2$ & $X_3$ & $X_4$
+    \end{tabular}
+    \caption{An example degenerate string $X = X_1 X_2 X_3 X_4$ over $\Sigma = \{A, C, G, T\}$.}
+    \label{fig:degenerate_example_tabular_v3}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+            node distance=2.8cm and 1.0cm, % x distance and y distance
+            node_style/.style={circle, draw, thick, minimum size=7mm, inner sep=0pt},
+            weight_one/.style={node_style, fill=yellow!50},
+            weight_zero/.style={node_style, fill=gray!20},
+            source_node/.style={node_style, fill=red!60},
+            edge_style/.style={->, >=latex, thin, gray},
+            level_label/.style={font=\footnotesize, below=12mm of #1} % Style for level labels, increased spacing
+        ]
+
+        % Nodes arranged by level (k) vertically aligned
+        \node[source_node] (s) at (0, 0) {$s$};
+
+        % Vertices for k=1 (X1 = {A, C, G})
+        \node[weight_one] (v1A) at (2, 2) {\tiny (1,A)}; \node[below=1pt of v1A] {\tiny w=1};
+        \node[weight_zero](v1C) at (2, 0) {\tiny (1,C)}; \node[below=1pt of v1C] {\tiny w=0};
+        \node[weight_zero](v1G) at (2,-2) {\tiny (1,G)}; \node[below=1pt of v1G] {\tiny w=0};
+        % \node[level_label=v1C] (l1) {$k=1$}; % Label for level 1
+
+        % Vertices for k=2 (X2 = {A, T})
+        \node[weight_one] (v2A) at (4.8, 1) {\tiny (2,A)}; \node[below=1pt of v2A] {\tiny w=1};
+        \node[weight_zero](v2T) at (4.8,-1) {\tiny (2,T)}; \node[below=1pt of v2T] {\tiny w=0};
+        % \node[level_label=v2A] (l2) {$k=2$}; % Label for level 2
+
+        % Vertices for k=3 (X3 = {T, C, A})
+        \node[weight_zero] (v3A) at (7.6, 2) {\tiny (3,T)}; \node[below=1pt of v3A] {\tiny w=0};
+        \node[weight_zero](v3C) at (7.6, 0) {\tiny (3,C)}; \node[below=1pt of v3C] {\tiny w=0};
+        \node[weight_one](v3T) at (7.6,-2) {\tiny (3,A)}; \node[below=1pt of v3T] {\tiny w=1};
+        % \node[level_label=v3C] (l3) {$k=3$}; % Label for level 3
+
+        % Vertices for k=4 (X4 = {A, G})
+        \node[weight_one] (v4A) at (10.4, 1) {\tiny (4,A)}; \node[below=1pt of v4A] {\tiny w=1};
+        \node[weight_zero](v4G) at (10.4,-1) {\tiny (4,G)}; \node[below=1pt of v4G] {\tiny w=0};
+        % \node[level_label=v4A] (l4) {$k=4$}; % Label for level 4
+
+        % Edges
+        % s to Level 1
+        \foreach \v in {v1A, v1C, v1G} { \draw[edge_style] (s) -- (\v); }
+
+        % Level 1 to Level 2 (All-to-all)
+        \foreach \u in {v1A, v1C, v1G} {
+                \foreach \v in {v2A, v2T} {
+                        \draw[edge_style] (\u) -- (\v);
+                    }
+            }
+
+        % Level 2 to Level 3 (All-to-all)
+        \foreach \u in {v2A, v2T} {
+                \foreach \v in {v3A, v3C, v3T} {
+                        \draw[edge_style] (\u) -- (\v);
+                    }
+            }
+
+        % Level 3 to Level 4 (All-to-all)
+        \foreach \u in {v3A, v3C, v3T} {
+                \foreach \v in {v4A, v4G} {
+                        \draw[edge_style] (\u) -- (\v);
+                    }
+            }
+
+    \end{tikzpicture}
+    \caption{The weighted DAG $G_A$ derived from the degenerate string in Figure \ref{fig:degenerate_example_tabular_v3} for character $c=\emph{A}$. Nodes visually labeled $(k,a)$ represent the abstract vertices $v_{k,a}$. Nodes with $w_A(v_{k,a})=1$ are yellow; those with $w_A(v_{k,a})=0$ are gray. Edges represent the connections defined in $E_A$.}
+    \label{fig:degenerate_dag_horizontal_v3}
+\end{figure}
+
+This graph-based perspective on degenerate strings serves as a concrete starting point for the core topic of this chapter: the development of succinct data structures for general node-weighted DAGs to support path-based queries. We address the challenge of representing an arbitrary DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena beyond degenerate strings. For example, in bioinformatics, pangenome graphs can be interpreted through this lens: if each node corresponds to a DNA sequence (a string over {A, C, G, T}), the weight $w(v)$ could represent the count of a specific nucleotide (e.g., \emph{A}) within that sequence; similarly for \emph{C}, \emph{G}, and \emph{T}.
+
+Our primary focus is on generalizing the Rank query concept to this graph setting; the Select query, while definable, will not be treated further in this work. For a given vertex $N$, the Rank query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
 
 The combinatorial complexity of paths in a DAG — potentially exponential in the number of vertices — makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. We introduce a novel representation strategy that partitions the vertices into two categories: \emph{explicit} vertices, for which path weight information is stored directly, and \emph{implicit} vertices, whose information is derived indirectly through references to other vertices via a carefully defined \emph{successor} relationship.
 
 \section{Mathematical Framework}
-\label{sec:dag_formal_defs}
+\label{sec:dag_defs}
 
 To develop our data structure and associated algorithms, we first establish the necessary mathematical definitions and properties concerning weighted DAGs and path weights.
 
@@ -46,6 +148,7 @@ Having defined the graph structure, we now define paths and their associated wei
     If the path consists only of the source vertex (i.e., $k=0$ and $P=(s)$), its weight is defined as $W'(P)=0$.
 \end{definition}
 
+
 \subsection{Path Weight Aggregation}
 \label{subsec:o_set_def}
 
@@ -62,6 +165,7 @@ A key challenge lies in efficiently representing the potentially vast collection
     \end{itemize}
 \end{definition}
 This definition implies that $\mathcal{O}_v$ contains only the distinct values generated by this union process. We consider $\mathcal{O}_v$ to be the set of these unique values, represented as a sorted sequence.
+
 
 The following proposition establishes the semantic meaning of the $\mathcal{O}$-set, confirming that it correctly captures the set of all possible path weights (as defined in \ref{def:paths_weights}) ending at a vertex.
 
@@ -256,6 +360,7 @@ This intuition leads to the following formal definition:
     \[ \mathrm{Rank}_G(2) = \{ [4, 5], [8, 11] \}. \]
     This collection represents the set $S_2 = \{4, 5\} \cup \{8, 9, 10, 11\}$, which encompasses all possible integer cumulative weights that could be considered active during the processing phase associated with node 2, across all possible paths leading to it.
 \end{example}
+
 \section{The Succinct DAG Representation}
 \label{sec:succinct_dag_representation}
 

@@ -1,7 +1,7 @@
 \section{Rank and Select on Degenerate Strings}
 \label{sec:degenerate_strings} % Changed label
 
-The concepts of \Rank{} and \Select{} queries, fundamental tools in string processing and succinct data structures as explored earlier in this chapter (\autoref{sec:rank_select_bitvectors_alt}, \autoref{sec:wavelet_trees_alt}), can be extended to the domain of \emph{degenerate strings}. This representation is often used to model uncertainty or variability in sequences, particularly in biological contexts.
+The concepts of \Rank{} and \Select{} queries, fundamental tools in string processing and succinct data structures as explored earlier in this chapter (\autoref{sec:bitvectors}, \autoref{sec:wavelet_trees}), can be extended to the domain of \emph{degenerate strings}. This representation is often used to model uncertainty or variability in sequences, particularly in biological contexts.
 
 Recall that a standard \emph{string} $S$ of length $n$ over a finite non-empty alphabet $\Sigma$ is a sequence $S = s_1 s_2 \dots s_n$ where each $s_i \in \Sigma$. A degenerate string generalizes this:
 
@@ -112,8 +112,6 @@ The $o(n \log \sigma)$ term covers the overhead for rank/select structures on th
 While the SWT offered a valuable first step, Bille et al. \cite{bille2023rank} revisited the subset rank-select problem, achieving significant theoretical and practical advances by focusing on reductions to standard rank-select operations on regular strings.
 
 \noindent They made three significant contributions in this context. First, they introduced the parameter $N$ and revisited the problem through reductions to the regular rank-select problem, deriving flexible complexity bounds based on existing rank-select structures, as detailed in Theorem~\ref{thm:general_upper_bound}. Second, they established a worst-case lower bound of $N\log \sigma - o(N\log \sigma)$ bits for structures supporting \texttt{subset-rank} or \texttt{subset-select}, and demonstrated that, by leveraging standard rank-select structures, their bounds often approach this lower limit while maintaining optimal query times (Theorem \ref{thm:space_lower_bound}). Lastly, they implemented and compared their reductions to prior implementations, achieving twice the query speed of the most compact structure from \cite{SubsetWT} while maintaining comparable space usage. Additionally, they designed a vectorized structure that offers a 4-7x speedup over compact alternatives, rivaling the fastest known solutions.
-
-% The authors further demonstrate that by plugging a standard rank-select data structure into Theorem~\ref{thm:general_upper_bound}, they can achieve exponential improvements in query times while essentially matching or improving space usage compared to the Subset Wavelet Tree. For instance, using the rank-select structure by Golynski, Munro, and Rao~\cite{GMR06}, which uses $\ell\log\sigma + o(\ell\log\sigma)$ bits and supports \Rank{} in $O(\log\log \sigma)$ time and select in constant time, they achieve an $N\log \sigma + N + o(N\log \sigma + N)$ bit data structure supporting \Drank{} in $O(\log\log \sigma)$ time and \Dselect{} in constant time. This significantly improves the constant on the space bound from $2$ to $1 + 1/\log \sigma$ and the query time from $O(\log \sigma)$ for both queries to $O(\log\log \sigma)$ for \Drank{} and constant for \Dselect{}.
 
 \begin{theorem}[General Upper Bound]
     \label{thm:general_upper_bound}
