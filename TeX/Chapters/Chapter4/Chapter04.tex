@@ -657,13 +657,13 @@ The pair $(S, L)$ uniquely determines the original sequence $Y$. Algorithm \ref{
     \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Theoretical Compression of RLE Components}
+\paragraph{Compression of RLE Components}
 The space efficiency of RLE depends on effectively compressing the resulting sequences $S$ and $L$.
 The run starts sequence $S = (s_1, \dots, s_p)$ is strictly monotonic. Consequently, it is an ideal candidate for Elias-Fano encoding. If $S$ contains $p$ values from the universe $[0 \dots U)$, its Elias-Fano representation would require approximately $p \log_2(U/p) + O(p)$ bits.
 
 The run lengths sequence $L = (l_1, \dots, l_p)$ is a sequence of positive integers. Standard variable-length integer codes (\autoref{sec:integer_coding}), such as Elias Gamma or Delta codes, can be applied. In practice, we can use the \textsf{compressed-intvec} structure (\autoref{app:compressed_intvec_engineering}) to store $L$ efficiently.
 
-\paragraph{Theoretical Random Access in RLE}
+\paragraph{Random Access in RLE}
 Retrieving the element $y_k$ (the element at index $k$ in the original sequence $Y$) from the RLE representation $(S, L)$ requires identifying the run to which $y_k$ belongs. This necessitates finding the unique run index $i^*$ (where $1 \le i^* \le p$) such that:
 \[ \sum_{j=1}^{i^*-1} l_j \le k < \sum_{j=1}^{i^*} l_j \]
 where the sum is defined as $0$ if $i^*=1$. Once $i^*$ is found, the value $y_k$ is given by:
@@ -733,4 +733,45 @@ Combining these components yields a formal definition for the $0^{th}$-order ent
 
 The value $\mathcal{H}_0(G)$ represents a theoretical lower bound on the space required by any lossless encoding of the graph $(V, E, w)$ based solely on its zero-order statistics.
 
-\todo[inline]{Adesso qui dovrei aggiungere diciamo l'unica parte sperimentale dove inserisco per certi dataset i risultati dei mockup di memory usage per quanto riguarda il dag succinto con RLE e senza RLE. Si giustifica che i nostri valori sono effettivamente sotto il valore di entropia (che devo pure calcolare per quel dag) semplicemente per il fatto che quello è il minimo teorico per una compressione lossless del DAG. Noi siamo lossy, non possiamo in particolare ricostruire il DAG originale, ma possiamo comunque calcolare il rank.}
+Our proposed succinct data structure (\autoref{sec:succinct_dag_representation}), however, is designed differently. While lossless for Rank query computation (\autoref{def:rank_dag}), it is inherently \emph{lossy} concerning the reconstruction of the original graph $G$, as it does not store the complete edge set $E$. It retains only vertex weights $\mathcal{W}$, successor information $\Sigma$, and associated data $\mathcal{D}$. This distinction allows the structure's space usage, $S(G)$, to potentially fall below the $\mathcal{H}_0(G)$ bound.
+
+To illustrate this, we analyze performance on a weighted DAG derived from unrolling a Bitcoin Peer-to-Peer temporal network graph (details of the unrolling process are beyond the scope of this thesis), having $n = 22,210$ vertices and $m = 50,514$ edges. For this specific DAG, the calculated $0^{th}$-order entropy $\mathcal{H}_0(G)$ amounts to 1,525,730 bits, comprising $\mathcal{H}_W(G) = 60,824$ bits for weights and $\mathcal{H}_E(G) = 1,464,906$ bits for topology according to \autoref{def:dag_entropy}.
+
+We compare this theoretical lower bound $\mathcal{H}_0(G)$ against theoretical estimates of the space required by our succinct structure and alternative approaches based on precomputation. These estimates are derived using foundational principles applied according to the nature of the data sequence being represented.
+
+For sequences composed of general non-negative integers $x$, such as the vertex weights $\mathcal{W}$, the successor identifiers $\Sigma$, or the interval endpoints in baseline precomputation results, the space estimation is based on summing the minimal binary representation cost for each integer independently. This cost is calculated as $\lceil \log_2(x+1) \rceil$ bits per integer $x$.
+
+When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. Theorem \ref{thm:ef_space_revised} guarantees an upper bound of $n \log_2(u/n) + 2n$ bits for encoding $n$ integers within the range $[0, u)$. Consequently, for the specific calculations in this analysis, we employ the closely related estimate of $n \lceil \log_2(u/n) \rceil + 2n$ bits, which aligns with this theoretical upper limit while accounting for practical implementation considerations.
+
+Finally, the space for the offset sequences $\mathcal{I}_v$ when stored using the Run-Length Encoding (RLE) scheme described in \autoref{sec:compression_strategies} is estimated by combining the previous principles. It requires the sum of the space estimate for the strictly monotonic sequence of run start values (using the Elias-Fano estimation) and the space estimate for the sequence of corresponding run lengths (using the minimal binary representation cost for each length).
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{l r}
+        \toprule
+        Component / Method                                      & Estimated Bits \\
+        \midrule
+        \textbf{Theoretical Lower Bound ($\mathcal{H}_0(G)$)}   &                \\
+        \quad $0^{th}$-Order Entropy Total                      & 1,525,730      \\
+        \quad \quad Weights Component ($\mathcal{H}_W(G)$)      & 60,824         \\
+        \quad \quad Topology Component ($\mathcal{H}_E(G)$)     & 1,464,906      \\
+        \midrule
+        \textbf{Precomputed Rank Queries}                       &                \\
+        \quad Explicit Storage (Minimal Binary)                 & 4,854,533      \\
+        \quad Elias-Fano Compressed Storage                     & 2,211,849      \\
+        \midrule
+        \textbf{Succinct DAG Representation (RLE)}              &                \\
+        \quad Total Space ($S(G)$)                              & 699,779        \\
+        \quad \quad Weights $\mathcal{W}$ (Minimal Binary)      & 60,824         \\
+        \quad \quad Successors $\Sigma$ (Minimal Binary)        & 274,015        \\
+        \quad \quad Associated Data $\mathcal{D}$ (RLE Offsets) & 364,940        \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:space_estimates_bitcoin}
+    \caption{Theoretical space estimates (in bits) for the example Bitcoin DAG ($n=22,210$, $m=50,514$).}
+\end{table}
+
+Table \ref{tab:space_estimates_bitcoin} presents the results of this theoretical space estimation for the example DAG. The total estimated space for our succinct DAG representation using RLE for the offsets, $S(G)$, is 699,779 bits. This value is notably less than half of the $0^{th}$-order entropy $\mathcal{H}_0(G)$ (1,525,730 bits). This result highlights the advantage of our approach: by selectively discarding information required for full graph reconstruction (specifically, the complete edge set $E$) while preserving all information necessary for Rank query computation, the structure achieves a space footprint smaller than the theoretical minimum for lossless graph encoding.
+
+Moreover, the analysis reveals the significant space overhead associated with precomputing Rank query results. Storing the interval sets for all nodes explicitly, even using minimal binary representations, requires an estimated 4,854,533 bits. Applying Elias-Fano compression to these precomputed results reduces the space to 2,211,849 bits. While this represents a substantial saving over the explicit form, it remains considerably larger than both the $0^{th}$-order entropy bound and, crucially, the space achieved by our succinct DAG representation ($S(G)$). Therefore, our structure provides not only a mechanism to answer complex path queries but does so with remarkable space efficiency, far surpassing precomputation strategies and falling below the conventional entropy bounds associated with lossless graph representation due to its targeted, query-specific information retention.

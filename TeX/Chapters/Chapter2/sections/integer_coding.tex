@@ -149,7 +149,7 @@ The representation then comprises two main components:
 The space bound $n + 2^h \le 2n$ holds if $2^h \le n$, which corresponds to $u/n \le n$. When $u/n$ is small (dense sequences), $l$ is small and $h$ is large; when $u/n$ is large (sparse sequences), $l$ is large and $h$ is small.
 
 % --- Theorem Environment ---
-\begin{theorem}[Elias-Fano Space Complexity {\cite[Thm 11.5]{ferragina2023pearls}, \cite{pibiri_et_al}}] \label{thm:ef_space_revised}
+\begin{theorem}[Elias-Fano Space Complexity {{ferragina2023pearls}}] \label{thm:ef_space_revised}
     The Elias-Fano encoding of a strictly increasing sequence $S$ of $n$ integers in the range $[0, u)$ requires $n \lfloor \log_2 (u/n) \rfloor + n + 2^h$ bits, where $h = \lceil \log_2 u \rceil - \lfloor \log_2 (u/n) \rfloor$. This is upper bounded by $n \log_2(u/n) + 2n$ bits, which is provably less than 2 bits per integer above the information-theoretic lower bound. The representation can be constructed in $O(n)$ time.
 \end{theorem}
 
