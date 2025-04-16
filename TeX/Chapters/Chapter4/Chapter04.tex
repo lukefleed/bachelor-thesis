@@ -8,7 +8,7 @@ Building upon this foundation, we now shift our focus to graph structures, speci
 \subsection*{Degenerate Strings as DAGs}
 \label{subsec:dag_from_degenerate}
 
-Given a degenerate string $X = X_1 X_2 \dots X_n$ over an alphabet $\Sigma$ (as defined in \autoref{sec:degenerate_strings}), we construct a weighted DAG $G_c = (V_c, E_c, w_c)$ for a specified character $c \in \Sigma$. This construction provides a formal mapping from the sequence structure to a graph structure, illustrating how the degenerate string problem can be viewed as a specific instance within a potentially broader graph-based framework.
+Given a degenerate string $X = X_1 X_2 \dots X_n$ over an alphabet $\Sigma$ (as defined in \autoref{sec:degenerate_strings}), we construct a weighted DAG $G_c = (V_c, E_c, w_c)$ for a specified character $c \in \Sigma$. This construction provides a mapping from the sequence structure to a graph structure.
 
 First, we define the set of vertices $V_c$. Let $s$ be a unique source vertex. For each index $k$ ($1 \le k \le n$) and each character $a \in X_k$, we introduce a unique vertex, denoted abstractly as $v_{k,a}$. The vertex set $V_c$ is the union of the source and all such vertices:
 \[ V_c = \{s\} \cup \{ v_{k,a} \mid 1 \le k \le n, a \in X_k \}. \]
@@ -22,7 +22,7 @@ The edge set $E_c$ connects the source to the vertices representing the first se
 \[ E_c = \{ (s, v_{1,a}) \mid a \in X_1 \} \cup \{ (v_{k,a}, v_{k+1,b}) \mid 1 \le k < n, a \in X_k, b \in X_{k+1} \}. \]
 Since edges only connect vertices associated with index $k$ to vertices associated with index $k+1$, the graph $(V_c, E_c)$ contains no directed cycles and is therefore a DAG.
 
-Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate string. The weighted DAG $G_A$ derived from this string for character $c = \emph{A}$, following the construction detailed above, is illustrated in Figure \ref{fig:degenerate_dag_horizontal_v3}. In the figure, the notation $(k,a)$ inside a node identifies the vertex $v_{k,a}$.
+Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate string. The weighted DAG $G_A$ derived from this degenerate string for character $c = \emph{A}$, following the construction detailed above, is illustrated in Figure \ref{fig:degenerate_dag_horizontal_v3}. In the figure, the notation $(k,a)$ inside a node identifies the vertex $v_{k,a}$.
 
 % --- Figure for Degenerate String Example (Tabular Style) ---
 \begin{figure}[htbp]
@@ -105,9 +105,9 @@ Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate strin
     \label{fig:degenerate_dag_horizontal_v3}
 \end{figure}
 
-This graph-based perspective on degenerate strings serves as a concrete starting point for the core topic of this chapter: the development of succinct data structures for general node-weighted DAGs to support path-based queries. We address the challenge of representing an arbitrary DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena beyond degenerate strings. For example, in bioinformatics, pangenome graphs can be interpreted through this lens: if each node corresponds to a DNA sequence (a string over {A, C, G, T}), the weight $w(v)$ could represent the count of a specific nucleotide (e.g., \emph{A}) within that sequence; similarly for \emph{C}, \emph{G}, and \emph{T}.
+This graph-based perspective on degenerate strings serves as a concrete starting point for the core topic of this chapter: the development of succinct data structures for general node-weighted DAGs to support path-based queries. We address the challenge of representing an arbitrary DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena beyond degenerate strings. For example, in bioinformatics, pangenome graphs\footnote{Pangenome graphs may contain cycles. These cycles can be addressed by either removing them or by utilizing path information provided by modern pangenome graph formats.} can be interpreted through this lens: if each node corresponds to a DNA sequence (a string over $\{A, C, G, T\}$), the weight $w(v)$ could represent the count of a specific nucleotide (e.g., \emph{A}) within that sequence; similarly for \emph{C}, \emph{G}, and \emph{T}.
 
-Our primary focus is on generalizing the Rank query concept to this graph setting; the Select query, while definable, will not be treated further in this work. For a given vertex $N$, the Rank query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
+Our primary focus is on generalizing the \Rank{} query to this graph setting; the \Select{} query, while definable, will not be treated further in this work. For a given vertex $N$, the \Rank{} query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
 
 The combinatorial complexity of paths in a DAG — potentially exponential in the number of vertices — makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. Our approach involves partitioning the vertices based on how their path weight information is represented: some vertices (\emph{explicit}) will store this information directly, while others (\emph{implicit}) will rely on indirect derivation through references facilitated by a carefully defined \emph{successor} relationship, as detailed in Section \ref{sec:succinct_dag_representation}.
 
@@ -129,7 +129,11 @@ We begin with the formal definition of the combinatorial structure central to th
         \item $E \subseteq V \times V$ is a set of directed edges such that the graph $(V, E)$ contains no directed cycles.
         \item $w: V \to \mathbb{N}_0$ is a weight function assigning a non-negative integer $w(v)$ to each vertex $v \in V$, where $\mathbb{N}_0 = \{0, 1, 2, \dots\}$.
     \end{itemize}
-    For a vertex $v \in V$, we denote the set of its direct predecessors as $Pred(v) = \{u \in V \mid (u, v) \in E\}$ and the set of its direct successors as $Succ(v) = \{u \in V \mid (v, u) \in E\}$. A vertex $v$ with $Succ(v) = \emptyset$ is termed a \emph{sink} vertex.
+    For a vertex $v \in V$, we denote the set of its direct predecessors as
+    \[Pred(v) = \{u \in V \mid (u, v) \in E\}\]
+    and the set of its direct successors as
+    \[Succ(v) = \{u \in V \mid (v, u) \in E\}.\]
+    A vertex $v$ with $Succ(v) = \emptyset$ is termed a sink vertex.
 \end{definition}
 
 This definition provides the fundamental object of study. We will often rely on the acyclic property, which guarantees the existence of topological orderings of the vertices.
@@ -141,11 +145,15 @@ This definition provides the fundamental object of study. We will often rely on 
 
 Having defined the graph structure, we now define paths and their associated weights, which are central to the queries we aim to support.
 
-\begin{definition}[Paths and Path Weights]
+\begin{definition}[Path in a DAG]
+    \label{def:path}
+    A path $P$ from a vertex $u$ to a vertex $v$ in $G$ is a sequence of vertices $P = (v_0, v_1, \dots, v_k)$ such that $v_0 = u$, $v_k = v$, and $(v_{j-1}, v_j) \in E$ for all $1 \le j \le k$. The length of the path $P$ is $k$, the number of edges. Let $Path(s, v)$ denote the set of all paths originating from the unique source $s$ and terminating at $v$.
+\end{definition}
+
+\begin{definition}[Cumulative Path Weight]
     \label{def:paths_weights}
-    A path $P$ from a vertex $u$ to a vertex $v$ in $G$ is a sequence of vertices $P = (v_0, v_1, \dots, v_k)$ such that $v_0 = u$, $v_k = v$, and $(v_{j-1}, v_j) \in E$ for all $1 \le j \le k$. The length of the path $P$ is $k$, the number of edges. Let $Path(s, v)$ denote the set of all paths originating from the unique source $s$ and terminating at $v$. The cumulative weight relevant for our Rank query, denoted $W'(P)$, for a path $P=(v_0=s, \dots, v_k=v)$ is defined as the sum of the weights of the vertices along the path, excluding the source vertex:
-    \[ W'(P) = \sum_{j=1}^{k} w(v_j). \]
-    If the path consists only of the source vertex (i.e., $k=0$ and $P=(s)$), its weight is defined as $W'(P)=0$.
+    The cumulative weight, denoted $W(P)$, for a path $P=(v_0=s, \dots, v_k=v)$ as defined in \ref{def:path}, is the sum of the weights of the vertices along the path:
+    \[ W(P) = \sum_{j=1}^{k} w(v_j). \]
 \end{definition}
 
 
@@ -156,7 +164,7 @@ A key challenge lies in efficiently representing the potentially vast collection
 
 \begin{definition}[$\mathcal{O}$-Set]
     \label{def:o_set}
-    For each vertex $v \in V$ in a weighted DAG $G=(V, E, w)$ with source $s$, the \emph{$\mathcal{O}$-set}, denoted $\mathcal{O}_v \subseteq \mathbb{N}_0$, is defined recursively. Let us assume a topological ordering of the vertices in $V$. The sets are constructed as follows:
+    For each vertex $v \in V$ in a weighted DAG $G=(V, E, w)$ with source $s$, the $\mathcal{O}$-set, denoted $\mathcal{O}_v \subseteq \mathbb{N}_0$, is defined recursively. Let us assume a topological ordering of the vertices in $V$. The sets are constructed as follows:
     \begin{itemize}
         \item For the source vertex $v = s$:
               \[ \mathcal{O}_s = \{0\}. \]
@@ -172,31 +180,31 @@ The following proposition establishes the semantic meaning of the $\mathcal{O}$-
 \begin{proposition}[Semantic Interpretation of $\mathcal{O}$-Set]
     \label{prop:o_set_correctness}
     For any vertex $v \in V$, the set $\mathcal{O}_v$ is precisely the set of cumulative path weights from the source $s$ to $v$:
-    \[ \mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}. \]
+    \[ \mathcal{O}_v = \{ W(P) \mid P \in Path(s, v) \}. \]
 \end{proposition}
 \begin{proof}
     The proof proceeds by induction on the vertices $v \in V$, ordered according to a topological sort of $G$.
-    \textit{Base Case:} For the source vertex $v=s$, the only path in $Path(s, s)$ is the trivial path $P=(s)$. According to Definition \ref{def:paths_weights}, $W'(P)=0$. By Definition \ref{def:o_set}, $\mathcal{O}_s = \{0\}$. Thus, the proposition holds for $s$.
-    \textit{Inductive Step:} Assume the proposition holds for all vertices $u$ that strictly precede $v$ in the topological order. In particular, this assumption holds for all $u \in Pred(v)$, since the existence of an edge $(u, v)$ implies $u$ precedes $v$ in any topological sort. We must show that $\mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}$.
+    \textit{Base Case:} For the source vertex $v=s$, the only path in $Path(s, s)$ is the trivial path $P=(s)$. According to Definition \ref{def:paths_weights}, $W(P)=0$. By Definition \ref{def:o_set}, $\mathcal{O}_s = \{0\}$. Thus, the proposition holds for $s$.
+    \textit{Inductive Step:} Assume the proposition holds for all vertices $u$ that strictly precede $v$ in the topological order. In particular, this assumption holds for all $u \in Pred(v)$, since the existence of an edge $(u, v)$ implies $u$ precedes $v$ in any topological sort. We must show that $\mathcal{O}_v = \{ W(P) \mid P \in Path(s, v) \}$.
 
     ($\subseteq$) Let $x \in \mathcal{O}_v$. By Definition \ref{def:o_set}, since $v \neq s$, there must exist a predecessor $u \in Pred(v)$ and a value $y \in \mathcal{O}_u$ such that $x = y + w(v)$. By the inductive hypothesis applied to $u$, $y = W'(P')$ for some path $P' = (v_0=s, \dots, v_{k-1}=u) \in Path(s, u)$. Consider the path $P = (v_0, \dots, v_{k-1}, v_k=v)$ formed by appending the edge $(u, v)$ to $P'$. This is a valid path in $Path(s, v)$. Its weight according to Definition \ref{def:paths_weights} is
     \begin{align*}
-        W'(P) & = \sum_{j=1}^{k} w(v_j) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
-              & = W'(P') + w(v) = y + w(v) = x.
+        W(P) & = \sum_{j=1}^{k} w(v_j) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
+             & = W(P') + w(v) = y + w(v) = x.
     \end{align*}
     Therefore, any element $x \in \mathcal{O}_v$ corresponds to the weight of some path in $Path(s, v)$.
 
-    ($\supseteq$) Let $P = (v_0=s, \dots, v_k=v)$ be an arbitrary path in $Path(s, v)$. Since $v \neq s$, the path must have length $k \ge 1$. Let $u = v_{k-1}$ be the vertex immediately preceding $v$ on this path; thus, $u \in Pred(v)$. Let $P' = (v_0, \dots, v_{k-1})$ be the subpath of $P$ ending at $u$. $P'$ is a path in $Path(s, u)$. By the inductive hypothesis, the weight $W'(P') = \sum_{j=1}^{k-1} w(v_j)$ must be an element of $\mathcal{O}_u$. Let $y = W'(P')$. By Definition \ref{def:o_set}, the value $y + w(v)$ is included in the construction of $\mathcal{O}_v$. We observe that
+    ($\supseteq$) Let $P = (v_0=s, \dots, v_k=v)$ be an arbitrary path in $Path(s, v)$. Since $v \neq s$, the path must have length $k \ge 1$. Let $u = v_{k-1}$ be the vertex immediately preceding $v$ on this path; thus, $u \in Pred(v)$. Let $P' = (v_0, \dots, v_{k-1})$ be the subpath of $P$ ending at $u$. $P'$ is a path in $Path(s, u)$. By the inductive hypothesis, the weight $W(P') = \sum_{j=1}^{k-1} w(v_j)$ must be an element of $\mathcal{O}_u$. Let $y = W(P')$. By Definition \ref{def:o_set}, the value $y + w(v)$ is included in the construction of $\mathcal{O}_v$. We observe that
     \begin{align*}
-        y + w(v) & = W'(P') + w(v_k) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
-                 & = \sum_{j=1}^{k} w(v_j) = W'(P).
+        y + w(v) & = W(P') + w(v_k) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
+                 & = \sum_{j=1}^{k} w(v_j) = W(P).
     \end{align*}
-    Thus, the weight $W'(P)$ of any path in $Path(s, v)$ is contained in $\mathcal{O}_v$.
+    Thus, the weight $W(P)$ of any path in $Path(s, v)$ is contained in $\mathcal{O}_v$.
 
-    Since both inclusions hold, we conclude that $\mathcal{O}_v = \{ W'(P) \mid P \in Path(s, v) \}$.
+    Since both inclusions hold, we conclude that $\mathcal{O}_v = \{ W(P) \mid P \in Path(s, v) \}$.
 \end{proof}
 
-An important property related to the sizes of these $\mathcal{O}$-sets is monotonicity along edges, which plays a role in the design of our succinct structure.
+An important property related to the sizes of these $\mathcal{O}$-sets is monotonicity along edges, which plays a fundamental role in the design of our succinct structure.
 
 \begin{lemma}[$\mathcal{O}$-Set Cardinality Monotonicity along Edges]
     \label{lem:o_set_cardinality_monotonicity}
@@ -205,7 +213,8 @@ An important property related to the sizes of these $\mathcal{O}$-sets is monoto
 \begin{proof}
     From Definition \ref{def:o_set}, the $\mathcal{O}$-set for $u$ is given by
     \[ \mathcal{O}_u = \bigcup_{p \in Pred(u)} \{ y + w(u) \mid y \in \mathcal{O}_p \}. \]
-    Since $u$ is a successor of $v$, it follows that $v$ is a predecessor of $u$, i.e., $v \in Pred(u)$. Therefore, the set $S_v = \{ y + w(u) \mid y \in \mathcal{O}_v \}$ contributes to the union forming $\mathcal{O}_u$. Specifically, $S_v \subseteq \bigcup_{p \in Pred(u)} \{ y + w(u) \mid y \in \mathcal{O}_p \}$.
+    Since $u$ is a successor of $v$, it follows that $v$ is a predecessor of $u$, i.e., $v \in Pred(u)$. Therefore, the set $S_v = \{ y + w(u) \mid y \in \mathcal{O}_v \}$ contributes to the union forming $\mathcal{O}_u$. Specifically
+    \[S_v \subseteq \bigcup_{p \in Pred(u)} \{ y + w(u) \mid y \in \mathcal{O}_p \}\]
     Consider the mapping $f: \mathcal{O}_v \to S_v$ defined by $f(y) = y + w(u)$. Since $w(u) \ge 0$, this mapping is injective. If $y_1 \neq y_2$, then $y_1 + w(u) \neq y_2 + w(u)$. Consequently, the number of distinct elements in $S_v$ is exactly equal to the number of distinct elements in $\mathcal{O}_v$, so $|S_v| = |\mathcal{O}_v|$.
     The set $\mathcal{O}_u$ is formed by taking the union of sets like $S_v$ for all predecessors $p \in Pred(u)$ and retaining only the unique values. Since the elements generated from $v$'s contribution (namely, $S_v$) are a subset of the elements considered for $\mathcal{O}_u$, the total number of unique elements in $\mathcal{O}_u$ must be at least the number of unique elements contributed by $v$.
     Therefore, $|\mathcal{O}_u| \ge |S_v| = |\mathcal{O}_v|$.
@@ -262,7 +271,7 @@ An important property related to the sizes of these $\mathcal{O}$-sets is monoto
 
 \begin{example}[$\mathcal{O}$-Set Calculation]
     \label{ex:o_set_calc}
-    Consider the weighted DAG shown in \autoref{fig:dag_example}. Each node $v$ is labelled with its weight $w(v)$ inside the circle. The label associated with each node displays its corresponding $\mathcal{O}$-set, calculated according to \ref{def:o_set}. Let us trace the computation for several nodes, respecting a topological order.
+    Consider the weighted DAG shown in \autoref{fig:dag_example}. Each node $v$ is labelled with its weight $w(v)$ inside the circle. The label associated with each node displays its corresponding $\mathcal{O}$-set, calculated according to \ref{def:o_set}.
 
     % \begin{itemize}
     %     \item \emph{Node 0 (Source):} $w(0)=0$. By definition, $\mathcal{O}_0 = \{0\}$.
@@ -314,36 +323,35 @@ An important property related to the sizes of these $\mathcal{O}$-sets is monoto
 \subsection{The Rank Query}
 \label{subsec:rank_dag_def}
 
-Having defined the $\mathcal{O}$-set, which precisely captures the set of all possible cumulative path weights terminating at a given vertex $N$, we now introduce the Rank query. This query builds upon the $\mathcal{O}$-set to provide a richer description related to the path weights.
+Having defined the $\mathcal{O}$-set, which precisely captures the set of all possible cumulative path weights terminating at a given vertex $N$, we now introduce the \Rank{} query. This query builds upon the $\mathcal{O}$-set to provide a richer description related to the path weights.
 
-Intuitively, each value $x \in \mathcal{O}_N$ represents the total accumulated weight along some path from the source $s$ ending exactly at $N$. We can think of the weight $w(N)$ of the node $N$ itself as the contribution or cost associated with the final step or "activity" performed at $N$. The Rank query, $\mathrm{Rank}_G(N)$, aims to capture not just the final cumulative weights $x \in \mathcal{O}_N$, but rather the set of all possible cumulative values that could be considered "active" or relevant \emph{during} the activity represented by node $N$.
+Intuitively, each value $x \in \mathcal{O}_N$ represents the total accumulated weight along some path from the source $s$ ending exactly at $N$. We can think of the weight $w(N)$ of the node $N$ itself as the contribution or cost associated with the final step or "activity" performed at $N$. The \Rank{} query, $\mathrm{rank}_G(N)$, aims to capture not just the final cumulative weights $x \in \mathcal{O}_N$, but rather the set of all possible cumulative values that could be considered "active" or relevant \emph{during} the activity represented by node $N$.
 
-Specifically, for a path $P$ reaching $N$ with total weight $W'(P)=x$, the query considers the range of cumulative values from the point just before incorporating $N$'s full weight up to the final value $x$. This corresponds mathematically to the integer interval $[\max(0, x - w(N) + 1), x]$. This interval represents all possible integer cumulative weights observed during the \emph{processing} of node $N$ along that specific path. The Rank query then aggregates these intervals over all possible paths ending at $N$.
+Specifically, for a path $P$ reaching $N$ with total weight $W(P)=x$, the query considers the range of cumulative values from the point just before incorporating $N$'s full weight up to the final value $x$. This corresponds mathematically to the integer interval
+\[[\max(0, x - w(N) + 1), x]\]
+This interval represents all possible integer cumulative weights observed during the \emph{processing} of node $N$ along that specific path. The \Rank{} query then aggregates these intervals over all possible paths ending at $N$.
 
 This intuition leads to the following formal definition:
 
 \begin{definition}[Rank Query on Weighted DAG]
     \label{def:rank_dag}
-    Given a vertex $N \in V$ in a weighted DAG $G=(V, E, w)$, the Rank query, denoted $\mathrm{Rank}_G(N)$, returns a representation of a specific set of integers derived from the $\mathcal{O}$-set $\mathcal{O}_N$. The target set, $S_N \subseteq \mathbb{N}_0$, is defined as the union of intervals generated from each element $x \in \mathcal{O}_N$:
+    Given a vertex $N \in V$ in a weighted DAG $G=(V, E, w)$, the Rank query, denoted $\mathrm{rank}_G(N)$, returns a representation of a specific set of integers derived from the $\mathcal{O}$-set $\mathcal{O}_N$. The target set, $S_N \subseteq \mathbb{N}_0$, is defined as the union of intervals generated from each element $x \in \mathcal{O}_N$:
     \[ S_N = \bigcup_{x \in \mathcal{O}_N} \{ z \in \mathbb{N}_0 \mid \max(0, x - w(N) + 1) \le z \le x \}. \]
-    The query result is specified as a minimal collection of disjoint, closed integer intervals,
+    These intervals are then maximally merged, meaning $r_k < l_{k+1}-1$ for all $k=1, \dots, p-1$. The query result is specified as a minimal collection of disjoint, closed integer intervals,
     \[ \mathcal{R}_N = \{[l_1, r_1], [l_2, r_2], \dots, [l_p, r_p]\} \]
-    such that their union equals $S_N$,
+    such that their union exactly covers $S_N$,
     \[ \bigcup_{k=1}^{p} [l_k, r_k] = S_N \]
-    and the intervals are maximally merged, meaning $r_k < l_{k+1}-1$ for all $k=1, \dots, p-1$
 \end{definition}
 
-\begin{remark}
-    As motivated above, the transformation from $\mathcal{O}_N$ to the set $S_N$ via the interval generation rule $\{ z \mid \max(0, x - w(N) + 1) \le z \le x \}$ formalizes the idea of capturing the range of values associated with the final node $N$ for each possible incoming path weight $x$. The length of the generated interval is typically $w(N)$ (unless $x < w(N)-1$, in which case it starts from 0), ending precisely at $x$. This mathematical formulation directly implements the intuition of considering values accumulated during the phase associated with node $N$. The subsequent union and merging into disjoint intervals provide a canonical and compact representation of the overall set $S_N$.
-\end{remark}
+% \begin{remark}
+%     As motivated above, the transformation from $\mathcal{O}_N$ to the set $S_N$ via the interval generation rule $\{ z \mid \max(0, x - w(N) + 1) \le z \le x \}$ formalizes the idea of capturing the range of values associated with the final node $N$ for each possible incoming path weight $x$. The length of the generated interval is typically $w(N)$ (unless $x < w(N)-1$, in which case it starts from 0), ending precisely at $x$. This mathematical formulation directly implements the intuition of considering values accumulated during the phase associated with node $N$. The subsequent union and merging into disjoint intervals provide a canonical and compact representation of the overall set $S_N$.
+% \end{remark}
+
+We now illustrate the \Rank query with an example.
 
 \begin{example}[Rank Query Calculation with Disjoint Result]
     \label{ex:rank_calc_disjoint}
-    Let us compute the Rank query for vertex $N=2$ in the DAG shown in \autoref{fig:dag_example}. From Example \ref{ex:o_set_calc}, we have:
-    \begin{itemize}
-        \item The weight of node 2 is $w(2) = 2$.
-        \item The $\mathcal{O}$-set for node 2 is $\mathcal{O}_2 = \{ 5, 9, 11 \}$. These are the possible total weights of paths ending at node 2.
-    \end{itemize}
+    Let us compute the rank query for vertex $N=2$ in the DAG shown\footnote{In this example, the weight function $w$ assigns to each vertex $v$ a weight equal to its identifier, i.e., $w(v)=v$. This is possible since it's just a small graph and we have taken unique weights} in \autoref{fig:dag_example}. From Example \ref{ex:o_set_calc}, we know that the weight of node 2 is $w(2) = 2$, and its $\mathcal{O}$-set is $\mathcal{O}_2 = \{ 5, 9, 11 \}$. These are the possible total weights of paths ending at node 2.
     Applying Definition \ref{def:rank_dag}, we associate an interval with each $x \in \mathcal{O}_2$, representing the values active during the processing of node 2:
     \begin{itemize}
         \item For path weight $x=5$: Interval is $[\max(0, 5 - 2 + 1), 5] = [4, 5]$. These are the values active while accumulating the weight $w(2)=2$ to reach 5.
@@ -351,7 +359,7 @@ This intuition leads to the following formal definition:
         \item For path weight $x=11$: Interval is $[\max(0, 11 - 2 + 1), 11] = [10, 11]$.
     \end{itemize}
     The target set $S_2$ is the union of these intervals: $S_2 = [4, 5] \cup [8, 9] \cup [10, 11]$.
-    We merge these intervals to obtain the minimal disjoint representation $\mathcal{R}_2$. The intervals are already sorted by starting point.
+    We merge these intervals to obtain the minimal disjoint representation $\mathcal{R}_2$.
     \begin{itemize}
         \item Compare $[4, 5]$ and $[8, 9]$. Since $8 > 5 + 1$, they remain separate.
         \item Compare $[8, 9]$ and $[10, 11]$. Since $10 \le 9 + 1$, they are merged into $[8, \max(9, 11)] = [8, 11]$.
@@ -375,8 +383,8 @@ For an implicit representation of path information, we define a function $\sigma
     \label{def:sigma_function}
     For each vertex $v \in V$ that is not a sink (i.e., $Succ(v) \neq \emptyset$), we select a designated successor $\sigma(v) \in Succ(v)$ according to the following heuristic rule:
     \[ \sigma(v) \in \underset{u \in Succ(v)}{\operatorname{argmin}} \{ |\mathcal{O}_u| \}. \]
+    In case of ties (multiple successors minimize the $\mathcal{O}$-set cardinality) we select the successor with the smallest vertex ID among the candidates. The function $\sigma$ is thus well-defined for all non-sink vertices.
 \end{definition}
-In case of ties (multiple successors minimize the $\mathcal{O}$-set cardinality) we select the successor with the smallest vertex ID among the candidates. The function $\sigma$ is thus well-defined for all non-sink vertices.
 
 \subsection*{Node Partitioning}
 \label{subsec:node_partitioning}
@@ -387,9 +395,9 @@ The successor function $\sigma$ induces a natural partitioning of the graph's ve
     \label{def:explicit_implicit}
     The set of vertices $V$ is partitioned into two disjoint sets:
     \begin{itemize}
-        \item $V_E$: The set of \emph{explicit} vertices. This set comprises all sink vertices of the graph $G$:
+        \item $V_E$: The set of explicit vertices. This set comprises all sink vertices of the graph $G$:
               \[ V_E = \{ v \in V \mid Succ(v) = \emptyset \}. \]
-        \item $V_I$: The set of \emph{implicit} vertices. This set includes all non-sink vertices:
+        \item $V_I$: The set of implicit vertices. This set includes all non-sink vertices:
               \[ V_I = V \setminus V_E = \{ v \in V \mid Succ(v) \neq \emptyset \}. \]
     \end{itemize}
 \end{definition}
@@ -878,16 +886,16 @@ Finally, the space for the offset sequences $\mathcal{I}_v$ when stored using th
         \quad Elias-Fano Compressed Storage                     & 2,211,849      \\
         \midrule
         \textbf{Succinct DAG Representation (RLE)}              &                \\
-        \quad Total Space ($S(G)$)                              & 699,779        \\
+        \quad Total Space ($S(G)$)                              & 602,808        \\
         \quad \quad Weights $\mathcal{W}$ (Minimal Binary)      & 60,824         \\
-        \quad \quad Successors $\Sigma$ (Minimal Binary)        & 274,015        \\
-        \quad \quad Associated Data $\mathcal{D}$ (RLE Offsets) & 364,940        \\
+        \quad \quad Successors $\Sigma$ (Minimal Binary)        & 297,700        \\
+        \quad \quad Associated Data $\mathcal{D}$ (RLE Offsets) & 244,284        \\
         \bottomrule
     \end{tabular}
     \caption{Theoretical space estimates (in bits) for the example Bitcoin DAG ($n=22,210$, $m=50,514$).}
     \label{tab:space_estimates_bitcoin}
 \end{table}
 
-Table \ref{tab:space_estimates_bitcoin} presents the results of this theoretical space estimation for the example DAG. The total estimated space for our succinct DAG representation using RLE for the offsets, $S(G)$, is 699,779 bits. This value is notably less than half of the $0^{th}$-order entropy $\mathcal{H}_0(G)$ (1,525,730 bits). This result highlights the advantage of our approach: by selectively discarding information required for full graph reconstruction (specifically, the complete edge set $E$) while preserving all information necessary for Rank query computation, the structure achieves a space footprint smaller than the theoretical minimum for lossless graph encoding.
+Table \ref{tab:space_estimates_bitcoin} presents the results of this theoretical space estimation for the example DAG. The total estimated space for our succinct DAG representation using RLE for the offsets, $S(G)$, is 602,808 bits. This value is notably less than half of the $0^{th}$-order entropy $\mathcal{H}_0(G)$ (1,525,730 bits). This result highlights the advantage of our approach: by selectively discarding information required for full graph reconstruction (specifically, the complete edge set $E$) while preserving all information necessary for Rank query computation, the structure achieves a space footprint smaller than the theoretical minimum for lossless graph encoding.
 
 Moreover, the analysis reveals the significant space overhead associated with precomputing Rank query results. Storing the interval sets for all nodes explicitly, even using minimal binary representations, requires an estimated 4,854,533 bits. Applying Elias-Fano compression to these precomputed results reduces the space to 2,211,849 bits. While this represents a substantial saving over the explicit form, it remains considerably larger than both the $0^{th}$-order entropy bound and, crucially, the space achieved by our succinct DAG representation ($S(G)$). Therefore, our structure provides not only a mechanism to answer complex path queries but does so with remarkable space efficiency, far surpassing precomputation strategies and falling below the conventional entropy bounds associated with lossless graph representation due to its targeted, query-specific information retention.
