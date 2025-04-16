@@ -109,7 +109,7 @@ This graph-based perspective on degenerate strings serves as a concrete starting
 
 Our primary focus is on generalizing the Rank query concept to this graph setting; the Select query, while definable, will not be treated further in this work. For a given vertex $N$, the Rank query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
 
-The combinatorial complexity of paths in a DAG — potentially exponential in the number of vertices — makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. We introduce a novel representation strategy that partitions the vertices into two categories: \emph{explicit} vertices, for which path weight information is stored directly, and \emph{implicit} vertices, whose information is derived indirectly through references to other vertices via a carefully defined \emph{successor} relationship.
+The combinatorial complexity of paths in a DAG — potentially exponential in the number of vertices — makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. Our approach involves partitioning the vertices based on how their path weight information is represented: some vertices (\emph{explicit}) will store this information directly, while others (\emph{implicit}) will rely on indirect derivation through references facilitated by a carefully defined \emph{successor} relationship, as detailed in Section \ref{sec:succinct_dag_representation}.
 
 \section{Mathematical Framework}
 \label{sec:dag_defs}
@@ -401,18 +401,18 @@ Vertices in $V_E$ serve as base cases in our representation; their associated pa
 We now outline the main components of our data structure designed to represent the weighted DAG $G=(V,E,w)$ succinctly. These components are typically implemented as arrays indexed by vertex ID (from $0$ to $n-1$), enabling a Structure of Arrays (SoA) memory layout \footnote{The SoA organization can be advantageous for cache performance and allows for independent compression strategies for different data types (weights, pointers, path data).}.
 
 \begin{enumerate}
-    \item \emph{Weights $\mathcal{W}$:} An array storing the weight $w(v)$ for each vertex $v \in V$. Conceptually, $\mathcal{W}[v] = w(v)$.
+    \item \emph{Weights $\mathcal{W}$:} An array storing the weight $w(v)$ for each vertex $v \in V$., $\mathcal{W}[v] = w(v)$.
     \item \emph{Successor Information $\Sigma$:} An array encoding the successor function $\sigma$ and identifying explicit nodes. For an implicit vertex $v \in V_I$, $\Sigma[v]$ stores the identifier (ID) of its designated successor $\sigma(v)$. For an explicit vertex $v \in V_E$, $\Sigma[v]$ contains a special marker indicating its status.
-    \item \emph{Associated Data $\mathcal{D}$:} An array or structure holding the core path weight information, structured differently depending on whether a vertex is explicit or implicit. For a vertex $v$, $\mathcal{D}[v]$ conceptually stores either its full $\mathcal{O}$-set (if $v \in V_E$) or an offset sequence $\mathcal{I}_v$ (if $v \in V_I$) that enables reconstruction of $\mathcal{O}_v$ via reference to the data associated with $\sigma(v)$ (and eventually all its successors up to a node in $V_E$).
+    \item \emph{Associated Data $\mathcal{D}$:} An array or structure holding the core path weight information, structured differently depending on whether a vertex is explicit or implicit. For a vertex $v$, $\mathcal{D}[v]$ stores either its full $\mathcal{O}$-set (if $v \in V_E$) or an offset sequence $\mathcal{I}_v$ (if $v \in V_I$) that enables reconstruction of $\mathcal{O}_v$ via reference to the data associated with $\sigma(v)$ (and eventually all its successors up to a node in $V_E$).
 \end{enumerate}
 
 Let's focus on the content of the Associated Data $\mathcal{D}$ based on the vertex partitioning:
 
 \paragraph{Explicit Vertex Data ($\mathcal{D}_E$)}
-For $v \in V_E$ (Explicit Vertex), $\mathcal{D}[v]$ conceptually stores the sorted sequence $\mathcal{O}_v$. We denote this stored data representation as $\mathcal{D}_E(v)$. In practice, $\mathcal{D}_E(v)$ would be implemented using a suitable (potentially compressed) representation of the sequence $\mathcal{O}_v$.
+For $v \in V_E$ (Explicit Vertex), $\mathcal{D}[v]$ stores the sorted sequence $\mathcal{O}_v$. We denote this stored data representation as $\mathcal{D}_E(v)$. In practice, $\mathcal{D}_E(v)$ would be implemented using a suitable (potentially compressed) representation of the sequence $\mathcal{O}_v$.
 
 \paragraph{Implicit Vertex Data ($\mathcal{D}_I$)}
-For $v \in V_I$ (Implicit Vertex), let $u = \sigma(v)$ be the designated successor. $\mathcal{D}[v]$ conceptually stores the \emph{offset sequence} $\mathcal{I}_v$. This sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$ is a monotonically increasing sequence of $m = |\mathcal{O}_v|$ indices. The index $j_k$ (stored at position $k$ in $\mathcal{I}_v$) indicates that the $k$-th element of $\mathcal{O}_v$ (let it be $x_k$) can be computed from the $j_k$-th element of $\mathcal{O}_u$ (let it be $y_{j_k}$) using the reconstruction rule: $x_k = y_{j_k} - w(u)$. We denote this stored sequence representation as $\mathcal{D}_I(v)$.
+For $v \in V_I$, let $u = \sigma(v)$ be the designated successor. $\mathcal{D}[v]$ stores the \emph{offset sequence} $\mathcal{I}_v$. This sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$ is a strictly monotonically increasing sequence of $m = |\mathcal{O}_v|$ indices. The index $j_k$ (stored at position $k$ in $\mathcal{I}_v$) indicates that the $k$-th element of $\mathcal{O}_v$ (let it be $x_k$) can be computed from the $j_k$-th element of $\mathcal{O}_u$ (let it be $y_{j_k}$) using the reconstruction rule: $x_k = y_{j_k} - w(u)$. We denote this stored sequence representation as $\mathcal{D}_I(v)$.
 
 The successor information $\Sigma[v]$ provides the link $u = \sigma(v)$, and the weight $w(u)$ needed for the reconstruction is retrieved from $\mathcal{W}[u]$.
 
@@ -426,6 +426,13 @@ The successor information $\Sigma[v]$ provides the link $u = \sigma(v)$, and the
 This inequality guarantees that the length of the offset sequence $\mathcal{I}_v$ (which is $m = |\mathcal{O}_v|$) is no greater than the length of the sequence $\mathcal{O}_u$ (which is $|\mathcal{O}_u|$) from which values are derived. Furthermore, the reconstruction rule $x_k = y_{j_k} - w(u)$ implies that each $x_k \in \mathcal{O}_v$ originates from some element in $\mathcal{O}_u$ (shifted by $-w(u)$). The offset sequence $\mathcal{I}_v$ stores the index $j_k$ in $\mathcal{O}_u$ corresponding to the $k$-th element $x_k$ in $\mathcal{O}_v$.
 
 The heuristic choice of $\sigma(v)$ (\ref{def:sigma_function}) aims to minimize $|\mathcal{O}_{\sigma(v)}|$. While this is a greedy, local optimization, the intuition is that choosing a successor with a smaller $\mathcal{O}$-set might lead to offset sequences $\mathcal{I}_v$ that are structurally simpler or involve smaller index values, potentially improving the compressibility of the $\mathcal{D}_I(v)$ component.
+
+\begin{remark}[Unique Sink Transformation]
+    If the DAG $G=(V, E, w)$ possesses multiple sink vertices ($v$ with $Succ(v) = \emptyset$), we can decide to transform it to have a unique sink. This is achieved by introducing a virtual sink vertex $t'$ with $w(t') = 0$, setting $V' = V \cup \{t'\}$, and defining the edge set $E' = E \cup \{ (v, t') \mid v \in V \text{ and } Succ_G(v) = \emptyset \}$. In the resulting graph $G'=(V', E', w')$, $t'$ becomes the unique sink.
+
+    This transformation preserves the $\mathcal{O}$-sets for all original vertices $v \in V$. Its primary benefit for our representation is structural: the set of explicit vertices $V_E$ (Definition \ref{def:explicit_implicit}) reduces to the singleton $\{t'\}$. This potentially decreases the storage needed for the explicit data component $\mathcal{D}_E$, as only $\mathcal{O}_{t'}$ (which aggregates path information from all original sinks) needs explicit storage. Therefore, when discussing the representation structure, we may assume, without loss of generality, that such a transformation has been applied if beneficial, resulting in a unique sink.
+\end{remark}
+
 
 \subsection*{Example of the Structure}
 \label{subsec:structure_example}
@@ -709,7 +716,7 @@ The succinct representation detailed in \autoref{sec:succinct_dag_representation
 \subsection{Compressing Weights and Successor Information}
 \label{subsec:compressing_W_Sigma}
 
-The components $\mathcal{W}$ and $\Sigma$ are conceptually arrays of integers.
+The components $\mathcal{W}$ and $\Sigma$ are arrays of integers.
 \begin{itemize}
     \item $\mathcal{W}$: An array of length $n = |V|$, where $\mathcal{W}[v] = w(v) \in \mathbb{N}_0$. The values are non-negative integers representing vertex weights, without any guarantee of monotonicity or specific distribution patterns a priori.
     \item $\Sigma$: An array of length $n$, where $\Sigma[v]$ stores either the integer ID $\sigma(v) \in \{0, \dots, n-1\}$ if $v \in V_I$, or a special marker (which can also be represented as an integer) if $v \in V_E$. This is also fundamentally a sequence of integers.
@@ -724,28 +731,35 @@ Alternatively, if the range of possible integer values in $\mathcal{W}$ or $\Sig
 \subsection{Compressing Associated Data Sequences}
 \label{subsec:compressing_associated_data_sequences}
 
-The associated data component $\mathcal{D}$ holds the core path weight information, represented as sequences tied to each vertex. For an explicit vertex $v \in V_E$, $\mathcal{D}$ contains the $\mathcal{O}$-set $\mathcal{O}_v = (x_0, x_1, \dots, x_{m-1})$. This sequence consists of non-negative integers and is strictly increasing ($0 \le x_0 < x_1 < \dots < x_{m-1}$). For an implicit vertex $v \in V_I$, $\mathcal{D}$ contains the offset sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$. This sequence also consists of non-negative integers, but it is non-decreasing ($0 \le j_0 \le j_1 \le \dots \le j_{m-1}$). The ordered nature of these sequences (monotonicity) makes them suitable for specialized compression techniques that outperform general-purpose integer coding. The first method
-is Elias-Fano encoding (\autoref{subsec:elias_fano_compression}), which is particularly effective for monotonic sequences. The second method is Run-Length Encoding (RLE), which is effective for sequences with long runs of consecutive values. We will only focus on RLE since we have already covered Elias-Fano encoding in \autoref{subsubsec:elias_fano_compression}.
+The associated data component $\mathcal{D}$ holds the core path weight information, represented as sequences tied to each vertex. For an explicit vertex $v \in V_E$, $\mathcal{D}$ contains the $\mathcal{O}$-set $\mathcal{O}_v = (x_0, x_1, \dots, x_{m-1})$, where $m = |\mathcal{O}_v|$. This sequence consists of non-negative integers and, by Definition \ref{def:o_set}, is strictly increasing ($0 \le x_0 < x_1 < \dots < x_{m-1}$).
+For an implicit vertex $v \in V_I$, $\mathcal{D}$ contains the offset sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$, where $m = |\mathcal{O}_v|$. As established by the reconstruction rule $x_k = y_{j_k} - w(u)$ and the fact that $\mathcal{O}_v$ and $\mathcal{O}_u$ (where $u=\sigma(v)$) are themselves strictly increasing sequences, the offset sequence $\mathcal{I}_v$ is also strictly increasing ($0 \le j_0 < j_1 < \dots < j_{m-1}$).
+
+The strictly monotonic nature of both $\mathcal{O}_v$ and $\mathcal{I}_v$ makes them highly suitable for compression methods designed for such sequences. Elias-Fano encoding (\autoref{sec:elias_fano_code}), already discussed, provides excellent compression guarantees and support for efficient random access and predecessor/successor queries.
+
+Alternatively, especially if sequences exhibit significant clustering (long stretches of consecutive integers), Run-Length Encoding (RLE) can offer substantial compression. We focus here on describing the RLE approach as applied to these strictly monotonic sequences.
+
 \subsubsection*{Run-Length Encoding (RLE) Representation}
 
-Run-Length Encoding (RLE) exploits consecutive values within the monotonic sequence. Consider a generic monotonic sequence $Y = (y_0, y_1, \dots, y_{m-1})$. A \emph{run} is defined as a maximal contiguous subsequence of the form $(y_i, y_{i+1}, \dots, y_{i+l-1})$ such that $y_{j+1} = y_j + 1$ for all $j$ where $i \le j < i+l-1$. The RLE approach encodes $Y$ by representing each run by its starting value and its length.
+Run-Length Encoding exploits consecutive values within a monotonic sequence. Consider a generic strictly increasing sequence $Y = (y_0, y_1, \dots, y_{m-1})$. A \emph{run} is defined as a maximal contiguous subsequence of the form $(y_i, y_{i+1}, \dots, y_{i+l-1})$ such that $y_{j+1} = y_j + 1$ for all $j$ where $i \le j < i+l-1$. Note that a run can have length $l=1$ if an element does not have a consecutive successor in the sequence. The RLE approach encodes $Y$ by representing each run by its starting value and its length.
 
 Formally, the RLE of $Y$ generates two sequences:
 \begin{itemize}
-    \item The \emph{run starts sequence}, $S = (s_1, s_2, \dots, s_p)$, where $s_i$ is the first value of the $i$-th run identified in $Y$. Due to the maximality of runs and the monotonicity of $Y$, $S$ is a strictly increasing sequence: $s_1 < s_2 < \dots < s_p$.
-    \item The \emph{run lengths sequence}, $L = (l_1, l_2, \dots, l_p)$, where $l_i \ge 1$ is the number of elements (length) of the $i$-th run. $L$ is a sequence of positive integers, but it possesses no inherent monotonicity property.
+    \item The \emph{run starts sequence}, $S = (s_1, s_2, \dots, s_p)$, where $s_i$ is the first value ($y_{i'}$) of the $i$-th run identified in $Y$. Due to the maximality of runs and the strict monotonicity of $Y$, $S$ is also a strictly increasing sequence: $s_1 < s_2 < \dots < s_p$.
+    \item The \emph{run lengths sequence}, $L = (l_1, l_2, \dots, l_p)$, where $l_i \ge 1$ is the number of elements (length) of the $i$-th run. $L$ is a sequence of positive integers, possessing no inherent monotonicity property.
 \end{itemize}
-The pair $(S, L)$ uniquely determines the original sequence $Y$. Algorithm \ref{alg:rle_encode_theory} provides the conceptual procedure for generating $S$ and $L$.
+The pair $(S, L)$ uniquely determines the original sequence $Y$. Algorithm \ref{alg:rle_encode} provides the procedure for generating $S$ and $L$.
 
-\begin{algorithm}
-    \caption{$\textsc{Encode}(Y)$}
-    \label{alg:rle_encode_theory}
+\begin{algorithm}[htbp]
+    \caption{$\textsc{EncodeRLE}(Y)$: Generate RLE components for a monotonic sequence}
+    \label{alg:rle_encode} % Changed label to avoid duplicate
     \small
     \begin{algorithmic}[1]
-        \Require Monotonic sequence $Y = (y_0, y_1, \dots, y_{m-1})$.
+        \Require Monotonic sequence $Y = (y_0, y_1, \dots, y_{m-1})$, where $m = |Y|$.
         \Ensure Run starts sequence $S$, Run lengths sequence $L$.
         \State Initialize $S \leftarrow \emptyset$, $L \leftarrow \emptyset$.
-        \If{$m = 0$} \Return $(S, L)$ \EndIf
+        \If{$m = 0$}
+        \State \Return $(S, L)$
+        \EndIf
         \State $i \leftarrow 0$
         \While{$i < m$}
         \State $current\_start \leftarrow y_i$
@@ -763,27 +777,28 @@ The pair $(S, L)$ uniquely determines the original sequence $Y$. Algorithm \ref{
 \end{algorithm}
 
 \paragraph{Compression of RLE Components}
-The space efficiency of RLE depends on effectively compressing the resulting sequences $S$ and $L$.
-The run starts sequence $S = (s_1, \dots, s_p)$ is strictly monotonic. Consequently, it is an ideal candidate for Elias-Fano encoding. If $S$ contains $p$ values from the universe $[0 \dots U)$, its Elias-Fano representation would require approximately $p \log_2(U/p) + O(p)$ bits.
+The space efficiency of RLE hinges on effectively compressing the resulting sequences $S$ and $L$.
+The run starts sequence $S = (s_1, \dots, s_p)$ is strictly monotonic. Consequently, it is an ideal candidate for Elias-Fano encoding (\autoref{sec:elias_fano_code}), leveraging its space efficiency for such sequences.
 
-The run lengths sequence $L = (l_1, \dots, l_p)$ is a sequence of positive integers. Standard variable-length integer codes (\autoref{sec:integer_coding}), such as Elias Gamma or Delta codes, can be applied. In practice, we can use the \textsf{compressed-intvec} structure (\autoref{app:compressed_intvec_engineering}) to store $L$ efficiently.
+The run lengths sequence $L = (l_1, \dots, l_p)$ is a sequence of positive integers without guaranteed structure. Standard variable-length integer codes (\autoref{sec:integer_coding}), such as Elias Gamma or Delta codes, can be applied. In practice, employing a structure like the \textsf{compressed-intvec} (\autoref{app:compressed_intvec_engineering}) allows choosing an appropriate codec and provides efficient random access.
 
 \paragraph{Random Access in RLE}
-Retrieving the element $y_k$ (the element at index $k$ in the original sequence $Y$) from the RLE representation $(S, L)$ requires identifying the run to which $y_k$ belongs. This necessitates finding the unique run index $i^*$ (where $1 \le i^* \le p$) such that:
+Retrieving the element $y_k$ (the element at index $k$ in the original sequence $Y$, $0 \le k < m$) from the RLE representation $(S, L)$ requires identifying the run to which $y_k$ belongs. This necessitates finding the unique run index $i^*$ (where $1 \le i^* \le p$) such that:
 \[ \sum_{j=1}^{i^*-1} l_j \le k < \sum_{j=1}^{i^*} l_j \]
 where the sum is defined as $0$ if $i^*=1$. Once $i^*$ is found, the value $y_k$ is given by:
 \[ y_k = s_{i^*} + \left( k - \sum_{j=1}^{i^*-1} l_j \right) \]
-Directly computing the prefix sums $\sum l_j$ on demand requires iterating through $L$, leading to an $O(p)$ time complexity for access, which can be inefficient if $p$ is large.
+Computing the prefix sums $\sum l_j$ on the fly requires iterating through $L$, potentially leading to $O(p)$ time complexity for access, which is inefficient if the number of runs $p$ is large.
 
-To make this process faster, one can precompute and store the sequence of prefix sums of the lengths:
-\[ P = (p_1, p_2, \dots, p_p) \text{, where } p_i = \sum_{j=1}^{i} l_j. \]
-Since $l_j \ge 1$ for all $j$, the sequence $P$ is strictly increasing ($p_1 < p_2 < \dots < p_p = m$). As a monotonic sequence, $P$ itself can be compressed, for example, using Elias-Fano.
+To accelerate random access, one can precompute and store the sequence of prefix sums of the run lengths:
+\[ P = (p_1, p_2, \dots, p_p) \qquad  p_i = \sum_{j=1}^{i} l_j. \]
+Since $l_j \ge 1$ for all $j$, the sequence $P$ is strictly increasing. As a strictly monotonic sequence, $P$ itself can be compressed effectively, for instance, using Elias-Fano encoding.
 
-With the prefix sum sequence $P$ available, finding the index $i^*$ corresponding to the query index $k$ reduces to searching for the smallest $i^*$ such that $p_{i^*} > k$. This is a predecessor or successor search problem on the monotonic sequence $P$. Using standard binary search on $P$ takes $O(\log p)$ time. If $P$ is stored in a structure supporting faster searches (like certain Elias-Fano constructions), this lookup time might be further reduced. Algorithm \ref{alg:rle_get_theory} formalizes the access using prefix sums.
+With the prefix sum sequence $P$ available, finding the index $i^*$ corresponding to the query index $k$ reduces to searching for the smallest $i^*$ such that $p_{i^*} > k$. This is a successor search problem on the monotonic sequence $P$. Using binary search on $P$ (if stored as an array) takes $O(\log p)$ time. If $P$ is stored in a structure supporting faster searches (like rank/select structures built upon certain Elias-Fano constructions), this lookup time might be further improved. Algorithm \ref{alg:rle_get_value} formalizes access using prefix sums.
 
-\begin{algorithm}
-    \caption{$\textsc{Get}(S, L, P, k)$}
-    \label{alg:rle_get_theory}
+% Note: Algorithm is unchanged from the original text.
+\begin{algorithm}[htbp] % Added [htbp]
+    \caption{$\textsc{GetValueRLE}(S, L, P, k)$: Retrieve element from RLE representation} % Renamed for clarity
+    \label{alg:rle_get_value}
     \small
     \begin{algorithmic}[1]
         \Require Run starts $S=(s_1,\dots,s_p)$, Run lengths $L=(l_1,\dots,l_p)$, Prefix sums $P=(p_1, \dots, p_p)$, index $k \in [0, m-1]$.
@@ -800,35 +815,29 @@ With the prefix sum sequence $P$ available, finding the index $i^*$ correspondin
     \end{algorithmic}
 \end{algorithm}
 
-% \paragraph{Space-Time Trade-offs}
-% The total space complexity for the RLE representation is the sum of the space needed for the compressed representations of $S$, $L$, and optionally $P$. Let $\mathrm{Space}(X)$ denote the space complexity for representing sequence $X$. The RLE space is $\mathrm{Space}(S) + \mathrm{Space}(L)$ without prefix sums, and $\mathrm{Space}(S) + \mathrm{Space}(L) + \mathrm{Space}(P)$ with prefix sums.
-% \begin{itemize}
-%     \item RLE is theoretically advantageous over direct Elias-Fano encoding of $Y$ when the original sequence exhibits significant clustering, meaning the number of runs $p$ is substantially smaller than the total number of elements $m$ ($p \ll m$). In such cases, the combined space for $S, L, (P)$ might be less than the $m \log_2(U/m) + O(m)$ bits required for direct Elias-Fano on $Y$.
-%     \item The inclusion of the prefix sum sequence $P$ represents a classic space-time trade-off. It increases storage requirements but reduces the time complexity for random access from $O(p)$ (potentially linear in the compressed size) to $O(\log p)$ or potentially faster, depending on how $P$ is stored and queried.
-% \end{itemize}
-
 \paragraph{Method Selection}
-The choice between direct Elias-Fano encoding and RLE for representing the monotonic sequences $\mathcal{O}_v$ and $\mathcal{I}_v$ depends on the expected structure of these sequences. If long runs of consecutive integers are anticipated (e.g., due to specific weight patterns or graph structures), RLE offers potential for higher compression. If the sequences are expected to be sparse or lack significant runs, direct Elias-Fano is likely the more direct and potentially more space-efficient approach. The decision might also depend on the relative importance of compression ratio versus random access speed (considering the overhead and benefit of the prefix sum structure in RLE).
+The choice between direct Elias-Fano encoding and Run-Length Encoding (RLE) for representing the strictly increasing sequences $\mathcal{O}_v$ and $\mathcal{I}_v$ depends on their structure. RLE is advantageous when the sequence exhibits significant clustering, meaning the number of runs $p$ is substantially smaller than the total number of elements $m$ ($p \ll m$). In such cases, the combined compressed size of the run starts $S$ and run lengths $L$ (and potentially the prefix sums $P$) might be less than direct Elias-Fano encoding of the original sequence.
 
-Finally, regardless of the chosen compression method (Elias-Fano or RLE) for individual sequences, representing the entire associated data component $\mathcal{D}$ requires a mechanism to manage this collection. Conceptually, this involves concatenating the compressed representations of all sequences ($\{\mathcal{O}_v\}_{v \in V_E}$ and $\{\mathcal{I}_v\}_{v \in V_I}$) and maintaining an auxiliary index structure that maps each vertex ID $v$ to the starting position and relevant metadata (like length or universe size, if needed) of its corresponding compressed sequence within the concatenated data. The space complexity of this auxiliary index can be considered negligible compared to the compressed data itself\footnote{If we use a standard Rust \textsf{Vec}, the overhead is minimal: 64 bits for storing the length of the vector, 64 bits for storing the capacity and 64 bits for the pointer to the data.}.
+On the other hand, if sequences are sparse or lack significant runs ($p$ is close to $m$), direct Elias-Fano is likely more straightforward and potentially more space-efficient.
 
-\clearpage
+Regardless of the chosen compression method, representing the entire associated data component $\mathcal{D}$ practically involves concatenating the compressed representations of all sequences ($\{\mathcal{D}_E(v)\}_{v \in V_E}$ and $\{\mathcal{D}_I(v)\}_{v \in V_I}$) into a single buffer. An auxiliary index structure is then needed to map each vertex ID $v$ to the starting position and metadata of its compressed sequence. The space overhead for this index is typically negligible compared to the compressed data itself
+
 \section{Below the Entropy Lower Bound}
 \label{sec:below_entropy}
 
-In the preceding sections, we introduced a succinct representation for weighted DAGs designed to efficiently support path-based queries, along with compression strategies (\autoref{sec:compression_strategies}) aimed at minimizing its space footprint. To rigorously evaluate the space efficiency of our proposed structure, we establish a baseline based on the information content in the weighted DAG itself. Drawing upon the principles of information theory outlined in \autoref{ch:Chapter2}, we can define a measure of entropy for the graph $G=(V, E, w)$.
+To evaluate the space efficiency of our proposed structure, we establish a baseline based on the information content in the weighted DAG itself. Drawing upon the principles of information theory outlined in \autoref{ch:Chapter2}, we can define a measure of entropy for the graph $G=(V, E, w)$.
 
 Any \emph{lossless} representation of the graph $G$ must, at a minimum, encode the information required to uniquely specify its structure (the edges $E$) and the associated weights (the function $w$). We formulate a $0^{th}$-order entropy measure, denoted $\mathcal{H}_0(G)$, as a lower bound on the number of bits required to represent these components, assuming no prior knowledge about correlations or higher-order statistical properties.
 
 The information content required to specify the sequence of vertex weights $(w(v))_{v \in V}$ constitutes the first component. A fundamental lower bound, denoted $\mathcal{H}_W(G)$, can be established by considering the minimal binary representation length for each individual weight:
 \[ \mathcal{H}_W(G) = \sum_{v \in V} \lceil \log_2 (w(v)+1) \rceil \quad \text{bits}. \]
-This measure reflects the space needed assuming each weight is encoded independently, using the minimal bits for its value (handling $w(v)=0$), without leveraging potential statistical correlations or distribution patterns amenable to techniques like variable-length integer coding (\autoref{sec:integer_coding}).
+This measure reflects the space needed assuming each weight is encoded independently, using the minimal bits for its value (handling $w(v)=0$), without leveraging potential statistical correlations or distribution patterns suitable for techniques like variable-length integer coding (\autoref{sec:integer_coding}).
 
 The second component relates to the graph's topology, specifically the set of edges $E$. With $n = |V|$ vertices, there exist $n(n-1)$ possible directed edges (excluding self-loops). Encoding the topology requires specifying which $m = |E|$ of these potential edges are present. Assuming all directed graphs with $n$ vertices and $m$ edges are equally probable a priori, the information content is determined by the number of ways to choose these $m$ edges. This leads to the topological information component, $\mathcal{H}_E(G)$:
 \[ \mathcal{H}_E(G) = \log_2 \binom{n(n-1)}{m} \quad \text{bits}. \]
-This quantity can be approximated using Stirling's formula, $\log_2 \binom{N}{k} \approx k \log_2(N/k) + O(k)$, yielding $\mathcal{H}_E(G) \approx m \log_2 \left( \frac{n(n-1)}{m} \right) + O(m)$ bits, which relates the topological information content to the graph's density.
+This quantity can be approximated using Stirling's formula, $\log_2 \binom{N}{k} \approx k \log_2(N/k) + O(k)$, yielding $\mathcal{H}_E(G) \approx m \log_2 \left( \frac{n(n-1)}{m} \right) + O(m)$ bits.
 
-Combining these components yields a formal definition for the $0^{th}$-order entropy of the weighted DAG.
+Combining these components gives us a formal definition for the $0^{th}$-order entropy of the weighted DAG.
 
 \begin{definition}[$0^{th}$-Order Weighted DAG Entropy]
     \label{def:dag_entropy}
@@ -838,15 +847,17 @@ Combining these components yields a formal definition for the $0^{th}$-order ent
 
 The value $\mathcal{H}_0(G)$ represents a theoretical lower bound on the space required by any lossless encoding of the graph $(V, E, w)$ based solely on its zero-order statistics.
 
-Our proposed succinct data structure (\autoref{sec:succinct_dag_representation}), however, is designed differently. While lossless for Rank query computation (\autoref{def:rank_dag}), it is inherently \emph{lossy} concerning the reconstruction of the original graph $G$, as it does not store the complete edge set $E$. It retains only vertex weights $\mathcal{W}$, successor information $\Sigma$, and associated data $\mathcal{D}$. This distinction allows the structure's space usage, $S(G)$, to potentially fall below the $\mathcal{H}_0(G)$ bound.
+Our proposed succinct data structure (\autoref{sec:succinct_dag_representation}), however, is designed differently. While lossless for Rank query computation (\ref{def:rank_dag}), it is inherently \emph{lossy} concerning the reconstruction of the original graph $G$, as it does not store the complete edge set $E$. It retains only vertex weights $\mathcal{W}$, successor information $\Sigma$, and associated data $\mathcal{D}$. This distinction allows the structure's space usage, $S(G)$, to potentially fall below the $\mathcal{H}_0(G)$ bound.
 
-To illustrate this, we analyze performance on a weighted DAG derived from unrolling a Bitcoin Peer-to-Peer temporal network graph (details of the unrolling process are beyond the scope of this thesis), having $n = 22,210$ vertices and $m = 50,514$ edges. For this specific DAG, the calculated $0^{th}$-order entropy $\mathcal{H}_0(G)$ amounts to 1,525,730 bits, comprising $\mathcal{H}_W(G) = 60,824$ bits for weights and $\mathcal{H}_E(G) = 1,464,906$ bits for topology according to \autoref{def:dag_entropy}.
+To illustrate this, we analyze performance on a weighted DAG derived from unrolling a Bitcoin Peer-to-Peer temporal network graph (details of the unrolling process are beyond the scope of this thesis), having $n = 22,210$ vertices and $m = 50,514$ edges. For this specific DAG, the calculated $0^{th}$-order entropy $\mathcal{H}_0(G)$ amounts to 1,525,730 bits, comprising $\mathcal{H}_W(G) = 60,824$ bits for weights and $\mathcal{H}_E(G) = 1,464,906$ bits for topology according to \ref{def:dag_entropy}.
 
-We compare this theoretical lower bound $\mathcal{H}_0(G)$ against theoretical estimates of the space required by our succinct structure and alternative approaches based on precomputation. These estimates are derived using foundational principles applied according to the nature of the data sequence being represented.
+We compare this theoretical lower bound $\mathcal{H}_0(G)$ against theoretical estimates of the space required by our succinct structure and alternative approaches based on precomputation.
 
 For sequences composed of general non-negative integers $x$, such as the vertex weights $\mathcal{W}$, the successor identifiers $\Sigma$, or the interval endpoints in baseline precomputation results, the space estimation is based on summing the minimal binary representation cost for each integer independently. This cost is calculated as $\lceil \log_2(x+1) \rceil$ bits per integer $x$.
 
-When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. Theorem \ref{thm:ef_space_revised} guarantees an upper bound of $n \log_2(u/n) + 2n$ bits for encoding $n$ integers within the range $[0, u)$. Consequently, for the specific calculations in this analysis, we employ the closely related estimate of $n \lceil \log_2(u/n) \rceil + 2n$ bits, which aligns with this theoretical upper limit while accounting for practical implementation considerations.
+When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. Theorem \ref{thm:ef_space_revised} guarantees an upper bound of
+\[n \log_2(u/n) + 2n\]
+bits for encoding $n$ integers within the range $[0, u)$ using Elias-Fano.
 
 Finally, the space for the offset sequences $\mathcal{I}_v$ when stored using the Run-Length Encoding (RLE) scheme described in \autoref{sec:compression_strategies} is estimated by combining the previous principles. It requires the sum of the space estimate for the strictly monotonic sequence of run start values (using the Elias-Fano estimation) and the space estimate for the sequence of corresponding run lengths (using the minimal binary representation cost for each length).
 
@@ -873,8 +884,8 @@ Finally, the space for the offset sequences $\mathcal{I}_v$ when stored using th
         \quad \quad Associated Data $\mathcal{D}$ (RLE Offsets) & 364,940        \\
         \bottomrule
     \end{tabular}
-    \label{tab:space_estimates_bitcoin}
     \caption{Theoretical space estimates (in bits) for the example Bitcoin DAG ($n=22,210$, $m=50,514$).}
+    \label{tab:space_estimates_bitcoin}
 \end{table}
 
 Table \ref{tab:space_estimates_bitcoin} presents the results of this theoretical space estimation for the example DAG. The total estimated space for our succinct DAG representation using RLE for the offsets, $S(G)$, is 699,779 bits. This value is notably less than half of the $0^{th}$-order entropy $\mathcal{H}_0(G)$ (1,525,730 bits). This result highlights the advantage of our approach: by selectively discarding information required for full graph reconstruction (specifically, the complete edge set $E$) while preserving all information necessary for Rank query computation, the structure achieves a space footprint smaller than the theoretical minimum for lossless graph encoding.
