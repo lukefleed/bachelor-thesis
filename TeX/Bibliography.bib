@@ -7,7 +7,6 @@
   journal      = {bioRxiv}
 }
 
-#articolo principale
 @inproceedings{alanko2023small,
   title        = {Small searchable $\kappa$-spectra via subset rank queries on the spectral burrows-wheeler transform},
   author       = {Alanko, Jarno N and Puglisi, Simon J and Vuohtoniemi, Jaakko},
@@ -26,7 +25,6 @@
   year      = {2018}
 }
 
-# versione migliorata del paper principale dei subset wavelet trees
 @article{benoit2005representing,
   title     = {Representing trees of higher degree},
   author    = {Benoit, David and Demaine, Erik D and Munro, J Ian and Raman, Rajeev and Raman, Venkatesh and Rao, S Srinivasa},
@@ -45,7 +43,15 @@
   primaryclass  = {cs.DS}
 }
 
-# Struttura dati RRR importante
+@article{burrows1994block,
+  title   = {A block-sorting lossless data compression algorithm},
+  author  = {Burrows, Michael},
+  journal = {SRS Research Report},
+  volume  = {124},
+  year    = {1994}
+}
+
+
 @article{Chazelle1988,
   author  = {Chazelle, Bernard},
   title   = {A Functional Approach to Data Structures and Its Use in Multidimensional Searching},
@@ -56,8 +62,6 @@
   year    = {1988}
 }
 
-
-# Libro di ferragina
 @inproceedings{claude2011space,
   title        = {Space efficient wavelet tree construction},
   author       = {Claude, Francisco and Nicholson, Patrick K and Seco, Diego},
@@ -67,7 +71,47 @@
   organization = {Springer}
 }
 
-# Mathematics of Information and Coding
+@article{claude2015wavelet,
+  title     = {The wavelet matrix: An efficient wavelet tree for large alphabets},
+  author    = {Claude, Francisco and Navarro, Gonzalo and Ord{\'o}nez, Alberto},
+  journal   = {Information Systems},
+  volume    = {47},
+  pages     = {15--32},
+  year      = {2015},
+  publisher = {Elsevier}
+}
+
+@misc{compressed-intvec,
+  author       = {Luca Lombardo},
+  title        = {compressed-intvec: Compressed Integer Vector Library},
+  howpublished = {Rust Crate},
+  url          = {https://crates.io/crates/compressed-intvec}
+}
+
+
+@misc{dsi-bitstream,
+  author       = {Sebastiano Vigna and others},
+  title        = {Dsi-bitstream: Bitstream readers/writers for the DSI utilities},
+  howpublished = {Rust Crate},
+  url          = {https://crates.io/crates/dsi-bitstream}
+}
+
+@inproceedings{EFVenturini2014,
+  author    = {Ottaviano, Giuseppe and Venturini, Rossano},
+  title     = {Partitioned Elias-Fano indexes},
+  year      = {2014},
+  isbn      = {9781450322577},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  doi       = {10.1145/2600428.2609615},
+  booktitle = {Proceedings of the 37th International ACM SIGIR Conference on Research \& Development in Information Retrieval},
+  pages     = {273–282},
+  numpages  = {10},
+  keywords  = {inverted indexes, dynamic programming, compression},
+  series    = {SIGIR '14}
+}
+
+
 @book{ElementsofInformationTheory,
   title     = {Elements of Information Theory},
   author    = {Cover, T.M. and Thomas, J.A.},
@@ -86,6 +130,13 @@
   keywords = {}
 }
 
+@book{Fano1971,
+  title     = {On the number of bits required to implement an associative memory},
+  author    = {Fano, Robert Mario},
+  year      = {1971},
+  publisher = {Massachusetts Institute of Technology, Project MAC}
+}
+
 @inproceedings{ferragina2000opportunistic,
   title        = {Opportunistic data structures with applications},
   author       = {Ferragina, Paolo and Manzini, Giovanni},
@@ -95,6 +146,14 @@
   organization = {IEEE}
 }
 
+@inproceedings{ferragina2004alphabet,
+  title        = {An alphabet-friendly FM-index},
+  author       = {Ferragina, Paolo and Manzini, Giovanni and M{\"a}kinen, Veli and Navarro, Gonzalo},
+  booktitle    = {International Symposium on String Processing and Information Retrieval},
+  pages        = {150--160},
+  year         = {2004},
+  organization = {Springer}
+}
 
 @article{FERRAGINA2007115,
   title    = {A simple storage scheme for strings achieving entropy bounds},
@@ -119,7 +178,6 @@
   publisher = {ACM New York, NY, USA}
 }
 
-
 @book{ferragina2023pearls,
   title     = {Pearls of Algorithm Engineering},
   author    = {Ferragina, P.},
@@ -131,6 +189,24 @@
   title  = {String-matching and other products},
   author = {Fischer, Michael J and Paterson, Michael S},
   year   = {1974}
+}
+
+@inproceedings{gog2014theory,
+  title        = {From theory to practice: Plug and play with succinct data structures},
+  author       = {Gog, Simon and Beller, Timo and Moffat, Alistair and Petri, Matthias},
+  booktitle    = {Experimental Algorithms: 13th International Symposium, SEA 2014, Copenhagen, Denmark, June 29--July 1, 2014. Proceedings 13},
+  pages        = {326--337},
+  year         = {2014},
+  organization = {Springer}
+}
+
+@inproceedings{gonzalez2005practical,
+  title        = {Practical implementation of rank and select queries},
+  author       = {Gonz{\'a}lez, Rodrigo and Grabowski, Szymon and M{\"a}kinen, Veli and Navarro, Gonzalo},
+  booktitle    = {Poster Proc. Volume of 4th Workshop on Efficient and Experimental Algorithms (WEA)},
+  pages        = {27--38},
+  year         = {2005},
+  organization = {CTI Press and Ellinika Grammata Greece}
 }
 
 @inproceedings{grossi2004indexing,
@@ -161,6 +237,7 @@
   keywords  = {compressed sequences, indexing, wavelet tree, wavelet trie},
   series    = {PODS '12}
 }
+
 
 @article{GrossiWT2003,
   author  = {Grossi, Roberto and Gupta, Ankur and Vitter, Jeffrey},
@@ -228,6 +305,15 @@
   school = {Ph. D. thesis, Department of Computer Science, University of Helsinki, Finland}
 }
 
+@inproceedings{karkkainen2011fixed,
+  title        = {Fixed block compression boosting in FM-indexes},
+  author       = {K{\"a}rkk{\"a}inen, Juha and Puglisi, Simon J},
+  booktitle    = {International Symposium on String Processing and Information Retrieval},
+  pages        = {174--184},
+  year         = {2011},
+  organization = {Springer}
+}
+
 @book{KolmogorovComplexity,
   title     = {Kolmogorov Complexity and Algorithmic Randomness},
   author    = {A. Shen, V. A. Uspensky, N. Vereshchagin},
@@ -246,7 +332,6 @@
   year      = {2000},
   publisher = {SIAM}
 }
-
 
 @article{makinen2004new,
   title   = {New search algorithms and time/space tradeoffs for succinct suffix arrays},
@@ -278,6 +363,17 @@
   author  = {Veli Mäkinen and Gonzalo Navarro}
 }
 
+@article{manzini2001analysis,
+  title     = {An analysis of the Burrows—Wheeler transform},
+  author    = {Manzini, Giovanni},
+  journal   = {Journal of the ACM (JACM)},
+  volume    = {48},
+  number    = {3},
+  pages     = {407--430},
+  year      = {2001},
+  publisher = {ACM New York, NY, USA}
+}
+
 @article{moffat1998arithmetic,
   title     = {Arithmetic coding revisited},
   author    = {Moffat, Alistair and Neal, Radford M and Witten, Ian H},
@@ -286,6 +382,17 @@
   number    = {3},
   pages     = {256--294},
   year      = {1998},
+  publisher = {ACM New York, NY, USA}
+}
+
+@article{navarro2007compressed,
+  title     = {Compressed full-text indexes},
+  author    = {Navarro, Gonzalo and M{\"a}kinen, Veli},
+  journal   = {ACM Computing Surveys (CSUR)},
+  volume    = {39},
+  number    = {1},
+  pages     = {2--es},
+  year      = {2007},
   publisher = {ACM New York, NY, USA}
 }
 
@@ -323,6 +430,18 @@
   keywords  = {Encoding;Decoding;Entropy;Data structures;Computer science;Digital arithmetic;Data compression;Upper bound;Huffman coding;Redundancy;succinct data structures;arithmetic coding;locally decodable}
 }
 
+@inproceedings{pibiri_et_al,
+  author    = {Pibiri, Giulio Ermanno and Venturini, Rossano},
+  title     = {{Dynamic Elias-Fano Representation}},
+  booktitle = {28th Annual Symposium on Combinatorial Pattern Matching (CPM 2017)},
+  pages     = {30:1--30:14},
+  series    = {Leibniz International Proceedings in Informatics (LIPIcs)},
+  year      = {2017},
+  volume    = {78},
+  editor    = {K\"{a}rkk\"{a}inen, Juha and Radoszewski, Jakub and Rytter, Wojciech},
+  publisher = {Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik}
+}
+
 @article{plotnik1992upper,
   title     = {Upper bounds on the probability of sequences emitted by finite-state sources and on the redundancy of the Lempel-Ziv algorithm},
   author    = {Plotnik, Eli and Weinberger, Marcelo J and Ziv, Jacob},
@@ -348,6 +467,18 @@
   year   = {1979}
 }
 
+@article{rissanen1976generalized,
+  title     = {Generalized Kraft inequality and arithmetic coding},
+  author    = {Rissanen, Jorma J},
+  journal   = {IBM Journal of research and development},
+  volume    = {20},
+  number    = {3},
+  pages     = {198--203},
+  year      = {1976},
+  publisher = {IBM}
+}
+
+
 @article{RRR2002,
   title     = {Succinct indexable dictionaries with applications to encoding k-ary trees, prefix sums and multisets},
   volume    = {3},
@@ -358,6 +489,14 @@
   year      = {2007},
   month     = nov,
   pages     = {43}
+}
+
+@inproceedings{sadakane2006squeezing,
+  title     = {Squeezing succinct data structures into entropy bounds},
+  author    = {Sadakane, Kunihiko and Grossi, Roberto},
+  booktitle = {Proceedings of the seventeenth annual ACM-SIAM symposium on Discrete algorithm},
+  pages     = {1230--1239},
+  year      = {2006}
 }
 
 @book{sayood2002lossless,
@@ -422,6 +561,27 @@
   organization = {Springer}
 }
 
+@inproceedings{vigna2008broadword,
+  title        = {Broadword implementation of rank/select queries},
+  author       = {Vigna, Sebastiano},
+  booktitle    = {International Workshop on Experimental and Efficient Algorithms},
+  pages        = {154--168},
+  year         = {2008},
+  organization = {Springer}
+}
+
+@inproceedings{vigna2013quasi,
+  author    = {Vigna, Sebastiano},
+  title     = {Quasi-succinct indices},
+  year      = {2013},
+  publisher = {Association for Computing Machinery},
+  booktitle = {Proceedings of the Sixth ACM International Conference on Web Search and Data Mining},
+  pages     = {83–92},
+  numpages  = {10},
+  keywords  = {succinct data structures, compressed indices},
+  series    = {WSDM '13}
+}
+
 @book{witten1999managing,
   title     = {Managing gigabytes: compressing and indexing documents and images},
   author    = {Witten, Ian H and Moffat, Alistair and Bell, Timothy C},
@@ -471,159 +631,9 @@
   publisher = {IEEE}
 }
 
-@inproceedings{EFVenturini2014,
-  author    = {Ottaviano, Giuseppe and Venturini, Rossano},
-  title     = {Partitioned Elias-Fano indexes},
-  year      = {2014},
-  isbn      = {9781450322577},
-  publisher = {Association for Computing Machinery},
-  address   = {New York, NY, USA},
-  doi       = {10.1145/2600428.2609615},
-  booktitle = {Proceedings of the 37th International ACM SIGIR Conference on Research \& Development in Information Retrieval},
-  pages     = {273–282},
-  numpages  = {10},
-  keywords  = {inverted indexes, dynamic programming, compression},
-  series    = {SIGIR '14}
-}
-
-@inproceedings{pibiri_et_al,
-  author    = {Pibiri, Giulio Ermanno and Venturini, Rossano},
-  title     = {{Dynamic Elias-Fano Representation}},
-  booktitle = {28th Annual Symposium on Combinatorial Pattern Matching (CPM 2017)},
-  pages     = {30:1--30:14},
-  series    = {Leibniz International Proceedings in Informatics (LIPIcs)},
-  year      = {2017},
-  volume    = {78},
-  editor    = {K\"{a}rkk\"{a}inen, Juha and Radoszewski, Jakub and Rytter, Wojciech},
-  publisher = {Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik}
-}
-
-
-@misc{compressed-intvec,
-  author       = {Luca Lombardo},
-  title        = {compressed-intvec: Compressed Integer Vector Library},
-  howpublished = {Rust Crate},
-  url          = {https://crates.io/crates/compressed-intvec}
-}
-
-@misc{dsi-bitstream,
-  author       = {Sebastiano Vigna and others},
-  title        = {Dsi-bitstream: Bitstream readers/writers for the DSI utilities},
-  howpublished = {Rust Crate},
-  url          = {https://crates.io/crates/dsi-bitstream}
-}
-
-@book{Fano1971,
-  title     = {On the number of bits required to implement an associative memory},
-  author    = {Fano, Robert Mario},
-  year      = {1971},
-  publisher = {Massachusetts Institute of Technology, Project MAC}
-}
-
-@inproceedings{vigna2008broadword,
-  title        = {Broadword implementation of rank/select queries},
-  author       = {Vigna, Sebastiano},
-  booktitle    = {International Workshop on Experimental and Efficient Algorithms},
-  pages        = {154--168},
-  year         = {2008},
-  organization = {Springer}
-}
-
-@inproceedings{vigna2013quasi,
-  author    = {Vigna, Sebastiano},
-  title     = {Quasi-succinct indices},
-  year      = {2013},
-  publisher = {Association for Computing Machinery},
-  booktitle = {Proceedings of the Sixth ACM International Conference on Web Search and Data Mining},
-  pages     = {83–92},
-  numpages  = {10},
-  keywords  = {succinct data structures, compressed indices},
-  series    = {WSDM '13}
-}
-
-@article{rissanen1976generalized,
-  title     = {Generalized Kraft inequality and arithmetic coding},
-  author    = {Rissanen, Jorma J},
-  journal   = {IBM Journal of research and development},
-  volume    = {20},
-  number    = {3},
-  pages     = {198--203},
-  year      = {1976},
-  publisher = {IBM}
-}
-
-@article{burrows1994block,
-  title   = {A block-sorting lossless data compression algorithm},
-  author  = {Burrows, Michael},
-  journal = {SRS Research Report},
-  volume  = {124},
-  year    = {1994}
-}
-
-@article{manzini2001analysis,
-  title     = {An analysis of the Burrows—Wheeler transform},
-  author    = {Manzini, Giovanni},
-  journal   = {Journal of the ACM (JACM)},
-  volume    = {48},
-  number    = {3},
-  pages     = {407--430},
-  year      = {2001},
-  publisher = {ACM New York, NY, USA}
-}
-
-@inproceedings{ferragina2004alphabet,
-  title        = {An alphabet-friendly FM-index},
-  author       = {Ferragina, Paolo and Manzini, Giovanni and M{\"a}kinen, Veli and Navarro, Gonzalo},
-  booktitle    = {International Symposium on String Processing and Information Retrieval},
-  pages        = {150--160},
-  year         = {2004},
-  organization = {Springer}
-}
-
-@article{navarro2007compressed,
-  title     = {Compressed full-text indexes},
-  author    = {Navarro, Gonzalo and M{\"a}kinen, Veli},
-  journal   = {ACM Computing Surveys (CSUR)},
-  volume    = {39},
-  number    = {1},
-  pages     = {2--es},
-  year      = {2007},
-  publisher = {ACM New York, NY, USA}
-}
-
-@inproceedings{karkkainen2011fixed,
-  title        = {Fixed block compression boosting in FM-indexes},
-  author       = {K{\"a}rkk{\"a}inen, Juha and Puglisi, Simon J},
-  booktitle    = {International Symposium on String Processing and Information Retrieval},
-  pages        = {174--184},
-  year         = {2011},
-  organization = {Springer}
-}
-
-@article{claude2015wavelet,
-  title     = {The wavelet matrix: An efficient wavelet tree for large alphabets},
-  author    = {Claude, Francisco and Navarro, Gonzalo and Ord{\'o}nez, Alberto},
-  journal   = {Information Systems},
-  volume    = {47},
-  pages     = {15--32},
-  year      = {2015},
-  publisher = {Elsevier}
-}
-
-@inproceedings{gog2014theory,
-  title        = {From theory to practice: Plug and play with succinct data structures},
-  author       = {Gog, Simon and Beller, Timo and Moffat, Alistair and Petri, Matthias},
-  booktitle    = {Experimental Algorithms: 13th International Symposium, SEA 2014, Copenhagen, Denmark, June 29--July 1, 2014. Proceedings 13},
-  pages        = {326--337},
-  year         = {2014},
-  organization = {Springer}
-}
-
-@inproceedings{gonzalez2005practical,
-  title        = {Practical implementation of rank and select queries},
-  author       = {Gonz{\'a}lez, Rodrigo and Grabowski, Szymon and M{\"a}kinen, Veli and Navarro, Gonzalo},
-  booktitle    = {Poster Proc. Volume of 4th Workshop on Efficient and Experimental Algorithms (WEA)},
-  pages        = {27--38},
-  year         = {2005},
-  organization = {CTI Press and Ellinika Grammata Greece}
+@article{clark1997compact,
+  title     = {Compact pat trees},
+  author    = {Clark, David},
+  year      = {1997},
+  publisher = {University of Waterloo}
 }
