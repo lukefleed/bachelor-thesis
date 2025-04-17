@@ -1,48 +1,45 @@
 \clearpage
 \section{Wavelet Trees} \label{sec:wavelet_trees}
 
-Wavelet trees, introduced in 2003 by Grossi, Gupta, and Vitter \cite{GrossiWT2003}, represent a significant development in the field of succinct data structures. They function as self-indexing structures, capable of supporting fundamental queries like \texttt{rank} and \texttt{select} directly on the compressed representation, while still permitting access to the original sequence data. This blend of capabilities makes them exceptionally useful, particularly in the construction of compressed full-text indexes such as the FM-index \cite{ferragina2000opportunistic}, where they are often employed to efficiently handle rank queries during pattern matching \cite{WTForALL}.
+Building upon the concepts established for bitvectors in Section~\ref{sec:bitvectors}, we now extend our focus to sequences over general alphabets using \emph{Wavelet Trees}. Introduced by Grossi, Gupta, and Vitter \cite{GrossiWT2003}, the wavelet tree is a highly versatile data structure. It functions as a self-index, capable of representing a sequence $S[1..n]$ drawn from an alphabet $\Sigma = \{1, \dots, \sigma\}$ within space close to its compressed size, while supporting fundamental query operations directly on this representation and allowing reconstruction of the original sequence data. This characteristic makes wavelet trees a cornerstone in applications like compressed full-text indexing, for example within the FM-index \cite{ferragina2000opportunistic}, where they provide efficient support for the essential \textsf{rank} queries during the backward search phase \cite{WTForALL}.
 
-Interestingly, the core idea behind wavelet trees shares resemblance to earlier structures; notably, it can be seen as a generalization of a data structure developed by Chazelle in 1988 \cite{Chazelle1988} for computational geometry problems, designed to represent point grids and manage their reshuffling based on coordinates. Furthermore, Kärkkäinen utilized a related concept in 1999 \cite{karkkainen1999repetition} within the context of repetition-based text indexing. However, the specific formulation and the range of applications envisioned by Grossi et al. were distinct and led to a broader impact \cite{WTForALL}.
+While the core idea of hierarchical alphabet partitioning shares conceptual similarities with earlier structures, such as Chazelle's structure for geometric point grids \cite{Chazelle1988} and Kärkkäinen's work on repetition-based indexing \cite{karkkainen1999repetition}, the specific formulation and operational capabilities defined by Grossi et al. \cite{GrossiWT2003} established the wavelet tree as a broadly applicable tool for sequence processing \cite{WTForALL}. Its flexibility derives from its capacity to represent data variously as sequences, permutations, or point grids \cite{WTForALL, WTFromTheoryToPractice, TheMyriadVirtuesWT}.
 
-The versatility of wavelet trees stems from their ability to be interpreted in multiple ways: (i) as a direct representation of a sequence, (ii) as an encoding of a permutation or reordering of elements, and (iii) as a representation of points on a grid. Since their inception, these perspectives, along with their interactions, have fueled innovative solutions across a surprisingly wide array of problems, extending far beyond their origins in text indexing and computational geometry \cite{WTForALL, WTFromTheoryToPractice, TheMyriadVirtuesWT}.
-
-\subsection*{An introduction to the problem}
-Consider a sequence $S[1,n]$ as a generalization of bitvectors whose elements $S[i]$ are drawn from an alphabet $\Sigma$\footnote{The size of the alphabet varies depending on the application. For example, in DNA sequences, the alphabet is $\Sigma = \{A,C,G,T\}$, while in other case it could be of millions of characters, such as in natural language processing.}. We are interested in the following operations on the sequence $S$:
+We consider a sequence $S[1..n] = s_1s_2\dots s_n$, with $s_i \in \Sigma = \{1, \dots, \sigma\}$. The primary operations of interest are generalizations of those defined for bitvectors:
 \begin{itemize}
-    \item \texttt{Access(i)}: return the $i$-th element of $S$.
-    \item \texttt{Rank(c,i)}: return the number of occurrences of character $c$ in the prefix $S[1,i]$.
-    \item \texttt{Select(c,i)}: return the position of the $i$-th occurrence of character $c$ in $S$.
+    \item \texttt{Access(S, i)}: $S \times [1..n] \to \Sigma$. Returns the symbol $S[i]$.
+    \item \textsf{rank}$_c(S, i)$: $S \times \Sigma \times [0..n] \to [0..n]$. Returns the number of occurrences of symbol $c$ in the prefix $S[1..i]$, i.e., $|\{j \mid 1 \le j \le i, S[j]=c\}|$. We define $\textsf{rank}_c(S, 0) = 0$.
+    \item \textsf{select}$_c(S, j)$: $S \times \Sigma \times [1..n] \to [1..n] \cup \{\perp\}$. Returns the position (index) $k$ such that $S[k]=c$ and $\textsf{rank}_c(S, k) = j$. If the $j$-th occurrence does not exist, it returns a special symbol $\perp$.
 \end{itemize}
-However, dealing with sequences is much more complex than dealing with bitvectors (as we have seen in \autoref{sec:bitvectors}). Navarro \cite{navarro2016compact} shows how a naive approach to solve this problem would require $n\sigma + o(n\sigma)$ bits of space, which is not space-efficient. Consider $\sigma$ bitvectors of length $n$, one for each symbol in the alphabet such that the $i$-th bit of the $c$-th bitvector is 1 if $S[i] = c$ and 0 otherwise. Then answering a $rank$ and $select$ query would be done by this simple transformation
-\begin{align*}
-    rank_c(S,i)   & = rank_1(B_c,i)   \\
-    select_c(S,j) & = select_1(B_c,j)
-\end{align*}
-If we try to use the techniques from \autoref{sec:bitvectors} to compress the bitvectors, we would end up with a constant time complexity for the $rank$ and $select$ queries, but with the downside of a space occupancy of $n\sigma + o(n\sigma)$ bits. This is not space-efficient considering that the plain representation of the string requires $n\log \sigma + o(n)$ bits.\footnote{Even if we use a compressed representation of the bitvectors, the space occupancy would still have the dominant term $n\sigma$, which is at least $\Omega(n\sigma \log \log n / \log n)$ bits if constant-time $rank$ and $select$ queries are still required.}
-\begin{remark}[Notation]
-    From now on, let $S[1,n]$ = $s_1s_2\dots s_n$ be a sequence of length $n$ over an alphabet $\Sigma$ that for simplicity we write as $\Sigma = \{1,\dots,\sigma\}$. In this way, the string can be represented using $n \lceil \log \sigma \rceil = n \log \sigma + o(n)$ bits in plain form.
-\end{remark}
+A naive approach using $\sigma$ distinct bitvectors $B_c$ (where $B_c[i]=1$ if and only if $S[i]=c$) reduces these operations to bitvector rank/select ($\textsf{rank}_c(S,i) = \textsf{rank}_1(B_c,i)$ and $\textsf{select}_c(S,j) = \textsf{select}_1(B_c,j)$). However, augmenting these bitvectors for $O(1)$ time queries using the methods of Section~\ref{sec:bitvectors} requires $n\sigma + o(n\sigma)$ total bits, which is inefficient compared to the $n \lceil \log \sigma \rceil$ bits of the plain representation, especially for large $\sigma$ \cite{navarro2016compact}. Wavelet trees offer a significantly more space-conscious solution.
 
 \subsection{Structure and construction}
 
-In the beginning of this section we showed that storing one bitvector per symbol is not space-efficient. The wavelet tree is a data structure that solves this problem by using a recursive hierarchical partitioning of the alphabet. Consider the subset $[a,b] \subset [1, \dots, \sigma]$, then a wavelet tree over $[a,b]$ is a balanced binary tree with $b-a+1$ leaves\footnote{if $a=b$ then the tree is just a leaf}. The root node $v_{root}$ is associated with the whole sequence $S[1,n]$, and stores a bitmap $B_{v_{root}}[1,n]$ defined as follows: $B_{v_{root}}[i] = 0$ if $S[i] \leq (a+b)/2$ and $B_{v_{root}}[i] = 1$ otherwise. The tree is then recursively built by associating the subsequence $S_0[1,n_0]$ of elements in $[a, \dots,\lfloor (a+b)/2 \rfloor ]$ to the left child of $v$, and the subsequence $S_1[1,n_1]$ of elements in $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$ to the right child of $v$. This process is repeated until the leaves are reached. In this way the left child of the root node, is a wavelet tree for $S_0[1,n_0]$ over the alphabet $[a,\dots, \lfloor (a+b)/2 \rfloor ]$, and the right child is a wavelet tree for $S_1[1,n_1]$ over the alphabet $[\lfloor (a+b)/2 \rfloor +1,\dots, b]$. \cite{WTForALL}
+The standard wavelet tree for a sequence $S[1..n]$ over $\Sigma = \{1, \dots, \sigma\}$ is a balanced binary tree structure. Each node $v$ corresponds to an alphabet sub-range $[a_v, b_v] \subseteq \Sigma$ and implicitly represents the subsequence $S_v$ containing all characters $s_i$ from the original sequence $S$ such that $s_i \in [a_v, b_v]$, maintaining their relative order.
 
-\noindent Building a wavelet tree is a recursive process that takes $O(n\log \sigma$) time by processing each node of the tree in linear time. The steps are outlined in Algorithm \ref{alg:build_wt}. Excluding the sequence $S$ and the final wavelet tree $T$, the algorithm uses $n \log \sigma$ bits of space \footnote{While building the wavelet tree, we can store the sequence $S$ on disk to free memory.}.
+The construction proceeds recursively:
+\begin{itemize}
+    \item The root node $v_{root}$ corresponds to the full alphabet range $[1, \sigma]$ and the entire sequence $S_{v_{root}} = S$.
+    \item For an internal node $v$ representing the range $[a_v, b_v]$ with $a_v < b_v$:
+          \begin{enumerate}
+              \item Define a midpoint $m_v = \lfloor (a_v + b_v) / 2 \rfloor$.
+              \item Store a bitmap $B_v[1..|S_v|]$ where $B_v[k] = 0$ if the $k$-th character of $S_v$ is in $[a_v, m_v]$, and $B_v[k] = 1$ if it is in $[m_v+1, b_v]$.
+              \item Recursively construct the left child $v_l$ for the alphabet range $[a_v, m_v]$ and the subsequence $S_{v_l}$ formed by characters $s \in S_v$ with $s \le m_v$.
+              \item Recursively construct the right child $v_r$ for the alphabet range $[m_v+1, b_v]$ and the subsequence $S_{v_r}$ formed by characters $s \in S_v$ with $s > m_v$.
+          \end{enumerate}
+    \item A leaf node $v$ represents a single symbol alphabet range $[a_v, a_v]$ (i.e., $a_v=b_v$) and stores no bitmap.
+\end{itemize}
+The height of this tree is $h = \lceil \log \sigma \rceil$. The construction process, detailed in Algorithm~\ref{alg:build_wt}, takes $O(n \log \sigma)$ time, as each symbol from $S$ is processed at each level of the tree.
 
 \begin{algorithm}[ht!]
     \caption{Building a wavelet tree}\label{alg:build_wt}
+    % ... (Algorithm code remains the same as provided) ...
     \begin{algorithmic}
-        % \Require Sequence $S[1,n]$ over alphabet $\Sigma = \{1,\dots,\sigma\}$
-        % \Ensure Wavelet tree $T$ for $S$
-        %
-
+        % ... (Algorithm code remains the same as provided) ...
         \Function{build\_wt}{$S,n$}
         \State $T \gets build(S,n,1,\sigma)$
         \State \Return $T$
         \EndFunction
-
-
         \Function {build}{$S,n,a,b$} \Comment{\small{Takes a string $S[1,n]$ over $[a,b]$}}
         \If {$a = b$}
         \State Free S
@@ -81,31 +78,10 @@ In the beginning of this section we showed that storing one bitvector per symbol
     \end{algorithmic}
 \end{algorithm}
 
-\begin{remark} \label{rem:space_occupancy_wavelet_tree}
-    The wavelet tree described has $\sigma$ leaves and $\sigma-1$ internal nodes, and the height of the tree is $ \lceil \log \sigma \rceil$. The space occupancy of each level it's exactly $n$ bits, while we have at most $n$ bits for the last level. The total number of bits stored by the wavelet tree is then upper bounded by $n \lceil \log \sigma \rceil$ bits. \cite{WTForALL}. However, if we also interested in storing the topology of the wavelet tree, then another $O(\sigma \log n)$ bits are needed, which can be critical for large alphabets. In \cite{claude2011space,tischler2011wavelet} are presented some techniques to build wavelet tree in a space-efficient way.
-\end{remark}
-
-\begin{example}[Building a wavelet tree]
-    Consider the sentence
-    \begin{center}
-        \texttt{wookies\_wield\_wicked\_weapons\_with\_wisdom\$}
-    \end{center}
-    where spaces are replaced by underscores and the sentence ends with a special character. The sorted alphabet for this example is
-    \[
-        \Sigma = \{\$, \_, a, c, d, e, h, i, k, l, m, n, o, p, s, t, w \}
-    \]
-    where we assume that in the lexicon the special character comes before the underscore. We now assign a bit to each symbol in the alphabet, where 0 is assigned to the first half of the alphabet and 1 to the second half.
-
-    \begin{tabular}{*{17}{c}}
-        \$                        & \_                        & a                         & c                         & d                         & e                         & h                         & i                         & k                         & l                         & m                         & n                         & o                         & p                         & s                         & t                         & w                         \\
-        \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{0} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} & \textcolor{purple!100}{1} \\
-    \end{tabular}
-
-    \noindent We can now build the wavelet tree for this sequence, recursively partitioning the alphabet and assigning a bit to each symbol. The resulting wavelet tree is shown in \autoref{fig:wavelet_tree_example}
-
-\end{example}
+The space usage of this pointer-based wavelet tree consists of the bitmaps and the pointers. The bitmaps across all nodes at any given level collectively store exactly $n$ bits. With $h = \lceil \log \sigma \rceil$ levels, the total space for bitmaps is $n \lceil \log \sigma \rceil$. The tree has $\sigma$ leaves and $\sigma-1$ internal nodes. Storing child and parent pointers (e.g., $3(\sigma-1)$ pointers, each $\approx \log \sigma$ bits) adds an overhead of $O(\sigma \log \sigma)$ bits (or $O(\sigma \log n)$ if indices into an array are used), which can dominate for large $\sigma$. Each bitmap $B_v$ must also be augmented with $o(|S_v|)$ bits to support constant-time rank/select (Section~\ref{sec:bitvectors}), contributing an additional $o(n \log \sigma)$ bits overall.
 
 \begin{figure}[h]
+    % ... (Tikz code remains the same as provided) ...
     \centering
     \tikzstyle{every node}=[font=\footnotesize]
     \begin{tikzpicture}[
@@ -171,13 +147,14 @@ In the beginning of this section we showed that storing one bitvector per symbol
 \end{figure}
 
 \subsubsection*{Tracking symbols}
-We have seen how the wavelet tree serves as a representation for a string $S$, but more than that it is a succinct data structure for the string. Thus, it takes space asymptotically close to the plain representation of the string and allows us to access the $i$-th symbol of the string in $O(\log \sigma)$ time.
+The wavelet tree supports the primary sequence operations by translating them into traversals involving bitvector rank/select queries.
 
 \subsubsection{Access}
-In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the string $S$ using a wavelet tree $T$, this operation is called \texttt{Access}. In order to find $S[i]$, we first look at the bitmap associated with the root node of the wavelet tree, and depending on the value of the $i$-th bit of the bitmap, we move to the left or right child of the root node and continue recursively. However, the problem is to determine where our $i$ has been mapped to: if we move to the left child, then we need to find the $i$-th 0 in the bitmap of the left child, and if we move to the right child, then we need to find the $i$-th 1 in the bitmap of the right child. This is done by the $rank_0$ and $rank_1$ functions, respectively. We continue this process until we reach a leaf node, and then we return the value of the leaf node.
+Computing $\textsf{access}(S, i)$ involves a top-down traversal from the root $v_{root}$. At each internal node $v$ (representing range $[a_v, b_v]$ with midpoint $m_v$), we examine the bit $B_v[i_v]$, where $i_v$ is the current index within the node's implicit sequence $S_v$. If $B_v[i_v] = 0$, we proceed to the left child $v_l$ (range $[a_v, m_v]$) and update the index to $i_{v_l} = \textsf{rank}_0(B_v, i_v)$. If $B_v[i_v] = 1$, we proceed to the right child $v_r$ (range $[m_v+1, b_v]$) and update the index to $i_{v_r} = \textsf{rank}_1(B_v, i_v)$. This repeats until a leaf node representing a single symbol $[a, a]$ is reached; this $a$ is $S[i]$. The process performs $\lceil \log \sigma \rceil$ bitvector \textsf{rank} operations in $O(\log \sigma)$ time. Algorithm~\ref{alg:access_wt} details this.
 
 \begin{algorithm}[h!]
-    \caption{\texttt{Access} queries on a wavelet tree}\label{alg:access_wt}
+    \caption{\textsf{access} queries on a wavelet tree}\label{alg:access_wt}
+    % ... (Algorithm code remains the same as provided) ...
     \begin{algorithmic}
         \Function {access}{$T,i$} \Comment{\small{$T$ is the sequence $S$ seen as a wavelet tree}}
         \State $v \gets T_{root}$ \Comment{\small{start at the root node}}
@@ -198,35 +175,35 @@ In algorithm \ref{alg:access_wt} we show how extract the $i$-th symbol of the st
     \end{algorithmic}
 \end{algorithm}
 
-
 \subsubsection{Select}
-In addition to retrieving the $i$-th symbol of the string, we might also need to perform the inverse operation. That is, given a symbol's position at a leaf node, we aim to determine the position of the symbol in the string. This operation is referred to as \texttt{Select} and is outlined in Algorithm \ref{alg:select_wt}. Assume we start at a given leaf node $v$ and want to find the position of the $j$-th occurrence of symbol $c$ in the string. We recursively move to the left or right child of the node $v$: if the leaf is the right child of its parent, then we need to find the $j$-th 1 in the bitmap of the parent node, and if the leaf is the left child of its parent, then we need to find the $j$-th 0 in the bitmap of the parent node. This is done by the $select_0$ and $select_1$ functions, respectively. We continue this process until we reach the root node, and then we return the position of the symbol in the string. As we have seen in \autoref{sec:bitvectors}, this two single operations can be solved in constant time if we use the \texttt{RRR} data structure \cite{RRR2002} on each bitmap. Thus, the time complexity to perform a \texttt{Select} query on a wavelet tree is $O(\log \sigma)$.
+Computing $\textsf{select}_c(S, j)$ involves an upward traversal from the leaf node $u$ corresponding to symbol $c$. Let the index within the leaf level be $j_u = j$. To move to the parent $v$, we determine if $u$ is the left ($v_l$) or right ($v_r$) child. If $u = v_l$, the corresponding index in the parent's bitmap $B_v$ is $j_v = \textsf{select}_0(B_v, j_u)$. If $u = v_r$, the index is $j_v = \textsf{select}_1(B_v, j_u)$. We repeat this process, updating $j$ at each level, until the root node is reached. The final index $j_{root}$ is the position of the $j$-th $c$ in $S$. This requires $\lceil \log \sigma \rceil$ bitvector \textsf{select} operations in $O(\log \sigma)$ time. Algorithm~\ref{alg:select_wt} shows the recursive structure.
 
 \begin{algorithm}
     \caption{\texttt{Select} queries on a wavelet tree}\label{alg:select_wt}
+    % ... (Algorithm code remains the same as provided) ...
     \begin{algorithmic}
         % add two functions to the algorithmic environment
-        \Function{$\text{select}_c$}{$S,j$}
+        \Function{$\textsf{select}_c$}{$S,j$}
         % \Require Sequence $S$ (as a wavelet tree $T$), symbol $c$, position $j$
         % \Ensure The position of the $j$-th occurrence of $c$ in $S$
 
-        \State \Return $\text{select}(T._{root},1, \sigma, c, j)$
+        \State \Return $\textsf{select}(T._{root},1, \sigma, c, j)$
         \EndFunction
 
 
 
-        \Function{$\text{select}$}{$v,a,b,c,j$}
+        \Function{$\textsf{select}$}{$v,a,b,c,j$}
         % \Comment $v$ is the current node, $[a,b]$ is the alphabet range, $c$ is the symbol, $j$ is the position
         \If{$a = b$}
         \State \Return $j$
         \EndIf
 
         \If {$c \leq \lfloor (a+b)/2 \rfloor$}
-        \State $j$ $\gets$ $\text{select}(v.left, a, \lfloor (a+b)/2 \rfloor, c, j)$
+        \State $j$ $\gets$ $\textsf{select}(v.left, a, \lfloor (a+b)/2 \rfloor, c, j)$
         \Return $select_0(v.B,j)$
 
         \Else
-        \State $j$ $\gets$ $\text{select}(v.right, \lfloor (a+b)/2 \rfloor +1, b, c, j)$
+        \State $j$ $\gets$ $\textsf{select}(v.right, \lfloor (a+b)/2 \rfloor +1, b, c, j)$
         \State \Return $select_1(v.B,j)$
         \EndIf
 
@@ -236,14 +213,13 @@ In addition to retrieving the $i$-th symbol of the string, we might also need to
 \end{algorithm}
 
 \subsubsection{Rank}
-During the $select$ algorithm, we track upwards the path from the leaf to the root. The process for solving a $rank$ query is similar, but instead of moving from the leaf to the root, we move from the root to the leaf. Algorithm \ref{alg:access_wt} also gives us the number of occurrences of a symbol $S[i]$ in the prefix $S[1,i]$, i.e $rank_{S[i]}(S,i)$. We now want to generalize this operation to solve any rank query $rank_c(S,i)$, where $c$ is a symbol in the alphabet. This procedure is shown in algorithm \ref{alg:rank_wt}.
-
-\noindent As mentioned in Remark \ref{rem:space_occupancy_wavelet_tree}, storing the explicit tree topology can incur an $O(\sigma \log n)$ bit overhead, problematic for large alphabets. This redundancy can be eliminated by adopting a \emph{pointer-less} representation \cite{WTForALL}. The balanced tree shape is slightly modified to ensure levels are fully populated (except potentially the last, which is filled left-to-right). This allows concatenating all the bitmaps at each level into a single large bitmap $B_{level}$ for each level, and then concatenating these level bitmaps into one global bitmap $B_{global}$. Navigation replaces explicit child pointers with calculations: knowing the bitmap segment $[l, r]$ for a node $v$ at level $k$, the segment for its left child (at level $k+1$) is determined by the range $[1 + (k+1)n + rank_0(B_{global}, l-1), (k+1)n + rank_0(B_{global}, r)]$ within $B_{global}$, and similarly for the right child using $rank_1$. This eliminates the pointers, reducing the extra space to the $o(n)$ bits per level required by the rank/select structures on the bitmaps (as seen in \ref{sec:bitvectors}), achieving a total space of $n \lceil \log \sigma \rceil + o(n \log \sigma)$ bits \cite{MAKINEN2007332,MAKINEN2006703}. While space-efficient, this approach might slightly increase query times in practice due to the additional rank operations needed for navigation compared to directly following pointers.
+Computing $\textsf{rank}_c(S, i)$ uses a top-down traversal similar to \textsf{access}. We start at the root $v_{root}$ with index $i_{root} = i$. At each node $v$ (range $[a_v, b_v]$, midpoint $m_v$), we check if the target symbol $c$ belongs to the left sub-range ($c \le m_v$) or the right sub-range ($c > m_v$). If $c \le m_v$, we descend to the left child $v_l$ and update the index to $i_{v_l} = \textsf{rank}_0(B_v, i_v)$. If $c > m_v$, we descend to the right child $v_r$ and update the index to $i_{v_r} = \textsf{rank}_1(B_v, i_v)$. The traversal continues until the leaf node $u$ corresponding to symbol $c$ is reached. The final index $i_u$ at this leaf is the value $\textsf{rank}_c(S, i)$. This requires $\lceil \log \sigma \rceil$ bitvector \textsf{rank} operations in $O(\log \sigma)$ time. Algorithm~\ref{alg:rank_wt} formalizes this.
 
 \begin{algorithm}[h!]
     \caption{\texttt{Rank} queries on a wavelet tree}\label{alg:rank_wt}
+    % ... (Algorithm code remains the same as provided) ...
     \begin{algorithmic}
-        \Function{$\text{rank}_c$}{$S,i$}
+        \Function{$\textsf{rank}_c$}{$S,i$}
         \State $v \gets T_{root}$ \Comment{\small{start at the root node}}
         \State $[a,b] \gets [1,\sigma]$
         \While {$a \neq b$}
@@ -260,87 +236,101 @@ During the $select$ algorithm, we track upwards the path from the leaf to the ro
         \State \Return $i$
         \EndFunction
     \end{algorithmic}
-
 \end{algorithm}
 
+\emph{Pointerless Representation}: To remove the $O(\sigma \log \sigma)$ pointer overhead, the pointerless wavelet tree concatenates bitmaps level-wise \cite{MAKINEN2007332, MAKINEN2006703}. Let $B_l$ be the concatenated bitmap for level $l$. If a node $v$ at level $l$ corresponds to the range $[s_v, e_v]$ in $B_l$, its left child's range in $B_{l+1}$ is
+\[
+    [(l+1)n + \textsf{rank}_0(B_l, s_v-1) + 1, (l+1)n + \textsf{rank}_0(B_l, e_v)]
+\]
+Its right child's range is
+\[
+    [(l+1)n + z_l + \textsf{rank}_1(B_l, s_v-1) + 1, (l+1)n + z_l + \textsf{rank}_1(B_l, e_v)]
+\]
+where $z_l = \textsf{rank}_0(B_l, n)$ is the total $0$-count at level $l$. This achieves $n \lceil \log \sigma \rceil + o(n \log \sigma)$ total space. Navigation requires extra \textsf{rank} operations per level compared to the pointer-based version (as seen \cite{claude2015wavelet}), which can impact practical performance, although the asymptotic query time remains $O(\log \sigma)$.
+
 \subsection{Compressed Wavelet Trees} \label{sec:compressed_WT}
-In order to make the wavelet tree more space efficient, we ask ourselves if we can compress this data structure. The answer is yes, and in this section we will see how a wavelet tree can be compressed to the zero-order entropy of the input string, while still being able to answer rank and select queries in $O(\log \sigma)$ time. The literature on this topic mainly focus one two different approaches: compressing the bitvectors and altering the shape of the wavelet tree itself.
 
-\subsubsection{Compressing the bitvectors} \label{subsec:compressing_bitvectors}
-In \cite{GrossiWT2003} Grossi et. al showed that if the bitvectors of each single node are compressed to their zero-order entropy, then their overall space occupance is $n H_0(S)$. So if we suppose that the bitmap associated to the root node has a skewed distribution of $0$s and $1$s, then the zero-order compressing it yields a space of
-\begin{equation}
-    n_0 \log \frac{n}{n_0} + n_1 \log \frac{n}{n_1}
-\end{equation}
-where $n_0$ and $n_1$ are the number of $0$s and $1$s in the bitmap, respectively. This is the same as the zero-order entropy of the bitmap. The same reasoning can be applied to the bitmaps of the children of the root node, and so on. This way, one can easy prove by induction \cite{navarro2016compact} that the overall space of the wavelet tree is
-\begin{equation}
-    \sum_{c \in \Sigma} n_c \log (\frac{n}{n_c}) = n H_0(S)
-\end{equation}
+The standard wavelet tree representations (pointer-based and pointerless) achieve space proportional to $n \log \sigma$. However, when the sequence $S$ itself is compressible (i.e., its empirical entropy is lower than $\log \sigma$), it is desirable for the index structure to reflect this compressibility. Wavelet trees can be adapted to achieve space bounds related to the empirical entropy of $S$, primarily through two main strategies: directly compressing the bitmaps stored within the nodes, or reshaping the tree based on symbol frequencies.
 
-\noindent We can now choose from the literature any zero-order entropy coding method for the bitvectors that supports rank and select queries in $O(1)$ time. Some of the most popular methods are RRR \cite{RRR2002} that we have vastly discussed in \autoref{sec:bitvectors}, that for each bitvector of length $n$ uses $n H_0(B) + o(n \log \log n / \log n)$ bits. In \cite{patrascu2008succincter} the authors showed\footnote{In this case, the time complexity of rank and select queries is $O(c)$.} that this value can be further reduced to $n H_0(B) + o(n/\log^c n)$ for any positive constant $c$.
+\subsubsection{Compressing the Bitvectors} \label{subsec:compressing_bitvectors}
+
+This approach maintains the balanced binary structure of the wavelet tree but replaces the plain bitmaps $B_v$ at each internal node $v$ with compressed representations that still support efficient \textsf{rank} and \textsf{select} queries. As explored in Section~\ref{subsec:elias_fano_compression}, various techniques exist for compressing sparse or biased bitvectors. If we employ a representation for each $B_v$ (of length $N_v = |S_v|$) that uses $N_v \mathcal{H}_0(B_v) + o(N_v)$ bits while maintaining $O(1)$ query times for \textsf{rank} and \textsf{select} (e.g., using structures based on Raman et al. \cite{RRR2002} or improved variants \cite{patrascu2008succincter}), the total space complexity aggregates advantageously.
+
+\begin{theorem}[Entropy-Compressed WT Space (Bitmaps) \cite{GrossiWT2003, navarro2016compact, ferragina2007compressed}] \label{thm:h0_bitmap_wt_space}
+    A wavelet tree for $S[1..n]$ over $\Sigma=\{1,\dots,\sigma\}$, using node bitmaps compressed to their zero-order entropy with $O(1)$-time rank/select support, can be stored in
+    \[ n \mathcal{H}_0(S) + o(n \log \sigma) \text{ bits}. \]
+    The query times for \textsf{access}, \textsf{rank}, and \textsf{select} remain $O(\log \sigma)$.
+\end{theorem}
+\begin{proof}[Proof sketch]
+    The core idea relies on the property that the sum of zero-order entropies of the bitmaps at any level $l$ is upper bounded by the sum at level $l-1$. Summing across all internal nodes, the total space for the compressed bitmaps relates directly to the zero-order entropy of the original sequence $S$:
+    \[\sum_{v \text{ internal}} |S_v| \mathcal{H}_0(B_v) = n \mathcal{H}_0(S)\]
+    The $o(n \log \sigma)$ term arises from aggregating the sublinear $o(N_v)$ overheads from each node's rank/select structure across all levels. Since rank/select on each compressed bitmap is $O(1)$, the total query time remains determined by the tree height, $O(\log \sigma)$.
+\end{proof}
+
+While theoretically achieving optimal space relative to $H_0(S)$, practical implementations using compressed bitmaps (like those based on RRR found in libraries such as SDSL \cite{gog2014theory}) can exhibit higher query latency compared to using plain, uncompressed bitmaps due to the computational overhead of performing rank/select on the compressed format \cite{claude2015wavelet}.
 
 \subsubsection{Huffman-Shaped Wavelet Trees} \label{subsec:huffman_shaped_wavelet_trees}
-Since working in practice with compressed bitvectors can be less efficient then in theory, we want a method for still obtaining nearly zero-order entropy compression, but while maintaining the bitvectors in plain form. The key idea for the compression method that we are going to analyze is that, as noted by Grossi et. al in \cite{grossi2004indexing}, the shape of the wavelet tree has no impact on the space occupance of the structure. They proposed to use this fact to alter the shape of the tree in order to optimize the average query time. Recalling how we built an Huffman Tree in \ref{subsec:huffman_coding}, we can adapt the same idea to the wavelet tree: given the frequencies $f_c$ with which each leaf node appears in the tree, we can create an Huffman-shaped wavelet tree, obtaining an average access time of
-\begin{equation}
-    \sum_{c \in \Sigma} f_c \log \frac{1}{f_c} \leq \log \sigma
-\end{equation}
-A counter effect noted by the authors in \cite{grossi2004indexing} is that in the worst case, we could and up with a time complexity of $O(\log n)$, for example in the case of a very infrequent symbol.However, if we choose $i$ uniformly at random from $[1, n]$ then the average access\footnote{And also for $rank_c(S,j)$ or $select_c(S,j)$ with $c = S=[1]$} time is
-\begin{equation}
-    O(\frac{1}{n} \sum_c f_c |h(c)| = O(1 + H_0(S))
-\end{equation}
-That is better than the $O(\log \sigma)$ time of the original balanced wavelet tree.
 
-\begin{remark}
-    On a further note, if we bound the depth of the Huffman Tree, we can keep worst care access time to $O(\log \sigma)$, with extra $O(n/\sigma)$ bits of redundancy
-\end{remark}
+Instead of compressing the content (bitmaps), this strategy compresses the structure itself by adapting the tree shape to the symbol frequencies $f_c = \textsf{rank}_c(S, n)$ in $S$. The wavelet tree is given the shape of a Huffman tree \cite{huffman1952method} constructed for the symbols based on their frequencies \cite{grossi2004indexing, makinen2004new}. In this structure, a symbol $c$ occurring $f_c$ times resides at a leaf at depth $|h(c)|$, where $h(c)$ is its Huffman code. The bitmaps $B_v$ are stored uncompressed at the internal nodes.
 
-\noindent Another possibile approach following the same idea of a Huffman-shaped wavelet tree, proposed in \cite{makinen2004new}, is to use the frequencies with which the symbols appear in the string. If we use this frequencies to build the Huffman Tree, we can then attach to each node $v$ a bitvector $B_v$ in the same way that we would do for the balanced wavelet tree (\ref{alg:build_wt}). In this way, the bits of $B_v$ are the bits of of the path from the root to $v$ in the Huffman Tree, i.e the Huffman codes of the symbols. Let's see the space occupance of this structure. Consider a leaf corresponding to a symbol $c$, at depth $|h(c|)$ (where $h(c)$ is the bitwise Huffman code for $c$), representing $f_c$ symbols. Each of this occurrences leads to a bit in each bitvector that is in the path from the root to the leaf; that is $|h(c)|$ bits. Thus, the occurrences of $c$ lead to $f_c |h(c)|$ bits in total. If we add this values to all the leaves we obtain same number of bits outputted by the Huffman coding of the string, that is
-\begin{equation}
-    \sum_{c \in \Sigma} f_c |h(c)| \leq n(H_0(S) + 1)
-\end{equation}
-If we also want to add the space to support the rank and select queries and the tree pointers needed to navigate the tree, we arrive to a space occupance of
-\begin{equation}
-    n(H_0(S) + 1) + o(n(H_0(S) + 1)) + O(n \log \sigma)
-\end{equation}
-For the sake of completeness, we also mention that the shape of an Huffman tree is not the only one that can be given to a wavelet tree. In \cite{grossi2012wavelet} Grossi and Ottaviano gave the wavelet the shape of a trie, making it possible to handle a sequence of strings.
+The total number of bits stored in the plain bitmaps across the entire tree is precisely the length of the Huffman-encoded sequence:
+\[ \sum_{c \in \Sigma} f_c |h(c)| \quad \le \quad n(\mathcal{H}_0(S)+1) \text{ bits}. \]
+Adding the overhead for rank/select support on these plain bitmaps ($o(n(\mathcal{H}_0(S)+1))$ total) and the space to store the Huffman model itself (e.g., $O(\sigma \log \sigma)$ bits, reducible for canonical codes \cite{claude2015wavelet}), gives the total space.
 
-\subsubsection{Higher Order Entropy Coding}
+\begin{theorem}[Huffman-Shaped WT Performance \cite{makinen2004new, navarro2016compact}] \label{thm:huffman_wt_space_time}
+    A Huffman-shaped wavelet tree using plain bitmaps (with $O(1)$ rank/select support) occupies space bounded by
+    \[ n(\mathcal{H}_0(S)+1) + o(n(\mathcal{H}_0(S)+1)) + O(\sigma \log \sigma) \text{ bits}. \]
+    It supports \textsf{access}, \textsf{rank}, and \textsf{select}. The worst-case query time is $O(d_{max})$, where $d_{max}$ is the maximum depth (potentially $O(n)$, but typically bounded to $O(\log \sigma)$ \cite{navarro2007compressed}). The average query time, assuming queries are distributed according to symbol frequencies ($f_c/n$), is $O(1+\mathcal{H}_0(S))$.
+\end{theorem}
 
-While compressing wavelet trees to their zero-order entropy $H_0(S)$ is effective, many sequences exhibit further compressibility captured by higher-order entropy $H_k(S)$. This measure leverages the statistical dependencies between symbols by considering the context of $k$ preceding symbols (as defined in Section \ref{sec:higher_order_entropy}). Achieving $H_k$ compression often involves the Burrows-Wheeler Transform (\textsc{Bwt}) \cite{burrows1994block}, a reversible permutation that groups symbols with similar preceding contexts together in the transformed string, denoted $S^{\textsc{Bwt}}$. Compressing the resulting runs or substrings ($S_A$ for each context $A$) within $S^{\textsc{Bwt}}$ to their respective zero-order entropies effectively achieves $H_k(S)$ for the original sequence $S$ \cite{manzini2001analysis}.
+This approach achieves compression related to $\mathcal{H}_0(S)$ through structural adaptation rather than bitmap compression, often leading to faster average query times ($O(1+\mathcal{H}_0(S))$ vs $O(\log \sigma)$) for statistically skewed query distributions, while using potentially simpler and faster plain bitmap rank/select structures. Pointerless versions based on canonical Huffman codes are also possible \cite{claude2015wavelet}.
 
-Early applications connecting wavelet trees and $H_k$ followed this logic. Grossi et al. \cite{GrossiWT2003}, compressed context-based subsequences using wavelet trees. Ferragina et al. \cite{ferragina2004alphabet} explicitly used the \textsc{Bwt} output and partitioned it, applying wavelet trees to compress the parts corresponding to different contexts, thereby reaching $nH_k(S) + o(n \log \sigma)$ bits.
+\subsubsection{Higher-Order Entropy Compression} \label{subsec:higher_order_entropy}
 
-A significant advancement came with the realization, notably explored by Grossi et al. in 2004 \cite{grossi2004indexing}, that partitioning $S^{\textsc{Bwt}}$ might not be necessary. A single wavelet tree built over the entire $S^{\textsc{Bwt}}$, equipped with appropriate compression schemes for its internal bitmaps, could achieve $H_k$ compression directly. Their initial approach using run-length encoding on the bitmaps yielded approximately $2nH_k(S)$ bits plus redundancy.
+To capture statistical dependencies beyond symbol frequencies, wavelet trees are often used on the Burrows-Wheeler Transformed \cite{burrows1994block} sequence $S^{\textsc{Bwt}}$. The \textsc{Bwt} groups symbols preceded by the same context of length $k$, making $S^{\textsc{Bwt}}$ highly compressible by methods sensitive to local statistics. The $k$-th order empirical entropy, $H_k(S)$, quantifies this context-dependent compressibility (see Section~\ref{sec:higher_order_entropy}). It is known that $\sum_{A \in \Sigma^k} |S_A| \mathcal{H}_0(S_A) = n \mathcal{H}_k(S)$, where $S_A$ is the sequence of symbols following context $A$ \cite{manzini2001analysis}.
 
-Subsequently, Mäkinen and Navarro \cite{navarro2007compressed} demonstrated that using more sophisticated bitmap representations, such as the fully indexable dictionaries of Raman et al. \cite{RRR2002} (mentioned in Section \ref{subsec:compressing_bitvectors}), within the single wavelet tree over $S^{\textsc{Bwt}}$ allowed reaching the theoretically tighter bound of $nH_k(S) + o(n \log \sigma)$ bits, while still supporting efficient rank/select operations needed for \textsc{Bwt}-based indexing.
+Building a single wavelet tree over the entire $S^{\textsc{Bwt}}$ and using zero-order entropy compression on its internal bitmaps (as in Section~\ref{subsec:compressing_bitvectors}) allows the structure to achieve space related to $H_k(S)$ for the original sequence $S$.
 
-Ferragina and Manzini \cite{TheMyriadVirtuesWT} provided a thorough analysis of wavelet tree variants for compression, comparing bitmap encodings like Run-Length Encoding (RLE) and Gap Encoding (GE). Their findings supported the suitability of RLE-based approaches (like the one in \cite{grossi2004indexing}) for achieving $H_k$ in conjunction with the \textsc{Bwt}. More recently, simpler strategies have also proven effective; Kärkkäinen and Puglisi \cite{karkkainen2011fixed} showed that partitioning $S^{\textsc{Bwt}}$ into fixed blocks and using Huffman-shaped wavelet trees (Section \ref{subsec:huffman_shaped_wavelet_trees}) on each block can practically achieve $H_k$ compression, offering a potentially faster alternative.
+\begin{theorem}[$H_k$-Compressed WT \cite{navarro2007compressed, TheMyriadVirtuesWT}] \label{thm:hk_wt_space}
+    Let $S^{\textsc{Bwt}}$ be the Burrows-Wheeler Transform of $S$. A wavelet tree built over $S^{\textsc{Bwt}}$ using node bitmaps compressed to their zero-order entropy (requiring $N_v \mathcal{H}_0(B_v) + o(N_v)$ bits per node $v$) occupies a total space of
+    \[ n \mathcal{H}_k(S) + o(n \log \sigma) \text{ bits} \]
+    for any $k \le \alpha \log_\sigma n$ ($0 < \alpha < 1$).
+\end{theorem}
+\begin{proof}[Proof sketch]
+    The space bound follows because the zero-order entropy of the wavelet tree bitmaps over $S^{\textsc{Bwt}}$ sums to $n \mathcal{H}_0(S^{\textsc{Bwt}})$, and $\mathcal{H}_0(S^{\textsc{Bwt}})$ effectively captures $\mathcal{H}_k(S)$ due to the context-grouping property of the \textsc{Bwt} \cite{manzini2001analysis, navarro2007compressed}. The $o(n \log \sigma)$ term accumulates the overheads of the compressed rank/select structures.
+\end{proof}
+
+This structure supports the \textsf{rank} operations on $S^{\textsc{Bwt}}$ needed for FM-index pattern matching in $O(\log \sigma)$ time per operation.
+
+This connection is crucial for compressed full-text indexing. Practical variants exist, such as partitioning $S^{\textsc{Bwt}}$ and using Huffman-shaped wavelet trees on the blocks \cite{karkkainen2011fixed}, which may offer different practical performance trade-offs. The choice between RLE and GE for bitmap encoding in this context was analyzed in \cite{TheMyriadVirtuesWT}, favoring RLE-like approaches for achieving $H_k$.
 
 \subsection{Wavelet Matrices and Quad Vectors} \label{sec:wavelet_matrices_and_quad_vectors}
 
-While the pointerless and Huffman-shaped wavelet trees offer significant space advantages over the basic pointer-based structure, they can still face challenges. Pointerless trees, especially the strict variant, require extra rank operations for navigation, potentially slowing down queries compared to pointer-based trees in practice, despite having the same asymptotic complexity \cite{claude2015wavelet}. Furthermore, for very large alphabets $\sigma$, even the overhead associated with Huffman models or the $o(n \log \sigma)$ term in pointerless structures might be undesirable. Moreover, a primary bottleneck for query performance in practice, especially with large sequences that do not fit in cache, is memory latency. Each level traversal in a standard wavelet tree typically incurs cache misses, leading to a query time proportional to $\log \sigma$ times the latency of a cache miss.
-
-Two main approaches have emerged to address these issues: the Wavelet Matrix and the use of higher-arity trees (specifically 4-ary or Quad trees).
+Further refinements address practical performance bottlenecks, primarily memory latency during tree traversal and the overhead associated with large alphabets in pointerless or Huffman representations.
 
 \subsubsection{The Wavelet Matrix}
-Introduced by Claude, Navarro, and Ordóñez \cite{claude2015wavelet}, the wavelet matrix offers an alternative representation that retains the functionality of the pointerless wavelet tree but simplifies navigation and often improves practical performance, particularly for large alphabets.
+The wavelet matrix \cite{claude2015wavelet} provides an alternative layout for the pointerless wavelet tree that simplifies navigation and improves speed. It maintains the level-wise concatenated bitmaps $B_0, B_1, \dots, B_{h-1}$ (where $h = \lceil \log \sigma \rceil$) and stores the counts $z_l = \textsf{rank}_0(B_l, n)$ for each level $l$. The key difference lies in the mapping between levels: a position $i$ in $B_l$ corresponding to a 0-bit maps to position $\textsf{rank}_0(B_l, i)$ in $B_{l+1}$, while a position corresponding to a 1-bit maps to position $z_l + \textsf{rank}_1(B_l, i)$ in $B_{l+1}$.
 
-The core idea is to decouple the alignment between parent and child bitmap segments. Instead of ensuring that the bits corresponding to a node $v$ at level $l$ map to a contiguous block within the level-$(l+1)$ bitmap $B_{l+1}$ that aligns with $v$'s conceptual children, the wavelet matrix uses a global reordering at each level. All the 0-bits from the level-$l$ bitmap $B_l$ are mapped to the beginning of the level-$(l+1)$ bitmap $B_{l+1}$, followed by all the 1-bits from $B_l$. To navigate, we only need to know the total number of 0s at level $l$, denoted $z_l$.
-\begin{itemize}
-    \item If $B_l[i] = 0$, the corresponding position at level $l+1$ is $rank_0(B_l, i)$.
-    \item If $B_l[i] = 1$, the corresponding position at level $l+1$ is $z_l + rank_1(B_l, i)$.
-\end{itemize}
-This mapping eliminates the need to calculate node boundaries $[s_v, e_v]$ during traversal. Access and rank operations still require one rank query per level, just like the standard pointer-based tree, but without the pointer overhead or the extra rank operations of the strict pointerless variant. Select operations can also be implemented efficiently using this mapping.
+\begin{theorem}[Wavelet Matrix Performance \cite{claude2015wavelet}] \label{thm:wm_perf}
+    The wavelet matrix represents $S[1..n]$ using
+    \[ n \lceil \log \sigma \rceil + o(n \log \sigma) \text{ bits} \]
+    (where $o(n \log \sigma)$ is for rank/select support on the $h$ bitmaps, and the $z_l$ values require negligible $O(\log \sigma \log n)$ bits). It supports \textsf{access}, \textsf{rank}, and \textsf{select} queries in $O(\log \sigma)$ time, executing exactly one bitvector rank or select operation per level traversed.
+\end{theorem}
 
-The space requirement is identical to the pointerless wavelet tree: $n \lceil \log \sigma \rceil$ bits for the bitmaps plus $o(n \log \sigma)$ for rank/select support (the $z_l$ values require negligible $O(\log \sigma \log n)$ bits total). Experiments in \cite{claude2015wavelet} show that the wavelet matrix is significantly faster than pointerless wavelet trees in practice and competitive with, or sometimes faster than, pointer-based wavelet trees, while using substantially less space, especially for large $\sigma$. It can also be combined with bitmap compression or Huffman shaping (requiring a specific code assignment strategy \cite{claude2015wavelet} to maintain the necessary properties).
-
+This simplified navigation avoids the extra rank operations needed in the strict pointerless WT and eliminates pointer overhead, making it practically faster than pointerless trees and competitive with pointer-based trees, especially for large $\sigma$ \cite{claude2015wavelet}. It can also be combined with bitmap compression or specialized Huffman shaping \cite{claude2015wavelet}.
 
 \subsubsection{4-ary (Quad) Wavelet Trees}
-Addressing the latency bottleneck caused by cache misses during the $\log \sigma$ levels of traversal, Venturini et al. \cite{QWT} proposed using a 4-ary wavelet tree structure. By increasing the arity from 2 to 4, the height of the tree is roughly halved to $\lceil (\log \sigma) / 2 \rceil$.
+To combat the $O(\log \sigma)$ cache misses inherent in traversing a binary tree, 4-ary wavelet trees reduce the tree height to $h' = \lceil (\log \sigma)/2 \rceil$ \cite{QWT}. Each internal node partitions its alphabet range $[a_v, b_v]$ into four sub-ranges based on the next two bits in the symbols' binary representation. Instead of a bitmap, each node stores a \emph{quad vector} $Q_v$ (a sequence over $\{0, 1, 2, 3\}$ or $\{00, 01, 10, 11\}$) indicating to which of the four children each symbol belongs.
 
-In this structure, each internal node has four children, corresponding to partitioning the current alphabet range $[a,b]$ into four sub-ranges based on the two most significant bits differentiating symbols in that range. Consequently, the data stored at each node is not a bitmap but a quad vector - a sequence over the alphabet $\{00, 01, 10, 11\}$ (or equivalently, $\{0, 1, 2, 3\}$).
+Supporting queries requires specialized rank/select operations on these quad vectors. Structures achieving $O(1)$ time for quad vector rank/select with $o(N_v \log 4) = o(N_v)$ bits of overhead per node (where $N_v$ is the quad vector length) have been developed \cite{QWT}.
 
-To support the standard wavelet tree operations, rank and select queries must now operate on these quad vectors. Venturini et al. \cite{QWT} developed space-efficient data structures for quad vector rank/select, adapting block-based techniques used for binary vectors. Their implementation achieves constant query times with a space overhead slightly larger than that for binary vectors (e.g., $\approx$ 6.25\%-7.81\% overhead in their experiments compared to $\approx$ 3.12\% for binary rank structures like \cite{gonzalez2005practical}).
+\begin{theorem}[4-ary WT Performance \cite{QWT}] \label{thm:qwt_perf}
+    A 4-ary wavelet tree using $O(1)$-time rank/select structures on quad vectors represents $S[1..n]$ in
+    \[ n \lceil \log \sigma \rceil + o(n \log \sigma) \text{ bits} \]
+    and supports \textsf{access}, \textsf{rank}, and \textsf{select} in $O(\log \sigma)$ time, specifically requiring $O(\lceil (\log \sigma)/2 \rceil)$ quad vector rank or select operations.
+\end{theorem}
+\begin{proof}[Proof sketch]
+    Each level effectively stores 2 bits per original symbol. With $\approx (\log \sigma)/2$ levels, the total space for the quad vectors is $n \times 2 \times (\log \sigma)/2 = n \log \sigma$ bits. The $o(n \log \sigma)$ term accounts for the aggregated overhead of the quad vector rank/select structures. The query time is determined by the reduced tree height.
+\end{proof}
 
-The primary benefit is significantly reduced query latency. By halving the number of traversal steps (levels), the number of dependent memory accesses and potential cache misses is also halved. Experimental results in \cite{QWT} demonstrate that their 4-ary wavelet tree (specifically, a 4-ary wavelet matrix implementation, combining both ideas) improves the latency of rank and select queries by a factor of approximately 2 compared to widely used binary wavelet tree implementations from libraries like SDSL \cite{gog2014theory}.
-
-The space complexity for a 4-ary wavelet tree using quad vectors is $n \lceil \log \sigma \rceil$ bits (since $n \times 2$ bits are stored per level, but there are only $\approx (\log \sigma)/2$ levels) plus the overhead for quad rank/select support, which is $o(n \log \sigma)$.
+The principal advantage lies in the potential halving of cache misses during queries, leading to significant practical speedups in latency-bound scenarios, as demonstrated experimentally in \cite{QWT}, particularly when implemented as a 4-ary wavelet matrix.
