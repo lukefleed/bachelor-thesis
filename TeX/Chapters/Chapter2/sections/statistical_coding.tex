@@ -1,7 +1,6 @@
-\clearpage
 \section{Statistical Coding} \label{sec:statistical_coding}
 
-This section explores a technique called \emph{statistical coding}: a method for compressing a sequence of symbols (\emph{texts}) drawn from a finite alphabet $\Sigma$. The idea is to divide the process in two key stages: modeling and coding. During the modeling phase, statistical characteristics of the input sequence are analyzed to construct a model, typically estimating the probability $P(\sigma)$ for each symbol $\sigma \in \Sigma$. In the coding phase, this model is utilized to generate codewords for the symbols, which are then employed to compress the input sequence. We will focus on two popular statistical coding methods: Huffman coding and Arithmetic coding.
+This section explores a technique called \emph{statistical coding}: a method for compressing a sequence of symbols (\emph{texts}) drawn from a finite alphabet $\Sigma$. The idea is to divide the process in two key stages: modeling and coding. During the modeling phase, statistical characteristics of the input sequence are analyzed to construct a model, typically estimating the probability $P(\sigma)$ for each symbol $\sigma \in \Sigma$. In the coding phase, this model is utilized to generate codewords for the symbols, which are then employed to compress the input sequence. Two popular statistical coding methods will be focused upon: Huffman coding and Arithmetic coding.
 
 \subsection{Huffman Coding} \label{subsec:huffman_coding}
 
@@ -9,19 +8,16 @@ Compared to the methods seen in Section~\ref{sec:integer_coding}, Huffman Codes,
 
 For instance, in English text, the letter \emph{e} is far more frequent than \emph{z}, and simple integer codes based on alphabetical order would be highly inefficient. Huffman coding directly addresses this by assigning shorter codewords to more frequent symbols.
 
-% Sources for this section: Chapter 4 of \cite{sayood2002lossless}, chapter 12 of \cite{ferragina2023pearls}, 3.8 from \cite{han2002mathematics}, 5.6/7/8 of \cite{ElementsofInformationTheory}, 2.6 of \cite{navarro2016compact} and the origianl paper \cite{Huffman1952}\\
-
 \paragraph{Construction of Huffman Codes} The construction algorithm is greedy and builds a binary tree bottom-up. Each symbol $\sigma \in \Sigma$ initially forms a leaf node, typically weighted by its probability $P(\sigma)$ or its frequency count $n_\sigma$. The algorithm repeatedly selects the two nodes (initially leaves, later internal nodes representing merged subtrees) with the smallest current weights, merges them into a new internal node whose weight is the sum of the two merged weights, and places the two selected nodes as its children. This process continues until only one node, the root, remains.
 
 The prefix-free code for each symbol $\sigma$ is then determined by the path from the root to the leaf corresponding to $\sigma$. Conventionally, a $0$ is assigned to traversing a left branch and a $1$ to a right branch (or vice versa). The concatenation of these bits along the path forms the Huffman code for the symbol. More formal descriptions and variations can be found in \cite{ferragina2023pearls, sayood2002lossless, han2002mathematics, ElementsofInformationTheory}.
 
-%%% INSERTION POINT 1: Add Huffman Example Here %%%
 \begin{example}[Huffman Coding Construction] \label{ex:huffman_construction}
     Let $\Sigma = \{a, b, c, d, e\}$ with probabilities $P(a)= 0.25$, $P(b)=0.25$, $P(c)=0.2$, $P(d)=0.15$, $P(e)=0.15$.
     \begin{enumerate}
         \item Initial nodes: (a: 0.25), (b: 0.25), (c: 0.2), (d: 0.15), (e: 0.15).
         \item Merge smallest: d and e. Create node (de: 0.30). Current nodes: (a: 0.25), (b: 0.25), (c: 0.2), (de: 0.30).
-        \item Merge smallest: c and a. Create node (ca: 0.45). Current nodes: (b: 0.25), (de: 0.30), (ca: 0.45). (Note: Choosing c and a over c and b is arbitrary here, another valid tree exists).
+        \item Merge smallest: c and a. Create node (ca: 0.45). Current nodes: (b: 0.25), (de: 0.30), (ca: 0.45). (Note: Choosing c and a over c and b is arbitrary here; another valid tree exists).
         \item Merge smallest: b and de. Create node (bde: 0.55). Current nodes: (ca: 0.45), (bde: 0.55).
         \item Merge last two: ca and bde. Create root (root: 1.00).
     \end{enumerate}
@@ -82,7 +78,6 @@ The prefix-free code for each symbol $\sigma$ is then determined by the path fro
         \label{fig:huffman_tree_example} % Etichetta per il riferimento alla figura
     \end{figure}
 \end{example}
-%%% END INSERTION POINT 1 %%%
 
 Let $L_C = \sum_{\sigma \in \Sigma} P(\sigma) \cdot l(\sigma)$ be the average codeword length for a prefix-free code $C$, where $l(\sigma)$ is the length of the codeword assigned to symbol $\sigma$. The Huffman coding algorithm produces a code $C_H$ that is optimal among all possible prefix-free codes for the given probability distribution.
 
@@ -99,11 +94,30 @@ Decoding uses the Huffman Tree (or an equivalent lookup structure). Bits are rea
 While optimal among prefix codes, Huffman coding still assigns an integer number of bits to each symbol. This leads to a slight inefficiency compared to the theoretical entropy limit, as quantified by the following theorem.
 
 \begin{theorem} \label{thm:huffman_bounds}
-    Let $\mathcal{H} = \sum_{\sigma \in \Sigma} P(\sigma)\log_2(1/P(\sigma))$ be the entropy of a source emitting symbols from $\Sigma$ according to distribution $P$. The average length $L_H$ of the corresponding Huffman code is bounded by $\mathcal{H} \le L_H < \mathcal{H} + 1$.
+    Let $\mathcal{H} = \sum_{\sigma \in \Sigma} P(\sigma)\log_2(1/P(\sigma))$ be the entropy of a source emitting symbols from $\Sigma$ according to distribution $P$. The average length $L_H$ of the corresponding Huffman code is bounded by
+    \begin{equation*}
+        \mathcal{H} \le L_H < \mathcal{H} + 1.
+    \end{equation*}
 \end{theorem}
 \begin{proof}
-    The lower bound $\mathcal{H} \le L_H$ follows directly from Shannon's source coding theorem (Theorem~\ref{thm:source_coding_theorem}), which states that $\mathcal{H}$ is the minimum possible average length for any uniquely decodable code.
-    For the upper bound, consider assigning an "ideal" codeword length $l'_\sigma = -\log_2 P(\sigma)$ to each symbol $\sigma$. As we must use an integer number of bits, let $l_\sigma = \lceil -\log_2 P(\sigma) \rceil$. Clearly, $l_\sigma < -\log_2 P(\sigma) + 1$. Summing these $l_\sigma$ satisfies Kraft's inequality ($\sum 2^{-l_\sigma} \le \sum 2^{-(-\log_2 P(\sigma))} = \sum P(\sigma) = 1$), guaranteeing the existence of a prefix code $C'$ with these lengths $l_\sigma$. Its average length is $L_{C'} = \sum P(\sigma) l_\sigma < \sum P(\sigma) (-\log_2 P(\sigma) + 1) = \mathcal{H} + 1$. Since Huffman coding produces the optimal prefix code (Theorem~\ref{thm:huffman_optimality}), its average length $L_H$ must be less than or equal to $L_{C'}$. Therefore, $L_H \le L_{C'} < \mathcal{H} + 1$. Combining bounds gives $\mathcal{H} \le L_H < \mathcal{H} + 1$. \qedhere
+    The lower bound $\mathcal{H} \le L_H$ follows from Shannon's source coding theorem (Theorem~\ref{thm:source_coding_theorem}), which states that $\mathcal{H}$ is the minimum possible average length for any uniquely decodable code.
+
+    For the upper bound, assign to each symbol $\sigma$ the ideal codeword length $l'_\sigma = -\log_2 P(\sigma)$. Since codeword lengths must be integers, set $l_\sigma = \lceil -\log_2 P(\sigma) \rceil$. Then
+    \begin{equation*}
+        l_\sigma < -\log_2 P(\sigma) + 1.
+    \end{equation*}
+    These $l_\sigma$ satisfy Kraft's inequality:
+    \begin{equation*}
+        \sum_{\sigma \in \Sigma} 2^{-l_\sigma} \le \sum_{\sigma \in \Sigma} 2^{-(-\log_2 P(\sigma))} = \sum_{\sigma \in \Sigma} P(\sigma) = 1,
+    \end{equation*}
+    so a prefix code $C'$ with these lengths exists. Its average length is
+    \begin{equation*}
+        L_{C'} = \sum_{\sigma \in \Sigma} P(\sigma) l_\sigma < \sum_{\sigma \in \Sigma} P(\sigma) (-\log_2 P(\sigma) + 1) = \mathcal{H} + 1.
+    \end{equation*}
+    Since Huffman coding is optimal (Theorem~\ref{thm:huffman_optimality}), $L_H \le L_{C'} < \mathcal{H} + 1$. Thus,
+    \begin{equation*}
+        \mathcal{H} \le L_H < \mathcal{H} + 1.
+    \end{equation*}
 \end{proof}
 
 This theorem highlights that the average Huffman code length is always within one bit of the source entropy. The gap $(L_H - \mathcal{H})$ represents the inefficiency due to the constraint of using integer bit lengths for each symbol's codeword. This gap is significant only when some symbol probabilities are very high (close to 1).
@@ -117,14 +131,15 @@ Unlike Huffman coding, which assigns a distinct, fixed-length (integer number of
 \subsubsection{Encoding and Decoding Process}
 Let $S = S[1]S[2]\ldots S[n]$ be the input sequence of symbols drawn from alphabet $\Sigma$, and let $P(\sigma)$ be the probability of symbol $\sigma$ according to the chosen statistical model.
 
-The core idea of the encoding process (Algorithm~\ref{alg:arithmetic_coding}) is to progressively narrow down a sub-interval of $[0, 1)$. Initially, the interval is $[l_0, h_0) = [0, 1)$. For each symbol $S[i]$ in the sequence, the current interval $[l_{i-1}, h_{i-1})$ of size $s_{i-1} = h_{i-1} - l_{i-1}$ is partitioned into smaller sub-intervals, one for each symbol $\sigma \in \Sigma$. The size of the sub-interval for $\sigma$ is proportional to its probability, $s_{i-1} \cdot P(\sigma)$. The algorithm then selects the sub-interval corresponding to the actual symbol $S[i]$ and makes it the new current interval $[l_i, h_i)$ for the next step. The cumulative probability function $C(\sigma) = \sum_{\sigma' \le \sigma} P(\sigma')$ is used to efficiently calculate the start ($l_i$) of the correct sub-interval. After processing all $n$ symbols, the final interval is $[l_n, h_n) = [l_n, l_n + s_n)$, where $s_n = \prod_{i=1}^n P(S[i])$.
+The core idea of the encoding process (Algorithm~\ref{alg:arithmetic_coding}) is to progressively narrow down a sub-interval of $[0, 1)$. Initially, the interval is $[l_0, h_0) = [0, 1)$. For each symbol $S[i]$ in the sequence, the current interval $[l_{i-1}, h_{i-1})$ of size $s_{i-1} = h_{i-1} - l_{i-1}$ is partitioned into smaller sub-intervals, one for each symbol $\sigma \in \Sigma$. The size of the sub-interval for $\sigma$ is proportional to its probability, $s_{i-1} \cdot P(\sigma)$. The algorithm then selects the sub-interval corresponding to the actual symbol $S[i]$ and makes it the new current interval $[l_i, h_i)$ for the next step. The cumulative probability function $C(\sigma) = \sum_{\sigma' < \sigma} P(\sigma')$ (summing probabilities of symbols lexicographically smaller than $\sigma$) is used to efficiently calculate the start ($l_i$) of the correct sub-interval. After processing all $n$ symbols, the final interval is $[l_n, h_n) = [l_n, l_n + s_n)$, where $s_n = \prod_{i=1}^n P(S[i])$.
 
 \begin{algorithm}[hbtp] % Use hbtp placement
-    \caption{Arithmetic Coding (Conceptual)} \label{alg:arithmetic_coding}
+    \caption{Arithmetic Coding} \label{alg:arithmetic_coding}
+    \small
     \begin{algorithmic}[1] % Add line numbers
         \Require Sequence $S=S[1..n]$, Probabilities $P(\sigma)$ for $\sigma \in \Sigma$
         \Ensure A sub-interval $[l_n, l_n+s_n)$ uniquely identifying $S$.
-        \State Compute cumulative probabilities $C(\sigma) = \sum_{\sigma' < \sigma} P(\sigma')$ (Note: sum over $\sigma' < \sigma$)
+        \State Compute cumulative probabilities $C(\sigma) = \sum_{\sigma' < \sigma} P(\sigma')$
         \State $l \gets 0$
         \State $s \gets 1$ \Comment{Initial interval [0, 1), size 1}
         \For{$i = 1$ to $n$}
@@ -142,7 +157,8 @@ The final output of the encoder is not the interval itself, but rather a binary 
 The decoding process (Algorithm~\ref{alg:arithmetic_decoding}) essentially reverses the encoding. The decoder needs the compressed bitstream (representing the fraction $x$), the same probability model $P(\sigma)$, and the original sequence length $n$. It starts with the interval $[0, 1)$. In each step $i$, it determines which symbol $\sigma$'s sub-interval $[l + s \cdot C(\sigma), l + s \cdot C(\sigma) + s \cdot P(\sigma))$ contains the encoded fraction $x$. That symbol $\sigma$ must be $S[i]$. The decoder outputs $\sigma$ and updates its current interval to be this sub-interval, just as the encoder did. This is repeated $n$ times to reconstruct the original sequence $S$.
 
 \begin{algorithm}[hbtp]
-    \caption{Arithmetic Decoding (Conceptual)} \label{alg:arithmetic_decoding}
+    \caption{Arithmetic Decoding} \label{alg:arithmetic_decoding}
+    \small
     \begin{algorithmic}[1]
         \Require Encoded fraction $x$, Probabilities $P(\sigma)$, Sequence length $n$.
         \Ensure Original sequence $S[1..n]$.
@@ -151,41 +167,19 @@ The decoding process (Algorithm~\ref{alg:arithmetic_decoding}) essentially rever
         \State $s \gets 1$
         \State $S \gets \text{empty sequence}$
         \For{$i = 1$ to $n$}
-        \State Find symbol $\sigma$ such that $l+s \cdot C(\sigma) \le x < l+s \cdot (C(\sigma)+P(\sigma))$
-        \State $S.\text{append}(\sigma)$
+        \State Find symbol $\sigma$ s.t $l+s \cdot C(\sigma) \le x < l+s \cdot (C(\sigma)+P(\sigma))$
+        \State Append $\sigma$ to $S$
         \State $l_{new} \gets l + s \cdot C(\sigma)$
         \State $s_{new} \gets s \cdot P(\sigma)$
         \State $l \gets l_{new}$
         \State $s \gets s_{new}$
-        \State \Comment{Practical decoders also update $x$ relative to the new interval}
         \EndFor
         \State \Return $S$
     \end{algorithmic}
 \end{algorithm}
 
-% \begin{example}[Arithmetic Coding Encoding] \label{ex:arithmetic_encoding}
-%     Let $\Sigma = \{A, B\}$ with $P(A)=0.6, P(B)=0.4$. Let the input sequence be $S = \text{"ABA"}$.
-%     We calculate cumulative probabilities: $C(A)=0$, $C(B)=P(A)=0.6$.
-%     \begin{enumerate}
-%         \item \textbf{Initial:} Interval $[0, 1)$, $l=0, s=1$.
-%         \item \textbf{Encode 'A' ($S[1]$):}
-%               New lower bound $l = 0 + 1 \cdot C(A) = 0$.
-%               New size $s = 1 \cdot P(A) = 0.6$.
-%               New interval $[0, 0.6)$.
-%         \item \textbf{Encode 'B' ($S[2]$):}
-%               New lower bound $l = 0 + 0.6 \cdot C(B) = 0 + 0.6 \cdot 0.6 = 0.36$.
-%               New size $s = 0.6 \cdot P(B) = 0.6 \cdot 0.4 = 0.24$.
-%               New interval $[0.36, 0.36 + 0.24) = [0.36, 0.60)$.
-%         \item \textbf{Encode 'A' ($S[3]$):}
-%               New lower bound $l = 0.36 + 0.24 \cdot C(A) = 0.36 + 0.24 \cdot 0 = 0.36$.
-%               New size $s = 0.24 \cdot P(A) = 0.24 \cdot 0.6 = 0.144$.
-%               New interval $[0.36, 0.36 + 0.144) = [0.36, 0.504)$.
-%     \end{enumerate}
-%     The final interval representing "ABA" is $[0.36, 0.504)$. The encoder must now output a binary fraction within this range, e.g., $0.0110_2 = 0.375$. To represent $0.375 = 3/8$, it would output the 3 bits \texttt{011} (implicitly preceded by a binary point). The decoder, given \texttt{011} (interpreted as $0.375$), length $n=3$, and the probabilities, would reverse the process to recover "ABA".
-% \end{example}
-
 \subsubsection{Efficiency of Arithmetic Coding}
-The final interval size $s_n = \prod_{i=1}^n P(S[i])$ is crucial. If we use empirical probabilities $P(\sigma) = n_\sigma / n$, where $n_\sigma$ is the frequency of $\sigma$ in $S$, then $s_n = \prod_{\sigma \in \Sigma} (n_\sigma / n)^{n_\sigma}$. As noted before, the number of bits required to uniquely specify a number within an interval of size $s_n$ is approximately $-\log_2 s_n$.
+The final interval size $s_n = \prod_{i=1}^n P(S[i])$ is crucial. If empirical probabilities $P(\sigma) = n_\sigma / n$ are used, where $n_\sigma$ is the frequency of $\sigma$ in $S$, then $s_n = \prod_{\sigma \in \Sigma} (n_\sigma / n)^{n_\sigma}$. As noted before, the number of bits required to uniquely specify a number within an interval of size $s_n$ is approximately $-\log_2 s_n$.
 
 Calculating $-\log_2 s_n$ with empirical probabilities gives:
 \begin{align*}
@@ -195,7 +189,7 @@ Calculating $-\log_2 s_n$ with empirical probabilities gives:
 \end{align*}
 where $\mathcal{H}$ is the empirical (0-th order) entropy of the sequence $S$. This demonstrates that the \emph{ideal} number of bits needed by arithmetic coding matches the entropy of the sequence exactly.
 
-The connection between the final interval size $s_n$ and the actual number of output bits deserves clarification. The encoder needs to transmit a binary representation of \emph{some} number $x$ that lies within the final interval $[l_n, l_n + s_n)$. To ensure the decoder can uniquely identify this interval (and thus the sequence), the chosen number $x$ must be distinguishable from any number lying in adjacent potential intervals. This requires a certain precision. The minimum number of bits $k$ needed to represent such an $x$ as a dyadic fraction (i.e., a number of the form $N/2^k$) must satisfy $2^{-k} \le s_n$. This condition ensures that the precision $2^{-k}$ is fine enough to pinpoint a unique value within the target interval of size $s_n$. Taking logarithms, this implies $k \ge -\log_2 s_n$. To guarantee that such a fraction actually *exists* within the interval, and to handle the process of incrementally outputting bits, practical arithmetic coding requires slightly more bits than the theoretical minimum $-\log_2 s_n$. A careful analysis shows that at most 2 extra bits are needed beyond the ideal $n\mathcal{H}$ \cite{ferragina2023pearls}.
+The connection between the final interval size $s_n$ and the actual number of output bits deserves clarification. The encoder needs to transmit a binary representation of \emph{some} number $x$ that lies within the final interval $[l_n, l_n + s_n)$. To ensure the decoder can uniquely identify this interval (and thus the sequence), the chosen number $x$ must be distinguishable from any number lying in adjacent potential intervals. This requires a certain precision. The minimum number of bits $k$ needed to represent such an $x$ as a dyadic fraction (i.e., a number of the form $N/2^k$) must satisfy $2^{-k} \le s_n$. This condition ensures that the precision $2^{-k}$ is fine enough to pinpoint a unique value within the target interval of size $s_n$. Taking logarithms, this implies $k \ge -\log_2 s_n$. To guarantee that such a fraction actually *exists* within the interval, and to handle the process of incrementally outputting bits, practical arithmetic coding requires slightly more bits than the theoretical minimum $-\log_2 s_n$. A careful analysis shows that at most 2 extra bits are needed beyond the ideal $n\mathcal{H}$.
 
 \begin{theorem} \label{thm:arithmetic_bits}
     The number of bits emitted by arithmetic coding for a sequence $S$ of $n$ symbols, using probabilities $P(\sigma)$ derived from the empirical frequencies within $S$, is at most $2 + n\mathcal{H}$, where $\mathcal{H}$ is the empirical entropy of the sequence $S$.
@@ -207,8 +201,3 @@ The connection between the final interval size $s_n$ and the actual number of ou
 \begin{remark}
     Practical arithmetic coders do not use floating-point numbers due to precision issues. They employ integer arithmetic, maintaining the interval bounds $[L, H)$ as large integers within a fixed range (e.g., 16 or 32 bits). As the conceptual interval shrinks, common leading bits of $L$ and $H$ are output, and the integer interval is rescaled (e.g., doubled) to occupy the full range again, effectively shifting the conceptual interval. Special handling ("underflow") is needed when the interval becomes very small but straddles the midpoint (e.g., 0.5), preventing immediate output of the next bit. These implementation details ensure correctness and efficiency with fixed-precision arithmetic \cite{moffat1998arithmetic}.
 \end{remark}
-
-% % \paragraph{Comparison with Huffman Coding}
-% Huffman and Arithmetic coding offer distinct approaches to statistical compression. Huffman coding operates at the symbol level, assigning a fixed, prefix-free codeword (an integer number of bits) to each symbol based on its frequency. This makes it relatively simple and fast, especially for decoding via tree traversal or table lookup. However, its efficiency is inherently limited by the constraint of using whole bits per symbol, resulting in an average codeword length $L_H$ bounded by $\mathcal{H} \le L_H < \mathcal{H} + 1$. This gap can be significant for skewed probability distributions.
-
-% In contrast, Arithmetic coding treats the entire input sequence as one unit, mapping it to a single fractional number within the interval $[0, 1)$. This allows it to effectively assign fractional bits per symbol, achieving a total compressed size very close to the theoretical entropy limit $n\mathcal{H}$. Consequently, Arithmetic coding generally yields better compression ratios, particularly when symbol probabilities are not close to powers of $1/2$. This improved efficiency comes at the cost of increased computational complexity and slower execution speed due to the interval arithmetic involved, even when implemented using integer operations. Both methods can be adapted to handle changing input statistics. The choice between them often involves a trade-off: Huffman is preferred for its speed and simplicity when near-optimal compression suffices, while Arithmetic coding is chosen when maximizing the compression ratio is the primary goal.

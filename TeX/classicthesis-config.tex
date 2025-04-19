@@ -119,6 +119,21 @@
 \newtheorem{example}[theorem]{Example}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{assumption}[theorem]{Assumption}
+
+% Fai sì che l'ambiente example sia in tondo invece che in corsivo
+\let\oldexample\example
+\let\oldendexample\endexample
+\renewenvironment{example}
+{\begin{oldexample}\normalfont}
+        {\end{oldexample}}
+
+% Fai sì che l'ambiente remark sia in tondo invece che in corsivo
+\let\oldremark\remark
+\let\oldendremark\endremark
+\renewenvironment{remark}
+{\begin{oldremark}\normalfont}
+        {\end{oldremark}}
+
 %------------------------------------------------
 
 \usepackage{mathtools}

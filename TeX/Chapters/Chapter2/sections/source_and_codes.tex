@@ -1,29 +1,29 @@
 \section{Source and Code} \label{sec:source_and_codes}
 
-\noindent In the previous section, we established information-theoretic limits based on the probabilistic nature of data sources. Now, we turn our attention to the practical mechanisms for achieving data compression: the interplay between a \emph{source} of information and the \emph{code} used to represent it. A source, in this context, can be thought of as any process generating a sequence of symbols drawn from a specific alphabet (e.g., letters of text, pixel values in an image, sensor readings). Source coding, or data compression, is the task of converting this sequence into a different, typically shorter, sequence of symbols from a target coding alphabet (often binary).
+\noindent In the previous section, information-theoretic limits based on the probabilistic nature of data sources were established. Attention now turns to the practical mechanisms for achieving data compression: the interplay between a \emph{source} of information and the \emph{code} used to represent it. A source, in this context, is any process generating a sequence of symbols drawn from a specific alphabet (e.g., letters of text, pixel values in an image, sensor readings). Source coding, or data compression, involves converting this sequence into a different, typically shorter, sequence of symbols from a target coding alphabet (often binary).
 
-\noindent The core principle behind efficient coding is to exploit the statistical properties of the source. Symbols or patterns that occur frequently should ideally be assigned shorter representations (codewords), while less frequent ones can be assigned longer codewords. A classic, intuitive example is Morse code: the most common letter in English text, 'E', is represented by the shortest possible signal, a single dot (`.`), whereas infrequent letters like 'Q' (`--.-`) receive much longer sequences.
+\noindent The core principle behind efficient coding is the exploitation of the source's statistical properties. Symbols or patterns occurring frequently should ideally be assigned shorter representations (codewords), while less frequent ones can be assigned longer codewords. A classic, intuitive example is Morse code: the most common letter in English text, 'E', is represented by the shortest possible signal, a single dot (`.`), whereas infrequent letters like 'Q' (`--.-`) receive much longer sequences.
 
 \subsection{Codes}
 
-A source characterized by a random process generates symbols from a specific alphabet at each time step. The objective is to transform this output sequence into a more concise representation. This data reduction technique, known as \emph{source coding} or \emph{data compression}, utilizes a code to represent the original symbols more efficiently. The device that performs this transformation is termed an \emph{encoder}, and the process itself is referred to as \emph{encoding}. \cite{han2002mathematics}
+A source characterized by a random process generates symbols from a specific alphabet at each time step. The objective is to transform this output sequence into a more concise representation. This data reduction technique, known as \emph{source coding} or \emph{data compression}, utilizes a code to represent the original symbols more efficiently. The device performing this transformation is termed an \emph{encoder}, and the process itself is referred to as \emph{encoding} \cite{han2002mathematics}.
 
 \begin{definition}[Source Code]\label{def:code}
-    A source code for a random variable $X$ is a mapping from the set of possible outcomes of $X$, called $\mathcal{X}$, to $\mathcal{D}^*$, the set of all finite-length strings of symbols from a $\mathcal{D}$-ary alphabet. Let $C(X)$ denote the codeword assigned to $x$ and let $l(x)$ denote length of $C(x)$
+    A source code for a random variable $X$ is a mapping from the set of possible outcomes of $X$, denoted $\mathcal{X}$, to $\mathcal{D}^*$, the set of all finite-length strings of symbols from a $\mathcal{D}$-ary alphabet. Let $C(x)$ denote the codeword assigned to $x$, and let $l(x)$ denote the length of $C(x)$.
 \end{definition}
 
 \begin{definition}[Expected length]\label{def:expected_length}
     The expected length $L(C)$ of a source code $C$ for a random variable $X$ with probability mass function $P_X(x)$ is defined as
-    \begin{equation}
+    \begin{equation*}
         L(C) = \sum_{x\in\mathcal{X}} P_X(x)l(x)
-    \end{equation}
+    \end{equation*}
     where $l(x)$ is the length of the codeword assigned to $x$.
 \end{definition}
 
-\noindent Let's assume from now for simplicity that the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, D-1\}$.
+\noindent Assume henceforth for simplicity that the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, K-1\}$, where $K=|\mathcal{D}|$.
 
 \begin{example}\label{ex:source_code}
-    Let's consider a source code for a random variable $X$ with $\mathcal{X} = \{a, b, c, d\}$ and $P_X(a) = 0.5$, $P_X(b) = 0.25$, $P_X(c) = 0.125$ and $P_X(d) = 0.125$. The code is defined as
+    Consider a source code for a random variable $X$ with $\mathcal{X} = \{a, b, c, d\}$ and $P_X(a) = 0.5$, $P_X(b) = 0.25$, $P_X(c) = 0.125$, and $P_X(d) = 0.125$. The code is defined as
     \begin{align*}
         C(a) & = 0   \\
         C(b) & = 10  \\
@@ -32,78 +32,48 @@ A source characterized by a random process generates symbols from a specific alp
     \end{align*}
     The entropy of $X$ is
     \begin{equation*}
-        H(X) = 0.5\log 2 + 0.25\log 4 + 0.125\log 8 + 0.125\log 8 = 1.75 \text{ bits}
+        H(X) = -0.5\log_2 0.5 - 0.25\log_2 0.25 - 0.125\log_2 0.125 - 0.125\log_2 0.125 = 1.75 \text{ bits}
     \end{equation*}
     The expected length of this code is also $1.75$:
     \begin{equation*}
         L(C) = 0.5 \cdot 1 + 0.25 \cdot 2 + 0.125 \cdot 3 + 0.125 \cdot 3 = 1.75 \text{ bits}
     \end{equation*}
-    In this example we have seen a code that is optimal in the sense that the expected length of the code is equal to the entropy of the random variable.
+    This example presents a code that achieves the lower bound given by the entropy, as $L(C) = H(X)$.
 \end{example}
-
-
 
 \begin{definition}[Nonsingular Code]\label{def:nonsingular_code}
     A code is nonsingular if every element of the range of $X$ maps to a different element of $\mathcal{D}^*$. Thus:
-    \begin{equation}
-        x \neq y \Rightarrow C(x) \neq C(y)
-    \end{equation}
+    \begin{equation*}
+        x \neq y \implies C(x) \neq C(y)
+    \end{equation*}
 \end{definition}
 
-\noindent While a single unique code can represent a single value from our source $X$ without ambiguity, our real goal is often to transmit sequences of these values. In such scenarios, we could ensure the receiver can decode the sequence by inserting a special symbol, like a "comma," between each codeword. However, this approach wastes the special symbol's potential. To overcome this inefficiency, especially when dealing with sequences of symbols from $X$, we can leverage the concept of self-punctuating or instantaneous codes. These codes possess a special property: the structure of the code itself inherently indicates the end of each codeword, eliminating the need for a separate punctuation symbol. The following definitions formalize this concept. \cite{ElementsofInformationTheory}
+\noindent Although a nonsingular code ensures distinct representations for individual source symbols, the primary objective is often the transmission of sequences of these symbols. This potential inefficiency motivates the use of codes where the structure inherently delineates codeword boundaries, eliminating the need for explicit separators. Such codes are often referred to as prefix codes or instantaneous codes. These codes possess a property where the structure itself indicates the end of each codeword. The following definitions formalize this concept \cite{ElementsofInformationTheory}.
 
 \begin{definition}[Extension of a Code]\label{def:extension_code}
     The extension $C^*$ of a code $C$ is the mapping from finite-length sequences of symbols from $\mathcal{X}$ to finite-length strings of symbols from the $\mathcal{D}$-ary alphabet defined by
-    \begin{equation}
+    \begin{equation*}
         C^*(x_1x_2\ldots x_n) = C(x_1)C(x_2)\ldots C(x_n)
-    \end{equation}
+    \end{equation*}
     where $C(x_1)C(x_2)\ldots C(x_n)$ denotes the concatenation of the codewords assigned to $x_1, x_2, \ldots, x_n$.
 \end{definition}
 
 \begin{example}
     If $C(x_1) = 0$ and $C(x_2) = 110$, then $C^*(x_1x_2) = 0110$.
 \end{example}
-
 \begin{definition}[Unique Decodability]\label{def:unique_decodability}
-    A code $C$ is uniquely decodable if its extension is nonsingular
+    A code $C$ is uniquely decodable if its extension $C^*$ is nonsingular.
 \end{definition}
 
-\noindent Thus, any encoded string in a uniquely decodable code has only one possibile source string that could have generated it.
+\noindent Thus, any encoded string in a uniquely decodable code has only one possible source string that could have generated it.
 
 \begin{definition}[Prefix Code]\label{def:prefix_code}
     A \marginpar{Also called instantaneous code} code is a prefix code if no codeword is a prefix of any other codeword.
 \end{definition}
 
-\noindent Imagine receiving a string of coded symbols. An \emph{instantaneous code} allows us to decode each symbol as soon as we reach the end of its corresponding codeword. We don't need to wait and see what comes next. Because the code itself tells us where each codeword ends, it's like the code "punctuates itself" with invisible commas separating the symbols.  This let us decode the entire message by simply reading the string and adding commas between the codewords without needing to see any further symbols. Consider the example \ref{ex:source_code} seen a the beginning of this section, where the binary string \texttt{01011111010} is decoded as \texttt{0,10,111,110,10} because the code used naturally separates the symbols. \cite{ElementsofInformationTheory}. Figure \ref{fig:codes} shows the relationship between different types of codes.
+\noindent Upon receiving a coded sequence, an \emph{instantaneous code} permits decoding each symbol as soon as its corresponding codeword is completely received. Since the code structure indicates where each codeword ends, the code effectively provides implicit punctuation separating the symbols. This allows the entire message to be decoded by simply reading the string and identifying codeword boundaries without needing subsequent symbols. For instance, using the code from Example \ref{ex:source_code}, the binary string \texttt{01011111010} is decoded as \texttt{0,10,111,110,10} because the code structure naturally separates the symbols \cite{ElementsofInformationTheory}. Figure \ref{fig:codes} illustrates the relationship between different classes of codes.
 
-% \begin{remark}[On the lower bound provided by Shannon Entropy]
-%     Shannon entropy, defined in \ref{def:entropy}, gives us a lower bound for the average length of a uniquely decodable code. Given a letter with frequency $p_i$, it carries $-\log p_i$  bits of information.
-% \end{remark}
-
-\begin{example}[Morse Code]\label{ex:morse_code}
-    Morse code serves as a classic illustration of these concepts. Historically used for telegraphy, it represents text characters using sequences from a ternary alphabet: a short signal (dot, `.`), a longer signal (dash, `-`), and a space (pause used as a delimiter). Frequent letters like 'E' receive short codes (`.`), while less common ones like 'Q' get longer codes (`--.-`). Here are a few examples:
-    \begin{center}
-        \begin{tabular}{ll}
-            \textbf{Character/Sequence} & \textbf{Code}        \\ \hline
-            E                           & \texttt{.}           \\
-            T                           & \texttt{-}           \\
-            A                           & \texttt{.-}          \\
-            N                           & \texttt{-.}          \\
-            S                           & \texttt{...}         \\
-            O                           & \texttt{---}         \\
-            SOS                         & \texttt{... --- ...} \\
-        \end{tabular}
-    \end{center}
-    % (Note: The SOS sequence \texttt{... --- ...} is typically sent continuously but represents the individual letters S, O, S separated by standard pauses.)
-    Let's evaluate Morse code based on our definitions:
-    \begin{itemize}
-        \item \textbf{Nonsingular:} The code is nonsingular because each letter corresponds to a unique sequence of dots and dashes. For instance, $E \neq T$, and their respective codes $C(E) = \texttt{.}$ and $C(T) = \texttt{-}$ are distinct.
-        \item \textbf{Prefix Code:} The code does not satisfy the prefix condition. Several codewords are prefixes of others. For example, $C(E) = \texttt{.}$ is a prefix of $C(A) = \texttt{.-}$ and $C(S) = \texttt{...}$. Similarly, $C(T) = \texttt{-}$ is a prefix of $C(N) = \texttt{-.}$ and $C(M) = \texttt{--}$. This lack of the prefix property means that receiving a sequence like `.--` is ambiguous without further information; it could represent 'A' or the sequence 'ET'.
-        \item \textbf{Uniquely Decodable:} The code achieves unique decodability, but this relies critically on the use of pauses (spaces) inserted between letters and words according to specific timing rules. These pauses function as explicit delimiters. Without them, the inherent ambiguity due to the lack of the prefix property would make decoding impossible. This contrasts with true prefix codes (like Example \ref{ex:source_code}), which are uniquely decodable based solely on their structure, without needing external delimiters. For example, the sequence `.---` is unambiguously decoded as 'ET' only when the timing correctly separates the 'E' (`.`) from the 'T' (`-`).
-    \end{itemize}
-\end{example}
-
-\begin{figure}[h]
+\begin{figure}[hbtp]
     \centering
     \begin{tikzpicture}[scale=2.2,transform shape]
         \node[set,fill=gray!10,text width=4cm] (all) at (0,-0.6)  {};
@@ -117,13 +87,37 @@ A source characterized by a random process generates symbols from a specific alp
     \caption{Relationship between different types of codes \label{fig:codes}}
 \end{figure}
 
+\begin{example}[Morse Code]\label{ex:morse_code}
+    Morse code serves as a classic illustration. Historically used for telegraphy, it represents text characters using sequences from a ternary alphabet: a short signal (dot, ~.~), a longer signal (dash, ~-~), and a space (pause used as a delimiter). Frequent letters like \emph{E} receive short codes (~.~), while less common ones like \emph{Q} get longer codes (~--.-~).
+    The following table summarizes the Morse code for some letters and the SOS distress signal:
+    \begin{center}
+        \begin{tabular}{ll}
+            Character/Sequence & Code                 \\ \hline
+            E                  & \texttt{.}           \\
+            T                  & \texttt{-}           \\
+            A                  & \texttt{.-}          \\
+            N                  & \texttt{-.}          \\
+            S                  & \texttt{...}         \\
+            O                  & \texttt{---}         \\
+            SOS                & \texttt{... --- ...} \\
+        \end{tabular}
+    \end{center}
+    We can evaluate the properties of this code:
+
+    \emph{Nonsingularity}: The code is nonsingular because each letter corresponds to a unique sequence of dots and dashes.
+
+    \emph{Prefix Property}: The code does not satisfy the prefix condition. Several codewords are prefixes of others. For example, $C(E) = \texttt{.}$ is a prefix of $C(A) = \texttt{.-}$ and $C(S) = \texttt{...}$
+
+    \emph{Unique Decodability}: Unique decodability is achieved through the critical use of pauses (spaces) inserted between letters and words according to specific timing rules. These pauses function as explicit delimiters. Without these explicit delimiters, the ambiguities arising from the lack of the prefix property would prevent reliable decoding. This contrasts with prefix codes (e.g., Example \ref{ex:source_code}), which are inherently uniquely decodable based solely on their structure, without needing external delimiters.
+\end{example}
+
+
+
 \subsection{Kraft's Inequality}
 
-We aim to construct efficient codes, ideally prefix codes (instantaneous codes), whose expected length approaches the source entropy. A fundamental constraint arises because we cannot arbitrarily assign short lengths to all symbols while maintaining the prefix property or even unique decodability. Kraft's inequality precisely quantifies this limitation. It establishes a \emph{necessary} condition that the chosen codeword lengths $l(x)$ must satisfy for \emph{any uniquely decodable} code to exist. Crucially, the same inequality also serves as a \emph{sufficient} condition guaranteeing that a \emph{prefix} code with these exact lengths can indeed be constructed. We will first state and prove the necessity part for uniquely decodable codes.
-% Rimuovi il  qui se preferisci, lo spazio è gestito dal paragrafo.
+The goal is to construct efficient codes, ideally prefix codes (instantaneous codes), whose expected length approaches the source entropy. A fundamental constraint arises because short lengths cannot be arbitrarily assigned to all symbols while maintaining the prefix property or even unique decodability. Kraft's inequality precisely quantifies this limitation. It establishes a \emph{necessary} condition that the chosen codeword lengths $l(x)$ must satisfy for \emph{any uniquely decodable} code to exist. Crucially, the same inequality also serves as a \emph{sufficient} condition guaranteeing that a \emph{prefix} code with these exact lengths can indeed be constructed. The necessity part for uniquely decodable codes will be stated and proved first.
 
-
-\noindent Let's denote the size of the source and code alphabets with $J = |\mathcal{X}|$ and $K = |\mathcal{D}|$, respectively. Different proofs of the following theorem can be found in \cite{ElementsofInformationTheory,han2002mathematics}, here we report the one from \cite{han2002mathematics}, however the one proposed in \cite{ElementsofInformationTheory} is also very interesting, based on the concept of a source tree.
+Denote the size of the source and code alphabets with $J = |\mathcal{X}|$ and $K = |\mathcal{D}|$, respectively. Different proofs of the following theorem can be found in \cite{ElementsofInformationTheory, han2002mathematics}; the proof presented here follows \cite{han2002mathematics}, although the one proposed in \cite{ElementsofInformationTheory}, based on the concept of a source tree, is also very interesting.
 
 \begin{theorem}[Kraft's Inequality]\label{thm:kraft_inequality}
     The codeword lengths $l(x)$, $x \in \mathcal{X}$, of any uniquely decodable code $C$ over a $K$-ary alphabet must satisfy the inequality
@@ -132,26 +126,26 @@ We aim to construct efficient codes, ideally prefix codes (instantaneous codes),
     \end{equation}
 \end{theorem}
 \begin{proof}
-    Consider the left hand side of the inequality \ref{eq:kraft_inequality} and consider its $n$-th power
-    \begin{align}
-        \left( \sum_{x\in\mathcal{X}} K^{-l(x)} \right)^n & = \sum_{x_1\in\mathcal{X}} \sum_{x_2\in\mathcal{X}} \ldots \sum_{x_n\in\mathcal{X}} K^{-l(x_1)} K^{-l(x_2)} \ldots K^{-l(x_n)} \nonumber \\
-                                                          & = \sum_{x^n \in\mathcal{X^n}} K^{-l(x^n)}
-    \end{align}
-    Where $l(x^n) = l(x_1) + l(x_2) + \ldots + l(x_n)$ is the length of the concatenation of the codewords assigned to $x_1, x_2, \ldots, x_n$. If we consider the all the extended codewords of length $m$ we have
-    \begin{equation}
-        \sum_{x^n \in\mathcal{X^n}} K^{-l(x^n)} = \sum_{m=1}^{n l_max} A(m) K^{-m}
-    \end{equation}
-    where $A(m)$ is the number source sequences of length $n$ whose codewords have length $m$ and $l_{max}$ is the maximum length of the codewords in the code. Since the code is separable, we have that $A(m) \leq K^m$ and therefore each term of the sum is less than or equal to $1$. Hence
-    \begin{equation}
-        \left( \sum_{x\in\mathcal{X}} K^{-l(x)} \right)^n \leq n l_{max}
-    \end{equation}
-    That is
-    \begin{equation}
+    Consider the $n$-th power of the sum in the inequality \eqref{eq:kraft_inequality}:
+    \begin{align*}
+        \left( \sum_{x\in\mathcal{X}} K^{-l(x)} \right)^n & = \sum_{x_1\in\mathcal{X}} \sum_{x_2\in\mathcal{X}} \ldots \sum_{x_n\in\mathcal{X}} K^{-l(x_1)} K^{-l(x_2)} \ldots K^{-l(x_n)} \\
+                                                          & = \sum_{x^n \in\mathcal{X^n}} K^{-l(C^*(x^n))}
+    \end{align*}
+    where $l(C^*(x^n)) = l(C(x_1)) + l(C(x_2)) + \ldots + l(C(x_n))$ is the length of the concatenation of the codewords assigned to $x_1, x_2, \ldots, x_n$. Grouping terms by the length $m$ of the resulting codeword extension $C^*(x^n)$, we obtain:
+    \begin{equation*}
+        \sum_{x^n \in\mathcal{X^n}} K^{-l(C^*(x^n))} = \sum_{m=1}^{n l_{max}} A(m) K^{-m}
+    \end{equation*}
+    where $A(m)$ denotes the number of source sequences $x^n \in \mathcal{X}^n$ whose extended codeword $C^*(x^n)$ has length $m$, and $l_{max} = \max_{x\in\mathcal{X}} l(x)$ is the maximum length of a codeword in the code $C$. Since the code $C$ is uniquely decodable, its extension $C^*$ is nonsingular. Consequently, any two distinct source sequences $x^n$ and $y^n$ must map to distinct coded sequences $C^*(x^n)$ and $C^*(y^n)$. For a fixed length $m$, the number of distinct coded sequences $C^*(x^n)$ having length $m$ cannot exceed the total number of possible $K$-ary sequences of length $m$, which is $K^m$. Thus, $A(m) \leq K^m$. This implies that each term $A(m)K^{-m}$ in the sum is less than or equal to $1$. Therefore, the sum is bounded by the number of possible values for $m$:
+    \begin{equation*}
+        \left( \sum_{x\in\mathcal{X}} K^{-l(x)} \right)^n = \sum_{m=1}^{n l_{max}} A(m) K^{-m} \leq \sum_{m=1}^{n l_{max}} 1 = n l_{max}
+    \end{equation*}
+    Thus,
+    \begin{equation*}
         \sum_{x\in\mathcal{X}} K^{-l(x)} \leq (n l_{max})^{1/n}
-    \end{equation}
-    Taking the limit as $n$ goes to infinity and using the fact that $(n l_{max})^{1/n} = e^{1/n \log (n l_{max})} \to 1$ we have that
-    \begin{equation}
+    \end{equation*}
+    Taking the limit as $n \to \infty$, and noting that $\lim_{n\to\infty} (n l_{max})^{1/n} = \lim_{n\to\infty} \exp\left(\frac{\ln(n l_{max})}{n}\right) = e^0 = 1$, yields
+    \begin{equation*}
         \sum_{x\in\mathcal{X}} K^{-l(x)} \leq 1
-    \end{equation}
-    That concludes the proof.
+    \end{equation*}
+    This completes the proof.
 \end{proof}

@@ -1,7 +1,7 @@
 \chapter{Succinct Weighted DAGs for Path Queries}
 \label{chap:succinct_dags}
 
-The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on Rank and Select operations over sequences (\autoref{ch:Chapter3}). These sequence-based tools provide efficient ways to handle queries on linear data.
+The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on \textsf{rank} and \textsf{Select} operations over sequences (\autoref{ch:Chapter3}). These sequence-based tools provide efficient ways to handle queries on linear data.
 
 Building upon this foundation, we now shift our focus to graph structures, specifically directed acyclic graphs (DAGs) where nodes carry weights. A key motivation for this shift comes from revisiting the \emph{degenerate string problem} introduced in \autoref{sec:degenerate_strings}. This problem can be viewed through a different lens, that of graph representation. As we detail below, a degenerate string and a target character can be naturally modeled as a specific type of weighted DAG.
 
@@ -107,9 +107,9 @@ Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate strin
 
 This graph-based perspective on degenerate strings serves as a concrete starting point for the core topic of this chapter: the development of succinct data structures for general node-weighted DAGs to support path-based queries. We address the challenge of representing an arbitrary DAG $G=(V, E, w)$, where each vertex $v \in V$ carries a non-negative integer weight $w(v)$, in a compressed format that efficiently supports queries related to cumulative path weights. Such weighted DAGs model various phenomena beyond degenerate strings. For example, in bioinformatics, pangenome graphs\footnote{Pangenome graphs may contain cycles. These cycles can be addressed by either removing them or by utilizing path information provided by modern pangenome graph formats.} can be interpreted through this lens: if each node corresponds to a DNA sequence (a string over $\{A, C, G, T\}$), the weight $w(v)$ could represent the count of a specific nucleotide (e.g., \emph{A}) within that sequence; similarly for \emph{C}, \emph{G}, and \emph{T}.
 
-Our primary focus is on generalizing the \Rank{} query to this graph setting; the \Select{} query, while definable, will not be treated further in this work. For a given vertex $N$, the \Rank{} query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
+Our primary focus is on generalizing the \Rank{} query to this graph setting; the \textsf{select} query, while definable, will not be treated further in this work. For a given vertex $N$, the \textsf{rank} query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
 
-The combinatorial complexity of paths in a DAG — potentially exponential in the number of vertices — makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. Our approach involves partitioning the vertices based on how their path weight information is represented: some vertices (\emph{explicit}) will store this information directly, while others (\emph{implicit}) will rely on indirect derivation through references facilitated by a carefully defined \emph{successor} relationship, as detailed in Section \ref{sec:succinct_dag_representation}.
+The combinatorial complexity of paths in a DAG - potentially exponential in the number of vertices - makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. Our approach involves partitioning the vertices based on how their path weight information is represented: some vertices (\emph{explicit}) will store this information directly, while others (\emph{implicit}) will rely on indirect derivation through references facilitated by a carefully defined \emph{successor} relationship, as detailed in Section \ref{sec:succinct_dag_representation}.
 
 \section{Mathematical Framework}
 \label{sec:dag_defs}
@@ -164,13 +164,10 @@ A key challenge lies in efficiently representing the potentially vast collection
 
 \begin{definition}[$\mathcal{O}$-Set]
     \label{def:o_set}
-    For each vertex $v \in V$ in a weighted DAG $G=(V, E, w)$ with source $s$, the $\mathcal{O}$-set, denoted $\mathcal{O}_v \subseteq \mathbb{N}_0$, is defined recursively. Let us assume a topological ordering of the vertices in $V$. The sets are constructed as follows:
-    \begin{itemize}
-        \item For the source vertex $v = s$:
-              \[ \mathcal{O}_s = \{0\}. \]
-        \item For any other vertex $v \neq s$:
-              \[ \mathcal{O}_v = \bigcup_{u \in Pred(v)} \{ y + w(v) \mid y \in \mathcal{O}_u \}. \]
-    \end{itemize}
+    For each vertex $v \in V$ in a weighted DAG $G=(V, E, w)$ with source $s$, the $\mathcal{O}$-set, denoted $\mathcal{O}_v \subseteq \mathbb{N}_0$, is defined recursively. Let us assume a topological ordering of the vertices in $V$. The sets are constructed as follows: for the source vertex $v = s$:
+    \[ \mathcal{O}_s = \{0\}. \]
+    For any other vertex $v \neq s$:
+    \[ \mathcal{O}_v = \bigcup_{u \in Pred(v)} \{ y + w(v) \mid y \in \mathcal{O}_u \}. \]
 \end{definition}
 This definition implies that $\mathcal{O}_v$ contains only the distinct values generated by this union process. We consider $\mathcal{O}_v$ to be the set of these unique values, represented as a sorted sequence.
 
@@ -389,24 +386,21 @@ For an implicit representation of path information, we define a function $\sigma
 \subsection*{Node Partitioning}
 \label{subsec:node_partitioning}
 
-The successor function $\sigma$ induces a natural partitioning of the graph's vertices, which dictates how path information is stored or derived for each vertex.
+The successor function $\sigma$ determines a partition of the vertex set $V$, influencing how path information is represented for each vertex.
 
 \begin{definition}[Explicit and Implicit Vertices]
     \label{def:explicit_implicit}
-    The set of vertices $V$ is partitioned into two disjoint sets:
-    \begin{itemize}
-        \item $V_E$: The set of explicit vertices. This set comprises all sink vertices of the graph $G$:
-              \[ V_E = \{ v \in V \mid Succ(v) = \emptyset \}. \]
-        \item $V_I$: The set of implicit vertices. This set includes all non-sink vertices:
-              \[ V_I = V \setminus V_E = \{ v \in V \mid Succ(v) \neq \emptyset \}. \]
-    \end{itemize}
+    The set of vertices $V$ is partitioned into the set of explicit vertices $V_E$ and the set of implicit vertices $V_I$. The set $V_E$ contains all sink vertices of the graph $G$, formally defined as
+    \[ V_E = \{ v \in V \mid Succ(v) = \emptyset \}. \]
+    The set $V_I$ contains all remaining vertices:
+    \[ V_I = V \setminus V_E = \{ v \in V \mid Succ(v) \neq \emptyset \}. \]
 \end{definition}
-Vertices in $V_E$ serve as base cases in our representation; their associated path weight information ($\mathcal{O}$-sets) is stored directly. For vertices in $V_I$, this information is represented implicitly, relying on references to their designated successor $\sigma(v)$ as defined above.
+The path weight information ($\mathcal{O}$-sets) for vertices in $V_E$ is stored explicitly within the representation, while for vertices in $V_I$, this information is derived implicitly through references involving the designated successor $\sigma(v)$.
 
 \subsection{Structure Components}
 \label{subsec:structure_components}
 
-We now outline the main components of our data structure designed to represent the weighted DAG $G=(V,E,w)$ succinctly. These components are typically implemented as arrays indexed by vertex ID (from $0$ to $n-1$), enabling a Structure of Arrays (SoA) memory layout \footnote{The SoA organization can be advantageous for cache performance and allows for independent compression strategies for different data types (weights, pointers, path data).}.
+We now outline the main components of our data structure designed to represent the weighted DAG $G=(V,E,w)$ succinctly. These components are typically implemented as arrays indexed by vertex ID (from $0$ to $n-1$), enabling a Structure of Arrays (SoA) memory layout \footnote{The SoA organization can be advantageous for cache performance and allows for independent compression strategies for different data types (weights, pointers, path data) that we will discuss in \autoref{sec:compression_strategies}.}.
 
 \begin{enumerate}
     \item \emph{Weights $\mathcal{W}$:} An array storing the weight $w(v)$ for each vertex $v \in V$, $\mathcal{W}[v] = w(v)$.
@@ -440,8 +434,7 @@ The heuristic choice of $\sigma(v)$ (\ref{def:sigma_function}) aims to minimize 
 
 \subsection*{Example of the Structure}
 \label{subsec:structure_example}
-
-To illustrate the succinct representation, let us apply the principles from \autoref{subsec:structure_components} to the example DAG introduced in \autoref{fig:dag_example}. The resulting structure is visualized in \autoref{fig:succinct_dag_example}.
+To illustrate the succinct representation, we apply the principles from \autoref{subsec:structure_components} to the example DAG introduced in \autoref{fig:dag_example}. The resulting structure is visualized in \autoref{fig:succinct_dag_example}.
 
 \begin{figure}[htbp]
     \centering
@@ -451,20 +444,20 @@ To illustrate the succinct representation, let us apply the principles from \aut
         root_node/.style={base_node, fill=red!60, text=black}, % Pastel red fill
         implicit_node/.style={base_node}, % Standard style for implicit nodes
         explicit_node/.style={base_node, fill=green!40, text=black}, % Style for explicit nodes
-        data_label/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt}, % Adjusted data label style slightly
-        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!30}, % Normal edges faint
+        data_label/.style={font=\tiny\sffamily\bfseries, text=black, inner sep=1pt}, % Adjusted data label style slightly
+        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!15}, % Normal edges faint
         successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Highlighted successor edge
         ]
 
         % Nodes with weights and associated data (Offset I or O-set O)
         \node[root_node, label={[data_label, red!80!black, yshift=-0.3cm]below:{$\mathcal{I}_0=(0)$}}] (0) at (0, 2) {0};
-        \node[implicit_node, label={[data_label, yshift=-0.3cm]below:{$\mathcal{I}_1=(0)$}}] (1) at (1.5, 0) {1};
+        \node[implicit_node, label={[data_label, yshift=-0.1cm]below:{$\mathcal{I}_1=(0)$}}] (1) at (1.5, 0) {1};
         \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_3=(1)$}}] (3) at (1.5, 4) {3};
         \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_6=(1, 2)$}}] (6) at (3.5, 1.5) {6};
-        \node[implicit_node, label={[data_label, yshift=-0.3cm]below:{$\mathcal{I}_7=(1)$}}] (7) at (4.5, 0) {7};
+        \node[implicit_node, label={[data_label, yshift=-0.1cm]below:{$\mathcal{I}_7=(1)$}}] (7) at (4.5, 0) {7};
         \node[implicit_node, label={[data_label, xshift=-0.8cm, yshift=0.2cm]above right:{$\mathcal{I}_2=(0, 1, 2)$}}] (2) at (5.5, 4) {2};
         \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_9=(1, 2, 3)$}}] (9) at (6.5, 2) {9};
-        \node[explicit_node, label={[data_label, align=left, xshift=0.4cm]right:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (8) at (11.5, 3) {8};
+        \node[explicit_node, label={[data_label, align=left, xshift=0.8cm, yshift=-0.1cm]below:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (8) at (11.5, 3) {8};
         \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (5) at (9, 0.5) {5};
         \node[implicit_node, label={[data_label, xshift=-0.9cm, yshift=0.2cm]above right:{$\mathcal{I}_{10}=(1, 5, 6)$}}] (10) at (8.5, 5) {10};
 
@@ -501,7 +494,7 @@ To illustrate the succinct representation, let us apply the principles from \aut
         \draw [successor_edge] (10) -- (8); % sigma(10)=8
 
     \end{tikzpicture}
-    \caption{Illustration of the succinct DAG representation for the graph in \autoref{fig:dag_example}. Implicit nodes are shown with standard borders, while the explicit sink node (8) is shaded green. The source node (0) is red. Highlighted blue edges indicate the chosen successor $\sigma(v)$ for each implicit node $v$, selected according to \ref{def:sigma_function}. Labels show the stored associated data $\mathcal{D}[v]$: the full $\mathcal{O}$-set for the explicit node 8, and the offset sequence $\mathcal{I}_v$ for all implicit nodes.}
+    \caption{Illustration of the succinct DAG representation for the graph in \autoref{fig:dag_example}. Implicit nodes are shown with standard borders, while the explicit sink node (8) is shaded green. The source node (0) is red. Highlighted blue edges indicate the chosen successor $\sigma(v)$ for each implicit node $v$, selected according to \ref{def:sigma_function}. Labels show the stored associated data $\mathcal{D}[v]$: the full $\mathcal{O}$-set for the explicit node, and the offset sequence $\mathcal{I}_v$ for all implicit nodes.}
     \label{fig:succinct_dag_example}
 \end{figure}
 
@@ -521,7 +514,28 @@ The construction proceeds in three main steps:
           The offset sequences for all implicit nodes are computed similarly and displayed as labels in \autoref{fig:succinct_dag_example}.
 \end{enumerate}
 
-This structure stores $\mathcal{O}$-sets only for sinks, relying on successor paths and offset sequences for implicit nodes, enabling query evaluation via traversal as shown in \autoref{fig:query_path_node7}.
+This representation stores $\mathcal{O}$-sets only for explicit (sink) nodes. For implicit nodes, it stores references (via $\sigma$) and transformations (via $\mathcal{I}_v$ and weights $\mathcal{W}$), enabling reconstruction of path information, as detailed in the next section.
+
+
+
+% The example in \autoref{fig:query_path_node7} illustrates how a specific value from an implicit node's $\mathcal{O}$-set can be reconstructed. The query for $\mathcal{O}_7[0]$ triggers a traversal along the $\sigma$-defined path $7 \to 9 \to 5 \to 8$. During this traversal, the offset sequences ($\mathcal{I}_7, \mathcal{I}_9, \mathcal{I}_5$) are used to update the target index within the respective successor's $\mathcal{O}$-set representation, and the weights of the successors ($w(9), w(5), w(8)$) are accumulated. Once the explicit node (8) is reached, the value at the final computed index (7) is retrieved from the stored $\mathcal{O}_8$. Subtracting the accumulated weight sum (22) from this base value (30) yields the desired result (8).
+
+
+
+
+\section{Query Algorithms}
+\label{sec:query_algorithms}
+
+This section details the algorithms operating on the succinct DAG representation introduced in \autoref{sec:succinct_dag_representation}. The core idea is to reconstruct the necessary path weight information for a queried node $v$ by traversing the successor path starting from $v$ until an explicit node is reached, using the stored offset sequences and weights to transform the query along the way.
+
+\subsection{Reconstructing $\mathcal{O}$-Sets}
+\label{subsec:reconstructing_o_sets}
+
+To compute queries like \Rank{}, we first need a mechanism to retrieve elements of the $\mathcal{O}$-set for any given vertex $v$. If $v$ is explicit ($v \in V_E$), this is straightforward as $\mathcal{O}_v$ is stored directly (or in a recoverable compressed format) in $\mathcal{D}[v]$. If $v$ is implicit ($v \in V_I$), the value must be reconstructed recursively by following the successor path defined by $\sigma$.
+
+Consider the task of retrieving the $k$-th element of $\mathcal{O}_v$, denoted $\mathcal{O}_v[k]$. The stored offset sequence $\mathcal{I}_v = \mathcal{D}[v]$ provides the corresponding index $j_k = \mathcal{I}_v[k]$ in the $\mathcal{O}$-set of the successor $u = \sigma(v)$, such that $\mathcal{O}_v[k] = \mathcal{O}_u[j_k] - w(u)$. This relation forms the basis of a traversal process. We start at node $v$ with the target index $k$. We find the successor $u=\sigma(v)$ and update the target index to $j_k = \mathcal{I}_v[k]$. We also accumulate the weight $w(u)$. We repeat this process from $u$ with the new index $j_k$, following the successor path $v \to u \to \dots \to e$, where $e$ is the first explicit node encountered. Let the final index reached at node $e$ be $K$, and let the sum of weights accumulated along the path (excluding $w(v)$ but including $w(e)$ if $e \ne v$) be $W_{sum}$. The desired value $\mathcal{O}_v[k]$ is then calculated as $\mathcal{O}_e[K] - W_{sum}$.
+
+\autoref{fig:query_path_node7} provides a concrete illustration of this query process, showing the computation of $\mathcal{O}_7[0]$ using the succinct structure from \autoref{fig:succinct_dag_example}.
 
 \begin{figure}[htbp]
     \centering
@@ -566,25 +580,11 @@ This structure stores $\mathcal{O}$-sets only for sinks, relying on successor pa
         \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
 
     \end{tikzpicture}
-    \caption{Visualization of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$ using the succinct representation. The query follows the successor path $7 \to 9 \to 5 \to 8$. At each step from an implicit node $v$ to its successor $u=\sigma(v)$, the current index $k_{current}$ is updated using the stored offset $k_{next} = \mathcal{I}_v[k_{current}]$, and the weight $w(u)$ is added to an accumulator. The path starts with $k=0$ at node 7. It proceeds to node 9 using index $\mathcal{I}_7[0]=1$, accumulating $w(9)=9$. Then to node 5 using index $\mathcal{I}_9[1]=2$, accumulating $w(5)=5$ (total sum 14). Then to node 8 using index $\mathcal{I}_5[2]=7$, accumulating $w(8)=8$ (total sum 22). Node 8 is explicit, so the value at the final index 7, $\mathcal{O}_8[7]=30$, is retrieved. The result is obtained by subtracting the total accumulated weight: $30 - 22 = 8$. This correctly reconstructs $\mathcal{O}_7[0]$.}
+    \caption{Visualization of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$ using the succinct representation (\autoref{fig:succinct_dag_example}). The query follows the successor path $7 \to 9 \to 5 \to 8$. At each step from an implicit node $v$ to its successor $u=\sigma(v)$, the current index $k_{current}$ is updated using the stored offset $k_{next} = \mathcal{I}_v[k_{current}]$, and the weight $w(u)$ is added to an accumulator (`sum`). The path starts with $k=0$ at node 7. It proceeds to node 9 using index $\mathcal{I}_7[0]=1$, accumulating $w(9)=9$. Then to node 5 using index $\mathcal{I}_9[1]=2$, accumulating $w(5)=5$ (total sum 14). Then to node 8 using index $\mathcal{I}_5[2]=7$, accumulating $w(8)=8$ (total sum 22). Node 8 is explicit, so the value at the final index 7, $\mathcal{O}_8[7]=30$, is retrieved. The result is obtained by subtracting the total accumulated weight: $30 - 22 = 8$. This correctly reconstructs $\mathcal{O}_7[0]$.}
     \label{fig:query_path_node7}
 \end{figure}
 
-This representation avoids storing the full $\mathcal{O}$-sets for implicit nodes. Instead, it stores references (via $\sigma$) and transformations (via $\mathcal{I}_v$ and weights $\mathcal{W}$). Queries for implicit nodes require traversing the successor path until an explicit node is reached, as illustrated next.
-
-The example in \autoref{fig:query_path_node7} illustrates how a specific value from an implicit node's $\mathcal{O}$-set can be reconstructed. The query for $\mathcal{O}_7[0]$ triggers a traversal along the $\sigma$-defined path $7 \to 9 \to 5 \to 8$. During this traversal, the offset sequences ($\mathcal{I}_7, \mathcal{I}_9, \mathcal{I}_5$) are used to update the target index within the respective successor's $\mathcal{O}$-set representation, and the weights of the successors ($w(9), w(5), w(8)$) are accumulated. Once the explicit node (8) is reached, the value at the final computed index (7) is retrieved from the stored $\mathcal{O}_8$. Subtracting the accumulated weight sum (22) from this base value (30) yields the desired result (8).
-
-\section{Query Algorithms}
-\label{sec:query_algorithms}
-
-This section details the algorithms operating on the succinct DAG representation introduced in \autoref{sec:succinct_dag_representation}. We first present the algorithm for reconstructing elements of the $\mathcal{O}$-set for any given vertex, which forms the basis for computing the \Rank{} query.
-
-\subsection{Reconstructing $\mathcal{O}$-Sets}
-\label{subsec:reconstructing_o_sets}
-
-The core operation is to determine the value of the $k$-th element ($0$-indexed) of $\mathcal{O}_v$ for an arbitrary vertex $v$. If $v$ is explicit ($v \in V_E$), this involves directly accessing the stored representation $\mathcal{D}_E(v)$. If $v$ is implicit ($v \in V_I$), the value must be reconstructed by traversing the successor path defined by $\sigma$ until an explicit vertex is reached, accumulating weights and applying the offset indices stored in the $\mathcal{I}$ sequences along the path.
-
-We define the function $\textsc{GetValue}(v, k)$ to perform this task. It relies on accessing the structure components: weights $\mathcal{W}$, successor information $\Sigma$ (to get $\sigma(v)$ and check for explicit nodes), and associated data $\mathcal{D}$ (to retrieve $\mathcal{I}$ sequences or $\mathcal{O}$-sets).
+The general procedure to compute the $k$-th element ($0$-indexed) of $\mathcal{O}_v$ is formalized in Algorithm \ref{alg:get_value}. It implements the traversal and accumulation process described above, relying on accessing the structure components: weights $\mathcal{W}$, successor information $\Sigma$ (to get $\sigma(v)$ and check for explicit nodes), and associated data $\mathcal{D}$ (to retrieve $\mathcal{I}$ sequences or $\mathcal{O}$-sets)
 
 \begin{algorithm}
     \caption{$\textsc{GetValue}(v, k)$: Compute the $k$-th element of $\mathcal{O}_v$}
@@ -615,7 +615,7 @@ The correctness of Algorithm \ref{alg:get_value} follows inductively from the de
 \[ k \to j_k^{(v)} \to j_{j_k^{(v)}}^{(u)} \to \dots \to K \]
 then the algorithm computes
 \[x_K^{(e)} - \sum_{z \in \text{path } v \to e, z \neq v} w(z)\]
-which correctly yields $x_k^{(v)}$. The visualization in \autoref{fig:query_path_node7} provides a concrete example of this process.
+which correctly yields $x_k^{(v)}$.
 
 To reconstruct the entire $\mathcal{O}$-set for a vertex $v$, we can repeatedly call $\textsc{GetValue}(v, k)$ for $k=0, 1, \dots, |\mathcal{O}_v|-1$. This requires knowing the size $|\mathcal{O}_v|$. We assume this size information is either stored explicitly for each node or can be efficiently derived (e.g., potentially stored alongside $\mathcal{I}_v$ or $\mathcal{O}_v$ in the $\mathcal{D}$ component). Let $\textsc{Length}(v)$ be an operation that returns $|\mathcal{O}_v|$. This procedure is implemented in Algorithm \ref{alg:get_o_set}.
 
@@ -641,7 +641,7 @@ To reconstruct the entire $\mathcal{O}$-set for a vertex $v$, we can repeatedly 
 
 Equipped with the ability to reconstruct $\mathcal{O}_N$ for any query vertex $N$ via Algorithm \ref{alg:get_o_set}, we can now implement the \Rank{} query as specified in \ref{def:rank_dag}. The procedure involves two main steps: first, generate the initial set of intervals based on the elements of $\mathcal{O}_N$ and the weight $w(N)$; second, merge these potentially overlapping or adjacent intervals into a minimal set of disjoint intervals.
 
-The interval merging step is a standard procedure. Given a list of intervals sorted by their starting points, we can merge them in linear time. Algorithm \ref{alg:merge_intervals} describes this process.
+The interval merging step is a standard procedure. Given a list of intervals sorted by their starting points, we can merge them efficiently. The core idea is to iterate through the sorted intervals, merging the current interval with the next one if they overlap or are directly adjacent (i.e., the start of the next interval is less than or equal to the end of the current interval plus one). Algorithm \ref{alg:merge_intervals} formalizes this merging process, which requires linear time with respect to the number of initial intervals
 \begin{algorithm}[htbp]
     \caption{$\textsc{MergeIntervals}(Intervals)$: Merge sorted intervals}
     \label{alg:merge_intervals}
@@ -667,11 +667,14 @@ The interval merging step is a standard procedure. Given a list of intervals sor
     \end{algorithmic}
 \end{algorithm}
 
-% The overall Rank query algorithm combines $\mathcal{O}$-set reconstruction and interval merging.
 
-Algorithm \ref{alg:rank_dag} implements the Rank query defined in \ref{def:rank_dag}. It first reconstructs the necessary path weight information ($\mathcal{O}_N$), then applies the specified transformation to generate the initial set of intervals
-\[S_N = \bigcup_{x \in \mathcal{O}_N} [ \max(0, x - w_N + 1), x ]\]
-Finally, it employs the standard interval merging algorithm to produce the canonical representation $\mathcal{R}_N$ as a minimal set of disjoint intervals. Note that the sorting step (line 9) is necessary because intervals generated from consecutive elements in $\mathcal{O}_N$ are not guaranteed to have non-decreasing start points.
+% Algorithm \ref{alg:rank_dag} implements the Rank query defined in \ref{def:rank_dag}. It first reconstructs the necessary path weight information ($\mathcal{O}_N$), then applies the specified transformation to generate the initial set of intervals
+% \[S_N = \bigcup_{x \in \mathcal{O}_N} [ \max(0, x - w_N + 1), x ]\]
+% Finally, it employs the standard interval merging algorithm to produce the canonical representation $\mathcal{R}_N$ as a minimal set of disjoint intervals. Note that the sorting step (line 9) is necessary because intervals generated from consecutive elements in $\mathcal{O}_N$ are not guaranteed to have non-decreasing start points.
+
+Algorithm \ref{alg:rank_dag} implements the Rank query defined in \ref{def:rank_dag}. It begins by reconstructing the set $\mathcal{O}_N$ using $\textsc{GetOSet}$ (Algorithm \ref{alg:get_o_set}). Subsequently, for each path weight $x \in \mathcal{O}_N$, it generates the interval $[\max(0, x - w_N + 1), x]$ according to the transformation rule specified in Definition \ref{def:rank_dag}, where $w_N = \mathcal{W}[N]$. The union of these generated intervals constitutes the set $S_N$:
+\[ S_N = \bigcup_{x \in \mathcal{O}_N} [ \max(0, x - w_N + 1), x ]. \]
+Since these intervals may overlap or be adjacent, they are first sorted by their starting points. The sorted intervals are then passed to $\textsc{MergeIntervals}$ (Algorithm \ref{alg:merge_intervals}, line 10) to compute the final result $\mathcal{R}_N$, which is the minimal representation of $S_N$ as disjoint intervals, fulfilling the requirements of Definition \ref{def:rank_dag}.
 
 \begin{algorithm}
     \caption{$\mathrm{Rank}_G(N)$: Compute the Rank query for vertex $N$}
@@ -695,29 +698,29 @@ Finally, it employs the standard interval merging algorithm to produce the canon
 \end{algorithm}
 
 
+\subsubsection*{Example: Rank Query Computation}
+\label{subsubsec:rank_query_example_node2}
 
-\subsubsection*{Example: Rank Query Computation \label{subsubsec:rank_query_example_node2}}
+We illustrate the execution of Algorithm \ref{alg:rank_dag} to compute $\mathrm{Rank}_G(N)$ for vertex $N=2$. Referring to the example structure presented in \autoref{fig:dag_example} and \autoref{fig:succinct_dag_example}, this vertex has weight $w(2)=2$.
 
-Let's trace the execution of Algorithm \ref{alg:rank_dag} to compute $\mathrm{Rank}_G(N)$ for the only node with weight $2$, in the representation already shown in \autoref{fig:dag_example} and \autoref{fig:succinct_dag_example}.
+First, the computation requires the $\mathcal{O}$-set for node 2. The algorithm calls $\textsc{GetOSet}(2)$ (Algorithm \ref{alg:get_o_set}), which utilizes $\textsc{GetValue}(2, k)$ (Algorithm \ref{alg:get_value}) for $k=0, 1, \dots, |\mathcal{O}_2|-1$. As described previously (Section \ref{subsec:reconstructing_o_sets} and Figure \ref{fig:query_path_node7} show a similar process), $\textsc{GetValue}$ traverses the successor path determined by $\sigma$. For node 2, this path is $2 \to 10 \to 8$. By following this path, applying the offset indices $\mathcal{I}_2 = \mathcal{D}[2]$ and $\mathcal{I}_{10} = \mathcal{D}[10]$, accumulating the weights $w(10) = \mathcal{W}[10]$ and $w(8) = \mathcal{W}[8]$, and retrieving the base value from the explicit node's data $\mathcal{D}[8]=\mathcal{O}_8$, the set $\mathcal{O}_2 = \{5, 9, 11\}$ is reconstructed.
 
-First, the algorithm requires the $\mathcal{O}$-set for node 2. It calls $\textsc{GetOSet}(2)$ (Algorithm \ref{alg:get_o_set}), which in turn relies on $\textsc{GetValue}(2, k)$ (Algorithm \ref{alg:get_value}) for $k=0, 1, \dots, |\mathcal{O}_2|-1$. $\textsc{GetValue}$ traverses the successor path determined by $\sigma$. For node 2, the successor path is $2 \to 10 \to 8$. Following this path, applying the stored offset indices $\mathcal{I}_2, \mathcal{I}_{10}$, accumulating weights $w(10)$ and $w(8)$, and finally retrieving the base value from the explicit node $\mathcal{O}_8$, yields the set $\mathcal{O}_2 = \{5, 9, 11\}$.
+Next, the weight of the query node, $w_N = w(2) = 2$, is retrieved (from $\mathcal{W}[2]$).
 
-Next, the weight of the query node is retrieved: $w_N = w(2) = 2$.
-
-The algorithm then proceeds to generate the initial set of intervals. Each element $x$ from $\mathcal{O}_2$ maps to an interval $[\max(0, x - w_2 + 1), x]$:
+The algorithm then proceeds to generate the initial set of intervals. Each element $x \in \mathcal{O}_2$ is transformed into an interval $[\max(0, x - w_2 + 1), x]$ using the rule from Definition \ref{def:rank_dag}:
 \begin{align*}
     x=5 \quad  & \longrightarrow \quad [\max(0, 5 - 2 + 1), 5] = [4, 5]     \\
     x=9 \quad  & \longrightarrow \quad [\max(0, 9 - 2 + 1), 9] = [8, 9]     \\
     x=11 \quad & \longrightarrow \quad [\max(0, 11 - 2 + 1), 11] = [10, 11]
 \end{align*}
-This yields the initial list $Intervals = \{ [4, 5], [8, 9], [10, 11] \}$.
-
-Finally, $\textsc{MergeIntervals}$ (\ref{alg:merge_intervals}) is applied to this sorted list. The intervals $[8, 9]$ and $[10, 11]$ merge into $[8, 11]$. The interval $[4, 5]$ remains separate. The final result returned by $\mathrm{Rank}_G(2)$ is the minimal set of disjoint intervals $\mathcal{R}_2 = \{ [4, 5], [8, 11] \}$.
+This yields the initial list of intervals
+\[InitialIntervals = \{ [4, 5], [8, 9], [10, 11] \}.\]
+Finally, $\textsc{MergeIntervals}$ (Algorithm \ref{alg:merge_intervals}) is applied to this list\footnote{after sorting, which does not change the order in this specific case.}. The intervals $[8, 9]$ and $[10, 11]$ merge because $10 \le 9+1$, resulting in $[8, 11]$. The interval $[4, 5]$ remains distinct as $8 > 5+1$. The final result returned by $\mathrm{Rank}_G(2)$ is the minimal set of disjoint intervals $\mathcal{R}_2 = \{ [4, 5], [8, 11] \}$.
 
 \section{Compression Strategies}
 \label{sec:compression_strategies}
 
-The succinct representation detailed in \autoref{sec:succinct_dag_representation} comprises three main components: the weights array $\mathcal{W}$, the successor information array $\Sigma$, and the associated data array $\mathcal{D}$. While the partitioning strategy itself reduces the need to store large $\mathcal{O}$-sets explicitly for all nodes, the components $\mathcal{W}$, $\Sigma$, and especially $\mathcal{D}$ can still consume significant space. This section explores strategies for further compressing these components, leveraging the techniques discussed in \autoref{ch:Chapter2} and \autoref{ch:Chapter3}, as well as the implementation concepts from \autoref{app:compressed_intvec_engineering}. Our goal is to minimize the space occupancy while maintaining efficient query performance, particularly for the reconstruction step (\autoref{alg:get_value}) underlying the Rank query (\autoref{alg:rank_dag}).
+The succinct representation presented in \autoref{sec:succinct_dag_representation} consists of arrays for weights ($\mathcal{W}$), successor information ($\Sigma$), and associated data ($\mathcal{D}$). To further reduce the memory footprint beyond the gains achieved by the explicit/implicit node partitioning, this section discusses compression techniques for each component. We primarily consider variable-length integer coding (\autoref{sec:integer_coding}), Elias-Fano encoding (\autoref{sec:elias_fano_code}), and Run-Length Encoding (RLE), aiming to preserve efficient access needed for query evaluation (Algorithms~\ref{alg:get_value} and \ref{alg:rank_dag}), potentially using structures like the engineered compressed integer vectors from \autoref{app:compressed_intvec_engineering}.
 
 \subsection{Compressing Weights and Successor Information}
 \label{subsec:compressing_W_Sigma}
@@ -728,36 +731,38 @@ The components $\mathcal{W}$ and $\Sigma$ are arrays of integers.
     \item $\Sigma$: An array of length $n$, where $\Sigma[v]$ stores either the integer ID $\sigma(v) \in \{0, \dots, n-1\}$ if $v \in V_I$, or a special marker (which can also be represented as an integer) if $v \in V_E$. This is also a sequence of integers.
 \end{itemize}
 
-Given that both $\mathcal{W}$ and $\Sigma$ are sequences of integers, the variable-length integer coding schemes discussed in \autoref{sec:integer_coding} are natural candidates for compression. Techniques such as Unary, Elias Gamma/Delta, or Rice codes can be employed. The optimal choice depends heavily on the empirical distribution of the weights $w(v)$ and the successor IDs $\sigma(v)$ (and the chosen marker value) within the specific DAG instance.
+% Given that both $\mathcal{W}$ and $\Sigma$ are sequences of integers, the variable-length integer coding schemes discussed in \autoref{sec:integer_coding} are natural candidates for compression. Techniques such as Unary, Elias Gamma/Delta, or Rice codes can be employed. The optimal choice depends heavily on the empirical distribution of the weights $w(v)$ and the successor IDs $\sigma(v)$ (and the chosen marker value) within the specific DAG instance.
 
-A practical approach to implement this compression while preserving the necessary random access capability (i.e., efficiently retrieving $\mathcal{W}[v]$ or $\Sigma[v]$ for any $v$) is provided by the engineered \textsf{compressed-intvec} structure described in \autoref{app:compressed_intvec_engineering}. This structure allows selecting an appropriate integer codec (e.g., Gamma, Delta, Rice) based on the data distribution and employs a sampling mechanism to ensure $O(1)$ expected time access to any element $v$, at the cost of a typically sub-linear space overhead for the samples.
+% A practical approach to implement this compression while preserving the necessary random access capability (i.e., efficiently retrieving $\mathcal{W}[v]$ or $\Sigma[v]$ for any $v$) is provided by the engineered \textsf{compressed-intvec} structure described in \autoref{app:compressed_intvec_engineering}. This structure allows selecting an appropriate integer codec (e.g., Gamma, Delta, Rice) based on the data distribution and employs a sampling mechanism to ensure $O(1)$ expected time access to any element $v$, at the cost of a typically sub-linear space overhead for the samples.
 
-Alternatively, if the range of possible integer values in $\mathcal{W}$ or $\Sigma$ (i.e., the maximum weight or $n$) is sufficiently small to be considered a small alphabet $\alpha$, one could choose to use Wavelet Trees (\autoref{sec:wavelet_trees}), particularly efficient variants like Wavelet Matrices or Quad Wavelet Trees (\autoref{sec:wavelet_matrices_and_quad_vectors}). These structures provide efficient Access (retrieving the element at a given position) in $O(\log \alpha)$ time, where $\alpha$ is the size of the alphabet (the number of distinct values). However, for general graphs where weights or vertex counts $n$ can be large, the alphabet size may not be small, making direct integer coding via \textsf{compressed-intvec} a more generally applicable starting point.
+% Alternatively, if the range of possible integer values in $\mathcal{W}$ or $\Sigma$ (i.e., the maximum weight or $n$) is sufficiently small to be considered a small alphabet $\alpha$, one could choose to use Wavelet Trees (\autoref{sec:wavelet_trees}), particularly efficient variants like Wavelet Matrices or Quad Wavelet Trees (\autoref{sec:wavelet_matrices_and_quad_vectors}). These structures provide efficient Access (retrieving the element at a given position) in $O(\log \alpha)$ time, where $\alpha$ is the size of the alphabet (the number of distinct values). However, for general graphs where weights or vertex counts $n$ can be large, the alphabet size may not be small, making direct integer coding via \textsf{compressed-intvec} a more generally applicable starting point.
+
+Since both $\mathcal{W}$ and $\Sigma$ are integer sequences, variable-length coding schemes from \autoref{sec:integer_coding} (e.g., Unary, Elias Gamma/Delta, Rice codes) are applicable. The choice of the best code depends on the observed distribution of weights and successor IDs.
+
+To combine compression with efficient random access (retrieving $\mathcal{W}[v]$ or $\Sigma[v]$), the \textsf{compressed-intvec} structure (\autoref{app:compressed_intvec_engineering}) is a suitable implementation choice. It allows selecting an appropriate integer codec and uses sampling to achieve constant expected time access, with sub-linear space overhead for samples.
+
+Alternatively, if the range of values (maximum weight or $n$) is small, treating them as symbols from a small alphabet $\alpha$ allows using Wavelet Trees (\autoref{sec:wavelet_trees}) or related structures (\autoref{sec:wavelet_matrices_and_quad_vectors}). These offer $O(\log |\alpha|)$ access time. However, for general graphs with potentially large weights or vertex counts, direct integer coding via \textsf{compressed-intvec} is often more practical.
 
 \subsection{Compressing Associated Data Sequences}
 \label{subsec:compressing_associated_data_sequences}
 
-The associated data component $\mathcal{D}$ holds the core path weight information, represented as sequences tied to each vertex. For an explicit vertex $v \in V_E$, $\mathcal{D}$ contains the $\mathcal{O}$-set $\mathcal{O}_v = (x_0, x_1, \dots, x_{m-1})$, where $m = |\mathcal{O}_v|$. This sequence consists of non-negative integers and, by Definition \ref{def:o_set}, is strictly increasing ($0 \le x_0 < x_1 < \dots < x_{m-1}$).
-For an implicit vertex $v \in V_I$, $\mathcal{D}$ contains the offset sequence $\mathcal{I}_v = (j_0, j_1, \dots, j_{m-1})$, where $m = |\mathcal{O}_v|$. As established by the reconstruction rule $x_k = y_{j_k} - w(u)$ and the fact that $\mathcal{O}_v$ and $\mathcal{O}_u$ (where $u=\sigma(v)$) are themselves strictly increasing sequences, the offset sequence $\mathcal{I}_v$ is also strictly increasing ($0 \le j_0 < j_1 < \dots < j_{m-1}$).
+The associated data component $\mathcal{D}$ stores sequences that encode path weight information. Specifically, for an explicit vertex $v \in V_E$, $\mathcal{D}$ holds the $\mathcal{O}$-set $\mathcal{O}_v = (x_0, \dots, x_{m-1})$, and for an implicit vertex $v \in V_I$, it holds the offset sequence $\mathcal{I}_v = (j_0, \dots, j_{m-1})$. Both $\mathcal{O}_v$ and $\mathcal{I}_v$ are sequences of non-negative integers which are strictly increasing ($x_k < x_{k+1}$ and $j_k < j_{k+1}$ respectively), as established by their definitions and construction rules.
 
-The strictly monotonic nature of both $\mathcal{O}_v$ and $\mathcal{I}_v$ makes them highly suitable for compression methods designed for such sequences. Elias-Fano encoding (\autoref{sec:elias_fano_code}), already discussed, provides excellent compression guarantees and support for efficient random access and predecessor/successor queries.
-
-Alternatively, especially if sequences exhibit significant clustering (long stretches of consecutive integers), Run-Length Encoding (RLE) can offer substantial compression. We focus here on describing the RLE approach as applied to these strictly monotonic sequences.
+This strictly monotonic property makes these sequences suitable for specialized compression techniques. Elias-Fano encoding (\autoref{sec:elias_fano_code}), discussed previously, is a strong candidate offering both good compression ratios and efficient support for operations like random access. An alternative approach, particularly effective when sequences contain long stretches of consecutive integers, is Run-Length Encoding (RLE). We detail the RLE representation below.
 
 \subsubsection*{Run-Length Encoding (RLE) Representation}
+Run-Length Encoding compresses a monotonic sequence by identifying and representing consecutive values efficiently. Consider a generic strictly increasing sequence $Y = (y_0, y_1, \dots, y_{m-1})$. A \emph{run} is a maximal contiguous subsequence $(y_i, y_{i+1}, \dots, y_{i+l-1})$ where each element is exactly one greater than its predecessor ($y_{j+1} = y_j + 1$ for $i \le j < i+l-1$). A run can have length $l=1$. RLE represents the sequence $Y$ by encoding each run using its starting value and its length.
 
-Run-Length Encoding exploits consecutive values within a monotonic sequence. Consider a generic strictly increasing sequence $Y = (y_0, y_1, \dots, y_{m-1})$. A \emph{run} is defined as a maximal contiguous subsequence of the form $(y_i, y_{i+1}, \dots, y_{i+l-1})$ such that $y_{j+1} = y_j + 1$ for all $j$ where $i \le j < i+l-1$. Note that a run can have length $l=1$ if an element does not have a consecutive successor in the sequence. The RLE approach encodes $Y$ by representing each run by its starting value and its length.
-
-Formally, the RLE of $Y$ generates two sequences:
+The RLE process generates two auxiliary sequences:
 \begin{itemize}
-    \item The \emph{run starts sequence}, $S = (s_1, s_2, \dots, s_p)$, where $s_i$ is the first value ($y_{i'}$) of the $i$-th run identified in $Y$. Due to the maximality of runs and the strict monotonicity of $Y$, $S$ is also a strictly increasing sequence: $s_1 < s_2 < \dots < s_p$.
-    \item The \emph{run lengths sequence}, $L = (l_1, l_2, \dots, l_p)$, where $l_i \ge 1$ is the number of elements (length) of the $i$-th run. $L$ is a sequence of positive integers, possessing no inherent monotonicity property.
+    \item The \emph{run starts sequence}, $S = (s_1, s_2, \dots, s_p)$, contains the first value $s_i$ of the $i$-th run in $Y$. Since runs are maximal and $Y$ is strictly increasing, $S$ is also strictly increasing.
+    \item The \emph{run lengths sequence}, $L = (l_1, l_2, \dots, l_p)$, contains the length $l_i \ge 1$ of the $i$-th run. $L$ is a sequence of positive integers with no other guaranteed properties.
 \end{itemize}
-The pair $(S, L)$ uniquely determines the original sequence $Y$. Algorithm \ref{alg:rle_encode} provides the procedure for generating $S$ and $L$.
+The pair $(S, L)$ allows for the exact reconstruction of $Y$. Algorithm \ref{alg:rle_encode} outlines the procedure to compute $S$ and $L$ from $Y$.
 
 \begin{algorithm}[htbp]
     \caption{$\textsc{EncodeRLE}(Y)$: Generate RLE components for a monotonic sequence}
-    \label{alg:rle_encode} % Changed label to avoid duplicate
+    \label{alg:rle_encode}
     \small
     \begin{algorithmic}[1]
         \Require Monotonic sequence $Y = (y_0, y_1, \dots, y_{m-1})$, where $m = |Y|$.
@@ -787,6 +792,7 @@ The space efficiency of RLE hinges on effectively compressing the resulting sequ
 The run starts sequence $S = (s_1, \dots, s_p)$ is strictly monotonic. Consequently, it is an ideal candidate for Elias-Fano encoding (\autoref{sec:elias_fano_code}).
 
 The run lengths sequence $L = (l_1, \dots, l_p)$ is a sequence of positive integers without guaranteed structure. Standard variable-length integer codes (\autoref{sec:integer_coding}), such as Elias Gamma or Delta codes, can be applied. In practice, employing a structure like the \textsf{compressed-intvec} (\autoref{app:compressed_intvec_engineering}) allows choosing an appropriate codec and provides efficient random access.
+
 
 \paragraph{Random Access in RLE}
 Retrieving the element $y_k$ (the element at index $k$ in the original sequence $Y$, $0 \le k < m$) from the RLE representation $(S, L)$ requires identifying the run to which $y_k$ belongs. This necessitates finding the unique run index $i^*$ (where $1 \le i^* \le p$) such that:
@@ -827,6 +833,7 @@ The choice between direct Elias-Fano encoding and Run-Length Encoding (RLE) for 
 On the other hand, if sequences are sparse or lack significant runs ($p$ is close to $m$), direct Elias-Fano is likely more straightforward and potentially more space-efficient.
 
 Regardless of the chosen compression method, representing the entire associated data component $\mathcal{D}$ practically involves concatenating the compressed representations of all sequences ($\{\mathcal{D}_E(v)\}_{v \in V_E}$ and $\{\mathcal{D}_I(v)\}_{v \in V_I}$) into a single buffer. An auxiliary index structure is then needed to map each vertex ID $v$ to the starting position and metadata of its compressed sequence. The space overhead for this index is typically negligible compared to the compressed data itself
+
 
 \section{Below the Entropy Lower Bound}
 \label{sec:below_entropy}

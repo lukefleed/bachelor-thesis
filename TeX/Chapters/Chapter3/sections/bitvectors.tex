@@ -7,15 +7,17 @@ Our examination proceeds in three stages. First, we consider the foundational ca
 \section{Bitvectors} \label{sec:bitvectors}
 We begin our study with the most fundamental sequence type, the \emph{bitvector} $B[1..n]$, a sequence of $n$ bits from $\{0, 1\}$. Our primary objective is to support two essential query operations on $B$ efficiently: \emph{\textsf{rank}}$_b(B, i)$, which counts the occurrences of bit $b$ in the prefix $B[1..i]$, and \emph{\textsf{select}}$_b(B, i)$, which finds the index of the $i$-th occurrence of bit $b$ in $B$. While these operations can be answered by scanning $B$ in $O(n)$ time, we seek constant-time solutions, $O(1)$, by augmenting $B$ with \emph{succinct} auxiliary data structures. These structures should occupy $o(n)$ bits, leading to a total space usage of $n+o(n)$ bits when storing $B$ explicitly. We now formally define these operations.
 
-\begin{definition}[Rank]\label{def:rank}
-    Given a bitvector $B[1..n]$, the \textbf{rank} of an index $i$ ($1 \le i \le n$) relative to a bit $c \in \{0, 1\}$ is the number of occurrences of $c$ in the prefix $B[1..i]$. We denote it as $rank_c(i)$.
+\begin{definition}[\textsf{Rank}]\label{def:rank}
+    Given a bitvector $B[1..n]$, the \textbf{\textsf{rank}} of an index $i$ ($1 \le i \le n$) relative to a bit $c \in \{0, 1\}$ is the number of occurrences of $c$ in the prefix $B[1..i]$. We denote it as $rank_c(i)$.
     Specifically, for $c=1$:
-    \[rank_1(i) = \sum_{j=1}^{i} B[j]\]
+    \begin{equation*}
+        rank_1(i) = \sum_{j=1}^{i} B[j]
+    \end{equation*}
     The rank for $c=0$ can be derived as $rank_0(i) = i - rank_1(i)$.
 \end{definition}
 
-\begin{definition}[Select]\label{def:select}
-    Given a bitvector $B[1..n]$, the \textbf{select} of the $i$-th occurrence of a bit $c \in \{0, 1\}$ is the index $j$ such that $B[j]=c$ and $rank_c(j) = i$. We denote it as $select_c(i)$. If the $i$-th occurrence of $c$ does not exist, $select_c(i)$ is undefined (or returns a special value). Unlike rank, $select_0(i)$ cannot generally be computed directly from $select_1(i)$ in constant time.
+\begin{definition}[\textsf{Select}]\label{def:select}
+    Given a bitvector $B[1..n]$, the \textbf{\textsf{select}} of the $i$-th occurrence of a bit $c \in \{0, 1\}$ is the index $j$ such that $B[j]=c$ and $rank_c(j) = i$. We denote it as $select_c(i)$. If the $i$-th occurrence of $c$ does not exist, $select_c(i)$ is undefined (or returns a special value). Unlike \textsf{rank}, $select_0(i)$ cannot generally be computed directly from $select_1(i)$ in constant time.
 \end{definition}
 
 \begin{figure}[htbp]
@@ -47,7 +49,7 @@ We begin our study with the most fundamental sequence type, the \emph{bitvector}
         \coordinate (rank_arrow_end) at ([xshift=-0.5mm,yshift=0.5mm]B15.south east); % Point just inside border
         \draw[->, red, thick] (rank_arrow_start) -- (rank_arrow_end);
         % Place text below the arrow start
-        \node[red, font=\footnotesize, align=center, anchor=north] at (rank_arrow_start) {$rank_1(15) = 9$};
+        \node[red, font=\footnotesize, align=center, anchor=north] at (rank_arrow_start) {$\textsf{rank}_1(15) = 9$};
         % Highlight the prefix B[1..15] slightly
         \foreach \idx in {1,...,15} {
                 \fill[red!10, opacity=0.5] (B\idx.south west) rectangle (B\idx.north east);
@@ -59,26 +61,29 @@ We begin our study with the most fundamental sequence type, the \emph{bitvector}
         \coordinate (select_arrow_end) at ([yshift=-0.5mm]B12.north); % Point just inside border
         \draw[->, blue, thick] (select_arrow_start) -- (select_arrow_end);
         % Place text above the arrow start
-        \node[blue, font=\footnotesize, align=center, anchor=south] at (select_arrow_start) {$select_1(7) = 12$};
+        \node[blue, font=\footnotesize, align=center, anchor=south] at (select_arrow_start) {$\textsf{select}_1(7) = 12$};
         % Highlight the 7th '1' (at index 12)
         \draw[blue, thick, rounded corners] (B12.north west) rectangle (B12.south east);
     \end{tikzpicture}
-    \caption{Example of a bitvector $B[1..20]$. The prefix $B[1..15]$ (shaded red) contains 9 ones, so $rank_1(15)=9$. The 7th $1$ (circled blue) occurs at index 12, so $select_1(7)=12$.}
+    \caption{Example of a bitvector $B[1..20]$. The prefix $B[1..15]$ (shaded red) contains 9 ones, so $\textsf{rank}_1(15)=9$. The 7th $1$ (circled blue) occurs at index 12, so $\textsf{select}_1(7)=12$.}
     \label{fig:bitvector_example}
 \end{figure}
 
-\begin{example}[Rank and Select on a plain bitvector]
+\begin{example}[\textsf{Rank} and \textsf{Select} on a plain bitvector]
     Let $B$ be the bitvector of length $n=20$ shown in Figure \ref{fig:bitvector_example}:
-    \[ B = 10110100110101110010 \]
-
+    \begin{equation*}
+        B = 10110100110101110010
+    \end{equation*}
     \begin{itemize}
-        \item $rank_1(15)$: We count the number of 1s in the prefix $B[1..15]$.
-              \[ B[1..15] = \underbrace{101101001101011}_{15 \text{ bits}} \]
-              By scanning, there are 9 ones. Therefore, $rank_1(15) = 9$.
+        \item $\textsf{rank}_1(15)$: We count the number of 1s in the prefix $B[1..15]$.
+              \begin{equation*}
+                  B[1..15] = \underbrace{101101001101011}_{15 \text{ bits}}
+              \end{equation*}
+              By scanning, there are 9 ones. Therefore, $\textsf{rank}_1(15) = 9$.
 
-        \item $select_1(7)$: We find the index of the 7th occurrence of $1$ in $B$.
+        \item $\textsf{select}_1(7)$: We find the index of the 7th occurrence of $1$ in $B$.
               Scanning $B$: the 1st $1$ is at index 1, 2nd at 3, 3rd at 4, 4th at 6, 5th at 9, 6th at 10, and the 7th $1$ is at index 12.
-              Therefore, $select_1(7) = 12$.
+              Therefore, $\textsf{select}_1(7) = 12$.
     \end{itemize}
     These manual calculations illustrate the definitions. Efficient data structures avoid such linear scans.
 \end{example}
@@ -98,9 +103,13 @@ A fundamental approach to support \textsf{rank} queries in constant time using s
 The structure typically employs two levels of blocking on top of the original bitvector $B$. First, $B$ is conceptually divided into \emph{superblocks} of size $Z$. Second, each superblock is further divided into \emph{blocks} of size $z$. Common parameter choices yielding $o(n)$ overhead are $Z = \Theta(\log^2 n)$ and $z = \Theta(\log n)$, for example $Z = \lfloor \log^2 n \rfloor$ and $z = \lfloor (1/2) \log n \rfloor$. We assume for simplicity that $z$ divides $Z$ and $Z$ divides $n$.
 
 Two auxiliary arrays store precomputed rank information. The first array, $R_S$, stores the absolute rank at the beginning of each superblock:
-\[R_S[k] = \textsf{rank}_1(B, k \cdot Z) \qquad k = 0, \dots, n/Z - 1\]
+\begin{equation*}
+    R_S[k] = \textsf{rank}_1(B, k \cdot Z) \qquad k = 0, \dots, n/Z - 1
+\end{equation*}
 The second array, $R_B$, stores the rank within a superblock at the beginning of each block, relative to the start of the superblock. Specifically, for the $l$-th block overall, which belongs to superblock $k = \lfloor l \cdot z / Z \rfloor$
-\[ R_B[l] = \textsf{rank}_1(B, l \cdot z) - \textsf{rank}_1(B, k \cdot Z)\]
+\begin{equation*}
+    R_B[l] = \textsf{rank}_1(B, l \cdot z) - \textsf{rank}_1(B, k \cdot Z)
+\end{equation*}
 Finally, a \emph{lookup table}, often denoted $T$, is used to determine the rank within a small block of size $z$. For every possible $z$-bit pattern $p$, and every position $j \in [1, z]$, $T[p][j]$ stores the value $\textsf{rank}_1(p, j)$, i.e., the number of set bits in the first $j$ positions of the pattern $p$.
 
 Figure \ref{fig:RRR} shows a visual representation of the hierarchical data structure.
@@ -172,18 +181,18 @@ The lookup table $T$ allows determining the number of set bits within any prefix
     \centering
     \begin{tabular}{|c|c|c|c|}
         % \hline
-        %                & \multicolumn{3}{c|}{\textbf{cumulative rank at bit index}}                                           \\
+        %                & \multicolumn{3}{c|}{cumulative rank at bit index}                                           \\
         \hline
-        \textbf{block} & $\mathbf{r_{i,0}}$ & $\mathbf{r_{i,1}}$ & $\mathbf{r_{i,2}}$ \\
+        block & $\mathbf{r_{i,0}}$ & $\mathbf{r_{i,1}}$ & $\mathbf{r_{i,2}}$ \\
         \hline
-        000            & 0                  & 0                  & 0                  \\
-        001            & 0                  & 0                  & 1                  \\
-        010            & 0                  & 1                  & 1                  \\
-        011            & 0                  & 1                  & 2                  \\
-        100            & 1                  & 1                  & 1                  \\
-        101            & 1                  & 1                  & 2                  \\
-        110            & 1                  & 2                  & 2                  \\
-        111            & 1                  & 2                  & 3                  \\
+        000   & 0                  & 0                  & 0                  \\
+        001   & 0                  & 0                  & 1                  \\
+        010   & 0                  & 1                  & 1                  \\
+        011   & 0                  & 1                  & 2                  \\
+        100   & 1                  & 1                  & 1                  \\
+        101   & 1                  & 1                  & 2                  \\
+        110   & 1                  & 2                  & 2                  \\
+        111   & 1                  & 2                  & 3                  \\
         \hline
     \end{tabular}
     \caption{Example of a lookup table $T$ for intra-block rank computation with $z = 3$. Each row corresponds to a possible $z$-bit pattern $p$. The cell for pattern $p$ and index $j$ stores $\textsf{rank}_1(p, j)$.} \label{tab:lookup}
@@ -215,9 +224,13 @@ We can state the following theorem regarding the space and time complexity \cite
     We verify that the space complexity for both directories $R_S$ and $R_B$ is sublinear, i.e., $o(n)$. For $R_S$, we have $O(n / \log n)$. As $n \to \infty$, $(n / \log n) / n = 1 / \log n \to 0$. For $R_B$, we have $O(n \log \log n / \log n)$. As $n \to \infty$, $(n \log \log n / \log n) / n = \log \log n / \log n \to 0$. Thus, both Space$(R_S)$ and Space$(R_B)$ are $o(n)$.
 
     Third, the \emph{Intra-Block Rank Mechanism ($T$)} is responsible for determining the rank within any $z$-bit block in constant time. A direct precomputation approach involves storing, for each of the $2^z$ possible $z$-bit patterns $p$ and each position $j \in [1, z]$, the value $\textsf{rank}_1(p, j)$. The space requirement for such a naive table would be:
-    \[ \text{Space}(\text{Naive } T) = O(2^z \cdot z \cdot \log z). \]
+    \begin{equation*}
+        \text{Space}(\text{Naive } T) = O(2^z \cdot z \cdot \log z).
+    \end{equation*}
     Substituting $z = \lfloor (1/2) \log n \rfloor$, this becomes
-    \[ O(2^{(1/2)\log n} \log n \log \log n) = O(\sqrt{n} \log n \log \log n) \]
+    \begin{equation*}
+        O(2^{(1/2)\log n} \log n \log \log n) = O(\sqrt{n} \log n \log \log n)
+    \end{equation*}
     which is not sublinear ($o(n)$). The crucial insight, originally provided by Jacobson \cite{Jacobson}, is that this intra-block rank functionality can indeed be implemented using auxiliary structures occupying only $o(n)$ bits while still supporting $O(1)$ query time. This often involves techniques like further table compression or specialized indexing strategies not detailed here, but whose existence and performance guarantees we rely upon.
 
     The total auxiliary space is the sum of the space complexities for $R_S$, $R_B$, and the efficient implementation of $T$. This sum is $O(n / \log n) + O(n \log \log n / \log n) + o(n)$, which simplifies to $o(n)$. Therefore, the total space including the original bitvector is $n + o(n)$ bits.
@@ -233,7 +246,9 @@ Retrieve the precomputed ranks: $rank_S = R_S[k]$ from the superblock directory 
 Access the $z$-bit block $p = B[l \cdot z + 1 .. (l+1) \cdot z]$ from the original bitvector $B$. This access takes $O(1)$ time on a Word RAM where the word size $w \ge \log n \ge z$.
 Compute the intra-block rank $rank_T = T(p, j)$ using the $o(n)$-space constant-time mechanism $T$.
 The final rank is obtained by summing these components:
-\[ \textsf{rank}_1(B, i) = rank_S + rank_B + rank_T. \]
+\begin{equation*}
+    \textsf{rank}_1(B, i) = rank_S + rank_B + rank_T.
+\end{equation*}
 All steps involve only constant-time operations (arithmetic, array lookups, memory access of $z$ bits, and the $T$ lookup), hence the total query time is $O(1)$.
 
 The query $\textsf{rank}_0(B, i)$ is then computed simply as $i - \textsf{rank}_1(B, i)$, also in constant time.
@@ -241,13 +256,17 @@ The query $\textsf{rank}_0(B, i)$ is then computed simply as $i - \textsf{rank}_
 \subsection{\textsf{Select}} \label{subsec:select}
 
 The \textsf{select} operation serves as the inverse to \textsf{rank}. Formally, for a bitvector $B$ and an integer $i$, $\textsf{select}_b(B, i)$ returns the index $j$ such that $B[j] = b$ and $\textsf{rank}_b(B, j) = i$. This relationship can be expressed as:
-\[ \textsf{rank}_b(B, \textsf{select}_b(B, i)) = i \]
+\begin{equation*}
+    \textsf{rank}_b(B, \textsf{select}_b(B, i)) = i
+\end{equation*}
 provided the $i$-th occurrence of $b$ exists.
 
 Supporting \textsf{select} queries efficiently requires a different auxiliary structure compared to the fixed-size blocking used for \textsf{rank}. An approach providing constant-time select within this space framework was developed by Clark \cite{clark1997compact}. It relies on a multi-level hierarchy guided by the number of set bits (specifically, 1s, as \textsf{select}$_0$ can be handled symmetrically or via \textsf{select}$_1$ on the complemented bitvector with additional rank structures). The core idea is to partition the bitvector $B$ based on the cumulative count of 1s and use multiple levels of indexing structures to locate the $i$-th 1 quickly.
 
 We begin by designing the first level of the select data structure. The bitvector $B$ is conceptually divided into variable-length \emph{chunks}, such that each chunk (except possibly the last) contains exactly $K$ set bits. A typical choice is $K = \Theta(\log n \log \log n)$. We store an array $P_1$ containing the starting position (index in $B$) of each chunk. The number of chunks is $\lceil m/K \rceil$, where $m = \textsf{rank}_1(B, n)$ is the total number of 1s. The space for $P_1$ is
-\[O(m/K \cdot \log n) = O(n / (\log n \log \log n) \cdot \log n) = O(n / \log \log n)\]
+\begin{equation*}
+    O(m/K \cdot \log n) = O(n / (\log n \log \log n) \cdot \log n) = O(n / \log \log n)
+\end{equation*}
 which is $o(n)$. Given a query $\textsf{select}_1(i)$, the relevant chunk index can be determined as $k = \lceil i/K \rceil$, and its starting position retrieved from $P_1$.
 
 The second step addresses how to find the target 1 within its chunk. Let the length of a chunk be $Z$. We categorize chunks into two types based on their density. A chunk is considered \emph{sparse} if its length $Z$ is large compared to $K$, specifically $Z > K^2$. Conversely, a chunk is \emph{dense} if $Z \le K^2$. For sparse chunks, we can afford to store the relative positions (offsets from the chunk's start) of the $K$ set bits explicitly. The total space required across all sparse chunks for these offsets can be shown to be $o(n)$ \cite{clark1997compact}. If the target 1 falls within a sparse chunk, its position is found by calculating its relative rank $i' = (i-1) \pmod K + 1$ and retrieving the $i'$-th stored offset. For dense chunks ($Z \le K^2$), explicitly storing offsets is too costly. Instead, we introduce a second level of structure within these dense chunks.
@@ -259,7 +278,7 @@ Finally, we need to handle the sub-chunks. Let a sub-chunk have length $z$. Simi
 The overall query process involves navigating this hierarchy. The algorithm can be summarized by the following pseudocode.
 
 \begin{algorithm}[hbtp]
-    \caption{$Select_1$ Algorithm (Conceptual)} \label{alg:select}
+    \caption{$Select_1$ Algorithm} \label{alg:select}
     \begin{algorithmic}[1] \small
         \Function{$Select_1$}{$B, i$}
         \State $k \gets \lceil i/K \rceil$
@@ -303,7 +322,7 @@ As for the rank data structure, we can state the following theorem:
 
 \subsection{Compressing Sparse Bitvectors with Elias-Fano} \label{subsec:elias_fano_compression}
 
-The rank and select structures discussed previously (\ref{subsec:rank}, \ref{subsec:select}) operate on the plain bitvector $B[1..n]$, achieving a total space occupancy of $n + o(n)$ bits. However, in many practical scenarios, the bitvector $B$ exhibits a skewed distribution, containing significantly fewer 1s than 0s (or vice-versa). Let $m = \textsf{rank}_1(B, n)$ be the total number of set bits. When $m \ll n$, storing the full $n$-bit vector is inefficient.
+The \textsf{rank} and \textsf{select} structures discussed previously (\ref{subsec:rank}, \ref{subsec:select}) operate on the plain bitvector $B[1..n]$, achieving a total space occupancy of $n + o(n)$ bits. However, in many practical scenarios, the bitvector $B$ exhibits a skewed distribution, containing significantly fewer 1s than 0s (or vice-versa). Let $m = \textsf{rank}_1(B, n)$ be the total number of set bits. When $m \ll n$, storing the full $n$-bit vector is inefficient.
 
 In such sparse settings, we can leverage compression techniques that exploit the low density of set bits. The Elias-Fano representation, previously introduced in Section~\ref{sec:elias_fano_code}, provides a highly effective method for this task. Recall that Elias-Fano encodes a monotonically increasing sequence of $m$ integers up to a maximum value $n$. We can represent the bitvector $B$ by encoding the sequence of indices $\{ i \mid B[i]=1 \}$.
 
@@ -317,7 +336,7 @@ While the asymptotic analysis guarantees $O(1)$ query time and $o(n)$ extra spac
 
 A particularly effective approach for optimizing \textsf{rank} and \textsf{select} implementations leverages \emph{broadword programming} (also known as \textsc{Swar} - \textsc{Simd} Within A Register). This technique treats machine registers as small parallel processors, performing operations on multiple data fields packed within a single word using standard arithmetic and logical instructions. Vigna \cite{vigna2008broadword} applied these techniques to \textsf{rank} and \textsf{select} queries, leading to highly efficient practical implementations.
 
-The \texttt{rank9} structure proposed by Vigna \cite{vigna2008broadword} exemplifies this approach. It employs a two-level hierarchy, similar in concept to the structure in Section~\ref{subsec:rank}, but critically relies on broadword algorithms for the final \textsf{rank} computation within a machine word (specifically, sideways addition or population count). Instead of large precomputed lookup tables for small blocks, \texttt{rank9} uses carefully designed constants and bitwise operations (detailed in Algorithm 1 of \cite{vigna2008broadword}) to compute the rank within a 64-bit word quickly. This typically involves storing relative counts for sub-blocks (e.g., seven 9-bit counts within a 64-bit word) in the second level. The advantages of this approach include speed, resulting from the exploitation of fast register operations and the avoidance of large table lookups, often outperforming other methods in practice. It also offers space efficiency, requiring relatively low overhead (typically around 25\% on top of the original bitvector $B$) mainly for the cumulative counts. Furthermore, broadword algorithms are generally branch-free, benefiting performance on modern pipelined processors by avoiding potential misprediction penalties.
+The \texttt{rank9} structure proposed by Vigna \cite{vigna2008broadword} exemplifies this approach. It employs a two-level hierarchy, similar in concept to the structure in Section~\ref{subsec:rank}, but critically relies on broadword algorithms for the final \textsf{rank} computation within a machine word (specifically, sideways addition or population count). Instead of large precomputed lookup tables for small blocks, \texttt{rank9} uses carefully designed constants and bitwise operations (detailed in Algorithm 1 of \cite{vigna2008broadword}) to compute the \textsf{rank} within a 64-bit word quickly. This typically involves storing relative counts for sub-blocks (e.g., seven 9-bit counts within a 64-bit word) in the second level. The advantages of this approach include speed, resulting from the exploitation of fast register operations and the avoidance of large table lookups, often outperforming other methods in practice. It also offers space efficiency, requiring relatively low overhead (typically around 25\% on top of the original bitvector $B$) mainly for the cumulative counts. Furthermore, broadword algorithms are generally branch-free, benefiting performance on modern pipelined processors by avoiding potential misprediction penalties.
 
 Similarly, Vigna \cite{vigna2008broadword} developed broadword algorithms for selection within a word (Algorithm 2 in the paper). The companion \texttt{select9} structure integrates these intra-word selection capabilities with a multi-level inventory scheme. The objective of \texttt{select9} is to support high-performance selection queries, often achieving near constant-time execution, through hierarchical indexing combined with efficient broadword search for the final location. This capability involves an additional space cost, typically measured at approximately 37.5\% relative to the \texttt{rank9} structure.
 

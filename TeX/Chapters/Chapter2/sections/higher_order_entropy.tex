@@ -1,29 +1,26 @@
 \section{Higher Order Entropy} \label{sec:higher_order_entropy}
 
-\noindent The zero-order empirical entropy $\mathcal{H}_0(S)$, discussed in the previous section, provides a useful baseline for compression by considering the frequency of individual symbols. However, it operates under the implicit assumption that symbols are generated independently, a condition seldom met in practice, especially for data like natural language text. For instance, the probability of encountering the letter 'u' in English text dramatically increases if the preceding letter is 'q'. To capture such dependencies and obtain a more accurate measure of the information content considering local context, we introduce the concept of \emph{higher-order empirical entropy}. This approach conditions the probability of a symbol's occurrence on the sequence of $k$ symbols that immediately precede it.
+\noindent The zero-order empirical entropy $\mathcal{H}_0(S)$, discussed in the previous section, provides a useful baseline for compression by considering the frequency of individual symbols. However, it operates under the implicit assumption that symbols are generated independently, a condition seldom met in practice, especially for data like natural language text. For instance, the probability of encountering the letter \emph{u} in English text dramatically increases if the preceding letter is \emph{q}. To capture such dependencies and obtain a more accurate measure of the information content considering local context, the concept of \emph{higher-order empirical entropy} is introduced. This approach conditions the probability of a symbol's occurrence on the sequence of $k$ symbols that immediately precede it.
 
 \begin{definition}[Redundancy] \label{def:redundancy}
     For an information source $X$ generating symbols from an alphabet $\Sigma$, the redundancy $R$ is the difference between the maximum possible entropy per symbol and the actual entropy $H(X)$ of the source:
-    \begin{equation}
+    \begin{equation*}
         R = \log_2 |\Sigma| - H(X)
-    \end{equation}
-    % Note: Added base 2 explicitly, assuming bits.
+    \end{equation*}
 \end{definition}
 
 \noindent This redundancy value, $R$, quantifies the degree of predictability or statistical structure inherent in the source. A high redundancy signifies that the source is far from random, exhibiting patterns (like non-uniform symbol probabilities or inter-symbol dependencies) that can potentially be exploited for compression. Conversely, a source with low redundancy behaves more randomly, leaving less room for compression beyond the theoretical minimum dictated by $H(X)$.
 
-\noindent However, evaluating redundancy directly using Definition \ref{def:redundancy} often proves impractical, as determining the true source entropy $H(X)$ for the process generating a given string $S$ is typically unfeasible. This limitation necessitates alternative, empirical approaches. To address this issue, we introduce the concept of the \emph{k-th order empirical entropy} of a string $S$, denoted as $\mathcal{H}_k(S)$. In statistical coding (\autoref{sec:statistical_coding}), we will see a scenario where $k=0$, relying on symbol frequencies within the string. Now, with $\mathcal{H}_k(S)$, our objective is to extend the entropy concept by examining the frequencies of $k$-grams in string $S$. This requires analyzing subsequences of symbols with a length of $k$, thereby capturing the \emph{compositional structure} of $S$ \cite{ferragina2023pearls}.
+\noindent However, evaluating redundancy directly using Definition \ref{def:redundancy} often proves impractical, as determining the true source entropy $H(X)$ for the process generating a given string $S$ is typically unfeasible. This limitation necessitates alternative, empirical approaches. To address this issue, the concept of the \emph{k-th order empirical entropy} of a string $S$, denoted as $\mathcal{H}_k(S)$, is introduced. In statistical coding (\autoref{sec:statistical_coding}), a scenario with $k=0$ will be examined, relying on symbol frequencies within the string. With $\mathcal{H}_k(S)$, the objective is to extend the entropy concept by examining the frequencies of $k$-grams in string $S$. This requires analyzing subsequences of symbols with a length of $k$, thereby capturing the \emph{compositional structure} of $S$ \cite{ferragina2023pearls}.
 
-\noindent Let $S$ be a string of length $n = |S|$ over an alphabet $\Sigma$ of size $|\Sigma| = \sigma$. Let $\omega$ denote a $k$-gram (a sequence of $k$ symbols from $\Sigma$), and let $n_\omega$ be the number of occurrences of $\omega$ in $S$. Let $n_{\omega \sigma_i}$ be the number of times the $k$-gram $\omega$ is followed by the symbol $\sigma_i \in \Sigma$ in $S$. \footnote{We use the notation $\omega \in \Sigma^k$ for a $k$-gram.}
+\noindent Let $S$ be a string of length $n = |S|$ over an alphabet $\Sigma$ of size $|\Sigma| = \sigma$. Let $\omega$ denote a $k$-gram (a sequence of $k$ symbols from $\Sigma$), and let $n_\omega$ be the number of occurrences of $\omega$ in $S$. Let $n_{\omega \sigma_i}$ be the number of times the $k$-gram $\omega$ is followed by the symbol $\sigma_i \in \Sigma$ in $S$. \footnote{The notation $\omega \in \Sigma^k$ signifies that $\omega$ is a $k$-gram.}
 
 \begin{definition}[k-th Order Empirical Entropy] \label{def:kth_order_empirical_entropy}
     The \emph{k-th order empirical entropy} of a string $S$ is defined as:
     \begin{equation}\label{eq:kth_order_entropy_formula1}
         \mathcal{H}_k(S) = \frac{1}{n} \sum_{\omega \in \Sigma^k} \left ( \sum_{\sigma_i \in \Sigma} n_{\omega\sigma_i} \log_2 \left ( \frac{n_\omega}{n_{\omega\sigma_i}} \right) \right )
-        % Corrected summation limit and added base 2
-        % Note: Ensure n_{\omega \sigma_i} is 0 if the combination never occurs, and handle log(0) appropriately (e.g., 0 log(inf) = 0 convention).
     \end{equation}
-    where terms with $n_{\omega\sigma_i} = 0$ contribute zero to the sum.
+    where terms with $n_{\omega\sigma_i} = 0$ contribute zero to the sum, following the convention $0 \log (a/0) = 0$.
 \end{definition}
 
 \noindent This definition calculates the average conditional entropy based on the preceding $k$ symbols. An equivalent and often more intuitive way to express this is by averaging the zero-order empirical entropies of the sequences formed by the symbols following each distinct $k$-gram context:
@@ -33,28 +30,18 @@
 where $S_\omega$ is the string formed by concatenating all symbols that immediately follow an occurrence of the $k$-gram $\omega$ in $S$ (its length is $|S_\omega| = n_\omega$). The sum is taken over all $k$-grams $\omega$ that actually appear in $S$ (i.e., $n_\omega > 0$).
 
 \begin{example}
-    Consider the example \ref{ex:0_order_entropy_abracadabra}, where $S = \text{"abracadabra"}$ ($n=11$) and $\Sigma = \{a, b, c, d, r\}$ ($\sigma=5$). The zero-order empirical entropy is $\mathcal{H}_0(S) \approx 2.04$. Now, let's calculate the first-order ($k=1$) empirical entropy using Equation \ref{eq:kth_order_entropy_formula2}. The contexts are the single characters:
-    \begin{itemize}[noitemsep, topsep=0pt] % Reduced spacing for the list
-        \item Context 'a' ($n_a=5$): Following symbols are 'b', 'c', 'd', 'b', '\$' (assuming end-of-string marker). $S_a = \text{"bcdb\$"}$. $\mathcal{H}_0(S_a) \approx 1.922$ bits/symbol (assuming $\$$ is a unique symbol).
-        \item Context 'b' ($n_b=2$): Following symbols are 'r', 'r'. $S_b = \text{"rr"}$. $\mathcal{H}_0(S_b) = 0$ bits/symbol.
-        \item Context 'c' ($n_c=1$): Following symbol is 'a'. $S_c = \text{"a"}$. $\mathcal{H}_0(S_c) = 0$ bits/symbol.
-        \item Context 'd' ($n_d=1$): Following symbol is 'a'. $S_d = \text{"a"}$. $\mathcal{H}_0(S_d) = 0$ bits/symbol.
-        \item Context 'r' ($n_r=2$): Following symbols are 'a', 'a'. $S_r = \text{"aa"}$. $\mathcal{H}_0(S_r) = 0$ bits/symbol.
-    \end{itemize}
+    Consider the example from \ref{ex:0_order_entropy_abracadabra}, where $S = \text{"abracadabra"}$ ($n=11$) and $\Sigma = \{a, b, c, d, r\}$ ($\sigma=5$). The zero-order empirical entropy is $\mathcal{H}_0(S) \approx 2.04$ bits/symbol. Now, let's calculate the first-order ($k=1$) empirical entropy using Equation \eqref{eq:kth_order_entropy_formula2}. The contexts are the single characters. For context \emph{a} ($n_a=5$), the following symbols form $S_a = \text{"bcdb\$"}$ (assuming \$ denotes an end-of-string marker), yielding $\mathcal{H}_0(S_a) \approx 1.922$ bits/symbol (assuming $\$$ is a unique symbol contributing to the calculation). For context \emph{b} ($n_b=2$), the sequence is $S_b = \text{"rr"}$, resulting in $\mathcal{H}_0(S_b) = 0$ bits/symbol. Similarly, for contexts \emph{c} ($n_c=1$), \emph{d} ($n_d=1$), and \emph{r} ($n_r=2$), the subsequent sequences are $S_c = \text{"a"}$, $S_d = \text{"a"}$, and $S_r = \text{"aa"}$, respectively, all leading to zero-order empirical entropies of 0 bits/symbol.
     Therefore, the first-order empirical entropy of $S$ is:
-    \[
-        \mathcal{H}_1(S) = \frac{n_a}{n}\mathcal{H}_0(S_a) + \frac{n_b}{n}\mathcal{H}_0(S_b) + \frac{n_c}{n}\mathcal{H}_0(S_c) + \frac{n_d}{n}\mathcal{H}_0(S_d) + \frac{n_r}{n}\mathcal{H}_0(S_r)
-    \]
-    \[
-        \mathcal{H}_1(S) = \frac{5}{11} \cdot (1.922) + \frac{2}{11} \cdot 0 + \frac{1}{11} \cdot 0 + \frac{1}{11} \cdot 0 + \frac{2}{11} \cdot 0 \approx 0.874 \text{ bits/symbol}
-    \]
+    \begin{align*}
+        \mathcal{H}_1(S) & = \frac{n_a}{n}\mathcal{H}_0(S_a) + \frac{n_b}{n}\mathcal{H}_0(S_b) + \dots + \frac{n_r}{n}\mathcal{H}_0(S_r)        \\
+                         & = \frac{5}{11} \cdot (1.922) + \frac{2}{11} \cdot 0 + \dots + \frac{2}{11} \cdot 0 \approx 0.874 \text{ bits/symbol}
+    \end{align*}
     This value is significantly lower than the zero-order empirical entropy $\mathcal{H}_0(S)$, reflecting the predictability introduced by considering the preceding character.
-    % Note: Corrected H_0 to mathcal{H}_0 for consistency. Added bits/symbol unit. Added calculation details.
 \end{example}
 
 \noindent The quantity $n \mathcal{H}_k(S)$ serves as a lower bound for the minimum number of bits attainable by any encoding of $S$, under the condition that the encoding of each symbol may rely only on the $k$ symbols preceding it in $S$. Consistently, any compressor achieving fewer than $n \mathcal{H}_k(S)$ bits would imply the ability to compress symbols originating from the related $k$-th order Markov source to a level below its Shannon entropy.
 
-The practical relevance of achieving compression close to this bound was demonstrated by Sadakane and Grossi \cite{sadakane2006squeezing}, who presented a general technique based on LZ78 parsing to transform various succinct data structures, such as those supporting rank and select queries, towards the $n \mathcal{H}_k(S) + o(n)$ space limit while preserving their original query time complexities
+% The practical relevance of achieving compression close to this bound was demonstrated by Sadakane and Grossi \cite{sadakane2006squeezing}, who presented a general technique based on LZ78 parsing to transform various succinct data structures, such as those supporting rank and select queries, towards the $n \mathcal{H}_k(S) + o(n)$ space limit while preserving their original query time complexities.
 
 \begin{remark}
     As $k$ grows large (up to $k=n-1$, and often sooner), the $k$-th order empirical entropy $\mathcal{H}_k(S)$ tends towards zero, given that most long $k$-grams appear only once, making their subsequent symbol perfectly predictable within the sequence $S$. This renders the model ineffective as a lower bound for practical compressors when $k$ is very large relative to $n$. Even before reaching $\mathcal{H}_k(S)=0$, achieving compression close to $n\mathcal{H}_k(S)$ bits becomes practically challenging for high $k$ values. This is due to the necessity of storing or implicitly representing the conditional probabilities (or equivalent coding information) for all $\sigma^k$ possible contexts, which requires significant space overhead ($\approx \sigma^{k+1} \log n$ bits in simple models). In theory, it is commonly assumed that $S$ can be compressed up to $n \mathcal{H}_k(S) + o(n)$ bits for any $k$ such that $k+1 \leq \alpha \log_\sigma n$ for some constant $0 < \alpha < 1$. Under this condition, the overhead for storing the model ($\sigma^{k+1} \log n \leq n^\alpha \log n$) becomes asymptotically negligible compared to the compressed data size ($o(n)$ bits) \cite{navarro2016compact}.
@@ -69,18 +56,18 @@ The practical relevance of achieving compression close to this bound was demonst
 
 \subsection{Source Coding Theorem}
 
-\noindent In \autoref{sec:source_and_codes} we have established the properties of different code types and the fundamental constraint imposed by Kraft's inequality (Theorem \autoref{thm:kraft_inequality}), we now arrive at a cornerstone result in information theory: the Source Coding Theorem. Attributed to Shannon \cite{Shannon1948}, this theorem provides the definitive answer to the question of the ultimate limit of lossless data compression. It establishes that the entropy $\mathcal{H}(X)$ of the source (representing the underlying probability distribution, distinct from the empirical entropy $\mathcal{H}_k(S)$ of a specific string) is not just a theoretical measure of information, but the precise operational limit for the average length of any uniquely decodable code representing that source.
+\noindent Having established the properties of different code types in \autoref{sec:source_and_codes} and the fundamental constraint imposed by Kraft's inequality (Theorem \autoref{thm:kraft_inequality}), we now arrive at a cornerstone result in information theory: the Source Coding Theorem. Attributed to Shannon \cite{Shannon1948}, this theorem provides the definitive answer to the question of the ultimate limit of lossless data compression. It establishes that the entropy $\mathcal{H}(X)$ of the source (representing the underlying probability distribution, distinct from the empirical entropy $\mathcal{H}_k(S)$ of a specific string) is not just a theoretical measure of information, but the precise operational limit for the average length of any uniquely decodable code representing that source.
 
-\noindent The theorem consists of two crucial parts: a lower bound on the achievable average length, and a statement about the existence of codes that approach this bound. We will state the theorem for a $K$-ary code alphabet $\mathcal{D}$, using $\mathcal{H}_K(X) = \mathcal{H}(X) / \log K$ to denote the theoretical source entropy measured in $K$-ary units (assuming $\mathcal{H}(X)$ is calculated, for instance, using base 2 logarithms unless otherwise specified).
+\noindent The theorem consists of two crucial parts: a lower bound on the achievable average length, and a statement about the existence of codes that approach this bound. The theorem will be stated for a $K$-ary code alphabet $\mathcal{D}$, using $\mathcal{H}_K(X) = \mathcal{H}(X) / \log K$ to denote the theoretical source entropy measured in $K$-ary units (assuming $\mathcal{H}(X)$ is calculated using base 2 logarithms unless otherwise specified).
 
 \begin{theorem}[Source Coding Theorem]\label{thm:source_coding_theorem}
     Let $X$ be a random variable generating symbols from an alphabet $\Sigma$ with probability mass function $P_X(x)$. Let $\mathcal{D}$ be a code alphabet of size $K \ge 2$.
     \begin{enumerate}
-        \item \textbf{(Lower Bound)} The expected length $L(C)$ of any uniquely decodable code $C: \Sigma \to \mathcal{D}^*$ for $X$ satisfies
+        \item (Lower Bound) The expected length $L(C)$ of any uniquely decodable code $C: \Sigma \to \mathcal{D}^*$ for $X$ satisfies
               \begin{equation}\label{eq:sct_lower_bound}
                   L(C) \ge \mathcal{H}_K(X) = \frac{\mathcal{H}(X)}{\log K}
               \end{equation}
-        \item \textbf{(Achievability)} There exists a prefix code $C: \Sigma \to \mathcal{D}^*$ such that its expected length $L(C)$ satisfies
+        \item (Achievability) There exists a prefix code $C: \Sigma \to \mathcal{D}^*$ such that its expected length $L(C)$ satisfies
               \begin{equation}\label{eq:sct_achievability}
                   L(C) < \mathcal{H}_K(X) + 1
               \end{equation}
@@ -88,20 +75,20 @@ The practical relevance of achieving compression close to this bound was demonst
 \end{theorem}
 
 \begin{proof}
-    \textbf{Part (i) - Lower Bound:}
+    \emph{Part (i) - Lower Bound:}
     Let $C$ be any uniquely decodable code with codeword lengths $l(x)$ for $x \in \Sigma$. By Theorem \ref{thm:kraft_inequality}, these lengths must satisfy Kraft's inequality: $S = \sum_{x \in \Sigma} K^{-l(x)} \leq 1$.
-    Let us define an auxiliary probability distribution $Q(x)$ over $\Sigma$ as $Q(x) = K^{-l(x)} / S$. Note that $\sum_{x \in \Sigma} Q(x) = 1$, so $Q$ is a valid probability distribution.
+    Let an auxiliary probability distribution $Q(x)$ over $\Sigma$ be defined as $Q(x) = K^{-l(x)} / S$. Note that $\sum_{x \in \Sigma} Q(x) = 1$, so $Q$ is a valid probability distribution.
 
-    Now, consider the expected length $L(C)$:
-    \begin{align}
+    Consider the expected length $L(C)$:
+    \begin{align*}
         L(C) & = \sum_{x \in \Sigma} P_X(x) l(x)                                                                                  \\
              & = \sum_{x \in \Sigma} P_X(x) \log_K \left( K^{l(x)} \right)                                                        \\
              & = \sum_{x \in \Sigma} P_X(x) \log_K \left( \frac{S}{Q(x)} \right) \quad \text{(since } K^{-l(x)} = S Q(x) \text{)} \\
              & = \sum_{x \in \Sigma} P_X(x) \left( \log_K S - \log_K Q(x) \right)                                                 \\
              & = (\log_K S) \sum_{x \in \Sigma} P_X(x) - \sum_{x \in \Sigma} P_X(x) \log_K Q(x)                                   \\
              & = \log_K S - \sum_{x \in \Sigma} P_X(x) \log_K Q(x)
-    \end{align}
-    We can relate the last term to the relative entropy (Kullback-Leibler divergence) $D(P_X || Q)$ and the entropy $\mathcal{H}_K(X)$. Recall that:
+    \end{align*}
+    Relating the last term to the relative entropy (Kullback-Leibler divergence) $D(P_X || Q)$ and the entropy $\mathcal{H}_K(X)$:
     \begin{align*}
         D(P_X || Q) & = \sum_{x \in \Sigma} P_X(x) \log_K \frac{P_X(x)}{Q(x)}                             \\
                     & = \sum_{x \in \Sigma} P_X(x) \log_K P_X(x) - \sum_{x \in \Sigma} P_X(x) \log_K Q(x) \\
@@ -109,53 +96,51 @@ The practical relevance of achieving compression close to this bound was demonst
     \end{align*}
     Thus, $-\sum P_X(x) \log_K Q(x) = D(P_X || Q) + \mathcal{H}_K(X)$.
     Substituting this back into the expression for $L(C)$:
-    \begin{equation}
+    \begin{equation*}
         L(C) = \log_K S + D(P_X || Q) + \mathcal{H}_K(X)
-    \end{equation}
-    Since $S \le 1$, we have $\log_K S \le \log_K 1 = 0$. Also, the relative entropy is always non-negative, $D(P_X || Q) \ge 0$. Therefore,
-    \begin{equation}
+    \end{equation*}
+    Since $S \le 1$, $\log_K S \le \log_K 1 = 0$. Also, the relative entropy is always non-negative, $D(P_X || Q) \ge 0$. Therefore,
+    \begin{equation*}
         L(C) \ge 0 + 0 + \mathcal{H}_K(X) = \mathcal{H}_K(X)
-    \end{equation}
+    \end{equation*}
     This establishes the lower bound \eqref{eq:sct_lower_bound}. This line of proof closely follows \cite{ElementsofInformationTheory}.
 
-    \textbf{Part (ii) - Achievability:}
-    We need to show the existence of a prefix code whose expected length satisfies \eqref{eq:sct_achievability}. Consider choosing codeword lengths $l(x)$ for each $x \in \Sigma$ as:
-    \begin{equation}\label{eq:shannon_length_choice_revised}
+    \emph{Part (ii) - Achievability:}
+    It must be shown that a prefix code exists whose expected length satisfies \eqref{eq:sct_achievability}. Consider choosing codeword lengths $l(x)$ for each $x \in \Sigma$ as:
+    \begin{equation*}
         l(x) = \lceil -\log_K P_X(x) \rceil
-    \end{equation}
-    where $\lceil \cdot \rceil$ denotes the ceiling function (rounding up to the nearest integer). These lengths are positive integers (assuming $P_X(x) \le 1$).
+    \end{equation*}
+    where $\lceil \cdot \rceil$ denotes the ceiling function. These lengths are positive integers (assuming $P_X(x) \le 1$ and $P_X(x) > 0$).
 
-    First, we verify that these lengths satisfy Kraft's inequality. From the definition of the ceiling function, we have:
-    \begin{equation}
+    First, verify that these lengths satisfy Kraft's inequality. From the definition of the ceiling function:
+    \begin{equation*}
         -\log_K P_X(x) \le l(x) < -\log_K P_X(x) + 1
-    \end{equation}
+    \end{equation*}
     Exponentiating the left inequality with base $K$:
-    \begin{equation}
+    \begin{equation*}
         K^{-\log_K P_X(x)} \ge K^{-l(x)} \implies P_X(x) \ge K^{-l(x)}
-    \end{equation}
+    \end{equation*}
     Summing over all $x \in \Sigma$:
-    \begin{equation}
+    \begin{equation*}
         \sum_{x \in \Sigma} K^{-l(x)} \le \sum_{x \in \Sigma} P_X(x) = 1
-    \end{equation}
-    Since the chosen lengths satisfy Kraft's inequality, the sufficiency part of Kraft's theorem guarantees that there exists a \emph{prefix} code $C$ with these exact lengths $l(x) = \lceil -\log_K P_X(x) \rceil$. (This existence is often demonstrated constructively, e.g., using code trees or interval mapping \cite{ElementsofInformationTheory,han2002mathematics}).
+    \end{equation*}
+    Since the chosen lengths satisfy Kraft's inequality, the sufficiency part of Kraft's theorem guarantees that there exists a \emph{prefix} code $C$ with these exact lengths $l(x) = \lceil -\log_K P_X(x) \rceil$ \cite{ElementsofInformationTheory,han2002mathematics}.
 
-    Now, let's calculate the expected length $L(C)$ for this prefix code:
-    \begin{align}
+    Now, calculate the expected length $L(C)$ for this prefix code:
+    \begin{align*}
         L(C) & = \sum_{x \in \Sigma} P_X(x) l(x)                                                                                    \\
              & = \sum_{x \in \Sigma} P_X(x) \lceil -\log_K P_X(x) \rceil                                                            \\
              & < \sum_{x \in \Sigma} P_X(x) \left( -\log_K P_X(x) + 1 \right) \quad \text{(using } \lceil y \rceil < y + 1 \text{)} \\
              & = \sum_{x \in \Sigma} -P_X(x) \log_K P_X(x) + \sum_{x \in \Sigma} P_X(x) \cdot 1                                     \\
              & = \mathcal{H}_K(X) + 1
-    \end{align}
-    Thus, we have shown that there exists a prefix code $C$ with $L(C) < \mathcal{H}_K(X) + 1$, proving the achievability part \eqref{eq:sct_achievability}.
+    \end{align*}
+    Thus, it has been shown that there exists a prefix code $C$ with $L(C) < \mathcal{H}_K(X) + 1$, proving the achievability part \eqref{eq:sct_achievability}.
 \end{proof}
 
-\noindent The Source Coding Theorem is a profound result. It states that the source entropy $\mathcal{H}_K(X)$ is the fundamental lower limit on the average number of $K$-ary symbols required per source symbol for reliable (lossless) representation using any uniquely decodable code. Furthermore, it guarantees that we can always find a prefix code (which is easy to decode instantaneously) whose average length is within 1 symbol of this theoretical minimum.
+\noindent The Source Coding Theorem is a profound result. It states that the source entropy $\mathcal{H}_K(X)$ is the fundamental lower limit on the average number of $K$-ary symbols required per source symbol for reliable (lossless) representation using any uniquely decodable code. Furthermore, it guarantees that a prefix code (which is instantaneously decodable) can always be found whose average length is within 1 symbol of this theoretical minimum.
 
-\noindent The gap of "1" in the achievability part arises from the constraint that codeword lengths must be integers, while $-\log_K P_X(x)$ is generally not. This gap can be made arbitrarily small (per source symbol) by encoding blocks of source symbols together. If we consider encoding blocks $X^n = (X_1, \ldots, X_n)$ from an i.i.d. source, the entropy per symbol is $\mathcal{H}(X^n)/n = \mathcal{H}(X)$. Applying the theorem to the block source $\Sigma^n$, we can find a prefix code with expected length $L_n$ such that $\mathcal{H}_K(X^n) \le L_n < \mathcal{H}_K(X^n) + 1$. Dividing by $n$, the average length per original source symbol, $L_n/n$, satisfies:
-\begin{equation}
+\noindent The gap of "1" in the achievability part arises from the constraint that codeword lengths must be integers, while $-\log_K P_X(x)$ is generally not. This gap can be made arbitrarily small (per source symbol) by encoding blocks of source symbols together. If blocks $X^n = (X_1, \ldots, X_n)$ from an i.i.d\footnote{Independent and identically distributed} source are considered, the entropy per symbol is $\mathcal{H}(X^n)/n = \mathcal{H}(X)$. Applying the theorem to the block source $\Sigma^n$, a prefix code can be found with expected length $L_n$ such that $\mathcal{H}_K(X^n) \le L_n < \mathcal{H}_K(X^n) + 1$. Dividing by $n$, the average length per original source symbol, $L_n/n$, satisfies:
+\begin{equation*}
     \mathcal{H}_K(X) \le \frac{L_n}{n} < \frac{\mathcal{H}_K(X^n)}{n} + \frac{1}{n} = \mathcal{H}_K(X) + \frac{1}{n}
-\end{equation}
-As the block length $n$ increases, the average codeword length per source symbol approaches the entropy $\mathcal{H}_K(X)$. This demonstrates that the entropy limit is asymptotically achievable. Practical codes like Huffman coding (\autoref{subsec:huffman_coding}) provide methods to construct optimal prefix codes for a given distribution, while techniques like arithmetic coding (\autoref{subsec:arithmetic_coding}) effectively approximate the block coding concept to get very close to the entropy bound even for moderate sequence lengths.
-
-\clearpage
+\end{equation*}
+As the block length $n$ increases, the average codeword length per source symbol approaches the entropy $\mathcal{H}_K(X)$. This demonstrates that the entropy limit is asymptotically achievable. Practical codes like Huffman coding (\autoref{subsec:huffman_coding}) provide methods to construct optimal prefix codes for a given distribution, while techniques like arithmetic coding (\autoref{subsec:arithmetic_coding}) effectively approximate the block coding concept to approach the entropy bound closely even for moderate sequence lengths.

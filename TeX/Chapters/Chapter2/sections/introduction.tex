@@ -1,6 +1,6 @@
-Entropy, in essence, represents the minimal quantity of bits required to unequivocally distinguish an object within a set. Consequently, it serves as a foundational metric for the space utilization in compressed data representations. The ultimate aim of compressed data structures is to occupy space nearly equivalent to the entropy required for object identification, while simultaneously enabling efficient querying operations. This pursuit lies at the core of optimizing data compression techniques: achieving a balance between storage efficiency and query responsiveness.
+Entropy fundamentally represents the minimal average number of bits required to encode information from a source. In the context of uniquely identifying objects within a set $U$, a related concept is the information content required, which serves as a fundamental measure of the space needed in compressed data representations. The primary goal of compressed data structures is to occupy space close to this theoretical lower bound, while simultaneously enabling efficient query operations. This balance between storage efficiency and query responsiveness is central to optimizing data compression techniques.
 
-\noindent There are plenty of compression techniques, yet they share certain fundamental steps. In Figure \ref{fig:typical_processes} is shown the typical processes employed for data compression. These procedures depend on the nature of the data, and the arrangement or fusion of the blocks in \ref{fig:typical_processes} may differ. Numerical manipulation, such as predictive coding and linear transformations, is commonly employed for waveform signals like images and audio. Logical manipulation involves altering the data into a format more feasible to compression, including techniques such as run-length encoding, zero-trees, set-partitioning information, and dictionary entries. Then, source modeling is used to predict the data's behavior and structure, which is crucial for entropy coding.
+\noindent Numerous compression techniques exist, yet they often share certain fundamental steps. Figure \ref{fig:typical_processes} illustrates typical processes employed for data compression. These procedures depend on the nature of the data, and the specific arrangement or combination of the blocks shown may differ. Numerical manipulation, such as predictive coding and linear transformations, is commonly employed for waveform signals like images and audio. Logical manipulation involves transforming the data into a format more amenable to compression, including techniques such as run-length encoding, zero-trees, set-partitioning information representations, and dictionary methods. Subsequently, source modeling is used to estimate the data's statistical properties, which is crucial for effective entropy coding.
 
 \begin{figure}[h]
     \centering
@@ -15,7 +15,7 @@ Entropy, in essence, represents the minimal quantity of bits required to unequiv
         };
         \node[draw, minimum width=1cm, minimum height=1cm, align=center] (block2) at (4,0) {
             \begin{tabular}{c}
-                \footnotesize Numerical \\
+                \footnotesize Numerical Data \\
                 \footnotesize Processing
             \end{tabular}
         };
@@ -51,55 +51,37 @@ Entropy, in essence, represents the minimal quantity of bits required to unequiv
         \draw[->] (block4) -- (block5);
         \draw[->] (block5) -- (block6);
 
-
-        % \draw[dotted, color=red] (block1.north west) -- (block3.north east) -- (block4.south east) -- (block4.south west) -- (block4.north west) -- (block6.north west) -- (block1.north west);
-
     \end{tikzpicture}
-    \caption{Typical processes in data compression}\label{fig:typical_processes}
+    \caption{Typical processes in data compression}\label{fig:typical_processes} % Consider adding citation if adapted, e.g., (Adapted from [Source])
 \end{figure}
 
-\noindent These initial numerical and logical processing stages typically aim to transform the data, exploiting specific properties like signal correlation or symbol repetition, to create a representation with enhanced statistical redundancy (e.g., more frequent symbols, predictable patterns). A common feature among most compression systems is the incorporation of \emph{entropy coding} as the final process, wherein information is represented in the most compressed form possible. This stage may bear a significant impact on the overall compression ratio, as it is responsible for the final reduction in the data size. In this chapter we will delve into the principles of entropy coding, exploring the fundamental concepts and methods that underpin this crucial stage of data compression.
+\noindent These initial numerical and logical processing stages typically aim to transform the data, exploiting specific properties like signal correlation or symbol repetition, to reduce specific forms of redundancy and produce a representation more amenable to statistical compression (e.g., yielding symbols with a more skewed frequency distribution or more predictable patterns). A common feature among most compression systems is the incorporation of \emph{entropy coding} as the final process, wherein the processed information is represented in a highly compact form. This stage can significantly impact the overall compression ratio, as it performs the final reduction in data size based on the modeled statistics. In this chapter, we examine the principles of entropy coding, exploring the fundamental concepts and methods that underpin this crucial stage of data compression.
 
-\section{Worst Case Entropy} \label{sec:worst_case_entropy}
-In its simplest form, entropy can be seen as the minimum number of bits required by identifiers (\emph{codes}, see \autoref{sec:source_and_codes}), when each element of a set $U$ has a unique code of identical length. This is called the \emph{worst case entropy} of $U$ and it's denoted by $H_{wc}(U)$. The worst case entropy of a set $U$ is given by the formula:
+\section{Worst-Case Entropy} \label{sec:worst_case_entropy}
+When considering the task of assigning a unique identifier (\emph{code}, see \autoref{sec:source_and_codes}) to every element of a finite set $U$, a baseline measure of the required information content is the logarithm of the set size. If we constrain the codes to all have the same length $l$, then $l$ must be at least $\lceil \log_2 |U| \rceil$ bits to distinguish all elements. The theoretical minimum information content per element, expressed in bits, without the constraint of integer code lengths or specific coding schemes, is defined as the \emph{worst-case entropy} of $U$ \cite{ElementsofInformationTheory}
 \begin{equation}
-    H_{wc}(U) =  \log |U|
+    H_{wc}(U) = \log_2 |U|
+    \label{eq:worst_case_entropy_def}
 \end{equation}
-where $|U|$ is the number of elements in $U$.
+where $|U|$ denotes the number of elements in the set $U$. The term "worst-case" here refers to the scenario where no probability distribution over the elements is assumed (or equivalently, a uniform distribution is assumed), and we seek the theoretical limit for encoding based solely on the set size.
 
 \begin{remark}
-    If we used codes of length $l < H_{wc} (U)$, we would have only $2^l \leq 2^{H_{wc}(U)} = |U|$ possible codes, which is not enough to uniquely identify all elements in $U$.
+    If fixed-length binary codes are used, their length $l$ must be an integer. To assign a unique code to each of the $|U|$ elements, we require $2^l \ge |U|$. Taking the logarithm base 2 gives $l \ge \log_2 |U|$. Since $l$ must be an integer, the minimum required length is $l_{min} = \lceil \log_2 |U| \rceil \ge H_{wc}(U)$.
 \end{remark}
 
-\noindent The reason behind the attribute \emph{worst case} is that if all codes are of the same length, then this length must be at least $\lceil \log |U| \rceil$ bits to be able to uniquely identify all elements in $U$. If they all have different lengths, the longest code must be at least $\lceil \log |U| \rceil$ bits long.
-
-% \begin{example}[Worst case entropy of $\mathcal{T}_n$]
-%     Let $\mathcal{T}_n$ be the set of all general ordinal trees \cite{benoit2005representing} with $n$ nodes. In this case, each node has an arbitrary number of children and distinguishes their order. Given $n$ nodes, the number of possible ordinal trees its the (n-1)-th Catalan number, which is given by the formula:
-%     \begin{equation}
-%         |\mathcal{T}_n| = \frac{1}{n} \binom{2n -2}{n-1}
-%     \end{equation}
-%     By using the Stirling approximation, we can estimate the worst case entropy of $\mathcal{T}_n$ as:
-%     \begin{equation*}
-%         |\mathcal{T}_n| = \frac{(2n-2)!}{n!(n-1)!} = \frac{(2n-2)^{2n-2} e^n e^{n-1}}{e^{2n-2} n^n (n-1)^{n-1} \sqrt{\pi n}} \left(1+ \left(O\frac{1}{n}\right) \right)
-%     \end{equation*}
-%     That is equal to $\frac{4^n}{n^{3/2}} \cdot \Theta (1)$, therefore
-%     \begin{equation}
-%         H_{wc} (\mathcal{T}_n) = \log | \mathcal{T}_n | = 2n - \Theta(\log n)
-%     \end{equation}
-%     We have then found the minimum numbers of bits required to uniquely identify (\emph{encode}) a general ordinal tree with $n$ nodes.
-% \end{example}
-\begin{example}[Worst-case entropy of $\mathcal{T}_n$]
+\begin{example}
     Let $\mathcal{T}_n$ denote the set of all general ordinal trees \cite{benoit2005representing} with $n$ nodes. In this scenario, each node can have an arbitrary number of children, and their order is distinguished. With $n$ nodes, the number of possible ordinal trees is the $(n-1)$-th Catalan number, given by:
-    \begin{equation}
-        |\mathcal{T}_n| = \frac{1}{n} \binom{2n - 2}{n - 1}
-    \end{equation}
-    Using Stirling's approximation, we can estimate the worst-case entropy of $\mathcal{T}_n$ as:
     \begin{equation*}
-        |\mathcal{T}_n| = \frac{(2n-2)!}{n!(n-1)!} = \frac{(2n-2)^{2n-2} e^n e^{n-1}}{e^{2n-2} n^n (n-1)^{n-1} \sqrt{\pi n}} \left(1+ O\left(\frac{1}{n}\right)\right)
+        |\mathcal{T}_n| = C_{n-1} = \frac{1}{n} \binom{2n - 2}{n - 1}
     \end{equation*}
-    This simplifies to $\frac{4^n}{n^{3/2}} \cdot \Theta (1)$, hence
-    \begin{equation}
-        H_{wc} (\mathcal{T}_n) = \log |\mathcal{T}_n| = 2n - \Theta(\log n)
-    \end{equation}
-    Thus, we have determined the minimum number of bits required to uniquely identify (encode) a general ordinal tree with $n$ nodes.
+    Using the known asymptotic approximation for Catalan numbers derived from Stirling's formula, for large $n$:
+    \begin{equation*}
+        |\mathcal{T}_n| = C_{n-1} \approx \frac{4^{n-1}}{\sqrt{\pi}(n-1)^{3/2}} = \frac{4^n}{4\sqrt{\pi}(n-1)^{3/2}} = \frac{4^n}{n^{3/2}} \Theta(1)
+    \end{equation*}
+    \begin{align*}
+        H_{wc} (\mathcal{T}_n) & = \log_2 |\mathcal{T}_n|                              \\
+                               & = \log_2 \left( \frac{4^n}{n^{3/2}} \Theta(1) \right) \\
+                               & = 2n - \Theta(\log_2 n)
+    \end{align*}
+    Thus, we have determined the minimum number of bits required to uniquely identify (encode) a general ordinal tree with $n$ nodes based solely on their count.
 \end{example}
