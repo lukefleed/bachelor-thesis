@@ -50,7 +50,7 @@ $\Drank_X(i, c)$ is answered by traversing from the root to the leaf for $c$. At
 $\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the root. Moving from child $v$ to parent $u$, if $v$ is the left child, update $j \leftarrow \textsf{select}_1(L_u, j)$; otherwise, update $j \leftarrow \textsf{select}_1(R_u, j)$. The final $j$ is the result (Algorithm~\ref{alg:subset-select-SWT}).
 
 
-\begin{algorithm}[hbtp]
+\begin{algorithm}[h]
     \caption{Subset-Rank Query using SWT {\cite{SubsetWT}}}
     \label{alg:subset-rank-SWT}
     \small
@@ -77,7 +77,7 @@ $\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the roo
     \end{algorithmic}
 \end{algorithm}
 
-\begin{algorithm}[hbtp]
+\begin{algorithm}[h]
     \caption{Subset-Select Query using SWT {\cite{SubsetWT}}}
     \label{alg:subset-select-SWT}
     \small

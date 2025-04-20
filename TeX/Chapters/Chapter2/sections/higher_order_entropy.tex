@@ -139,7 +139,9 @@ where $S_\omega$ is the string formed by concatenating all symbols that immediat
 
 \noindent The Source Coding Theorem is a profound result. It states that the source entropy $\mathcal{H}_K(X)$ is the fundamental lower limit on the average number of $K$-ary symbols required per source symbol for reliable (lossless) representation using any uniquely decodable code. Furthermore, it guarantees that a prefix code (which is instantaneously decodable) can always be found whose average length is within 1 symbol of this theoretical minimum.
 
-\noindent The gap of "1" in the achievability part arises from the constraint that codeword lengths must be integers, while $-\log_K P_X(x)$ is generally not. This gap can be made arbitrarily small (per source symbol) by encoding blocks of source symbols together. If blocks $X^n = (X_1, \ldots, X_n)$ from an i.i.d\footnote{Independent and identically distributed} source are considered, the entropy per symbol is $\mathcal{H}(X^n)/n = \mathcal{H}(X)$. Applying the theorem to the block source $\Sigma^n$, a prefix code can be found with expected length $L_n$ such that $\mathcal{H}_K(X^n) \le L_n < \mathcal{H}_K(X^n) + 1$. Dividing by $n$, the average length per original source symbol, $L_n/n$, satisfies:
+\noindent The gap of $1$ in the achievability part arises from the constraint that codeword lengths must be integers, while $-\log_K P_X(x)$ is generally not. This gap can be made arbitrarily small (per source symbol) by encoding blocks of source symbols together.
+
+If blocks $X^n = (X_1, \ldots, X_n)$ from an independent and identically distributed source are considered, the entropy per symbol is $\mathcal{H}(X^n)/n = \mathcal{H}(X)$. Applying the theorem to the block source $\Sigma^n$, a prefix code can be found with expected length $L_n$ such that $\mathcal{H}_K(X^n) \le L_n < \mathcal{H}_K(X^n) + 1$. Dividing by $n$, the average length per original source symbol, $L_n/n$, satisfies:
 \begin{equation*}
     \mathcal{H}_K(X) \le \frac{L_n}{n} < \frac{\mathcal{H}_K(X^n)}{n} + \frac{1}{n} = \mathcal{H}_K(X) + \frac{1}{n}
 \end{equation*}

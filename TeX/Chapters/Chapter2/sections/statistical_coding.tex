@@ -12,6 +12,61 @@ For instance, in English text, the letter \emph{e} is far more frequent than \em
 
 The prefix-free code for each symbol $\sigma$ is then determined by the path from the root to the leaf corresponding to $\sigma$. Conventionally, a $0$ is assigned to traversing a left branch and a $1$ to a right branch (or vice versa). The concatenation of these bits along the path forms the Huffman code for the symbol. More formal descriptions and variations can be found in \cite{ferragina2023pearls, sayood2002lossless, han2002mathematics, ElementsofInformationTheory}.
 
+\begin{figure}[hbtp]
+    \centering % Centra la figura
+    \begin{tikzpicture}[
+        level distance=12mm, % Distanza tra livelli
+        level 1/.style={sibling distance=40mm}, % Distanza tra fratelli livello 1
+        level 2/.style={sibling distance=20mm}, % Distanza tra fratelli livello 2
+        level 3/.style={sibling distance=12mm}, % Distanza tra fratelli livello 3
+        every node/.style={draw, circle, inner sep=1pt, font=\footnotesize, minimum size=5mm}, % Stile per nodi principali (cerchiati)
+        char label/.style={draw=none, font=\footnotesize, anchor=north}, % Stile per etichette caratteri (solo testo, SENZA cerchio)
+        edge label/.style={font=\tiny, draw=none, inner sep=0.5pt}, % Stile per etichette archi (solo testo, SENZA cerchio)
+        edge from parent/.style={draw, -{Latex[length=1.5mm]}}, % Stile freccia archi
+        edge from parent path={(\tikzparentnode.south) -- (\tikzchildnode.north)} % Percorso archi
+        ]
+        % Definizione dell'albero
+        \node {1.00} % Nodo radice
+        child { node {0.45} % Nodo interno ca
+                child { node (c_leaf) {0.20} % Nodo foglia c (probabilità)
+                        edge from parent node[left, edge label] {0}; % Etichetta arco 0
+                        % Etichetta carattere sotto la foglia (usa lo stile 'char label')
+                        \node[char label, below=1mm of c_leaf] {c};
+                    }
+                child { node (a_leaf) {0.25} % Nodo foglia a (probabilità)
+                        edge from parent node[right, edge label] {1}; % Etichetta arco 1
+                        % Etichetta carattere sotto la foglia (usa lo stile 'char label')
+                        \node[char label, below=1mm of a_leaf] {a};
+                    }
+                edge from parent node[left, edge label] {0} % Etichetta arco 0
+            }
+        child { node {0.55} % Nodo interno bde
+                child { node (b_leaf) {0.25} % Nodo foglia b (probabilità)
+                        edge from parent node[left, edge label] {0}; % Etichetta arco 0
+                        % Etichetta carattere sotto la foglia (usa lo stile 'char label')
+                        \node[char label, below=1mm of b_leaf] {b};
+                    }
+                child { node {0.30} % Nodo interno de
+                        child { node (d_leaf) {0.15} % Nodo foglia d (probabilità)
+                                edge from parent node[left, edge label] {0}; % Etichetta arco 0
+                                % Etichetta carattere sotto la foglia (usa lo stile 'char label')
+                                \node[char label, below=1mm of d_leaf] {d};
+                            }
+                        child { node (e_leaf) {0.15} % Nodo foglia e (probabilità)
+                                edge from parent node[right, edge label] {1}; % Etichetta arco 1
+                                % Etichetta carattere sotto la foglia (usa lo stile 'char label')
+                                \node[char label, below=1mm of e_leaf] {e};
+                            }
+                        edge from parent node[right, edge label] {1} % Etichetta arco 1
+                    }
+                edge from parent node[right, edge label] {1} % Etichetta arco 1
+            };
+    \end{tikzpicture}
+    % Caption della figura
+    \caption[Huffman tree example]{Huffman tree for the example probabilities ($P(a)= 0.25, P(b)=0.25, P(c)=0.2, P(d)=0.15, P(e)=0.15$). The resulting codes (0 for left, 1 for right) are: $C(a)=\texttt{01}$, $C(b)=\texttt{10}$, $C(c)=\texttt{00}$, $C(d)=\texttt{110}$, $C(e)=\texttt{111}$.}
+    \label{fig:huffman_tree_example} % Etichetta per il riferimento alla figura
+\end{figure}
+
 \begin{example}[Huffman Coding Construction] \label{ex:huffman_construction}
     Let $\Sigma = \{a, b, c, d, e\}$ with probabilities $P(a)= 0.25$, $P(b)=0.25$, $P(c)=0.2$, $P(d)=0.15$, $P(e)=0.15$.
     \begin{enumerate}
@@ -22,61 +77,6 @@ The prefix-free code for each symbol $\sigma$ is then determined by the path fro
         \item Merge last two: ca and bde. Create root (root: 1.00).
     \end{enumerate}
     The resulting tree and codes (assigning 0 to left, 1 to right) are shown in Figure~\ref{fig:huffman_tree_example}.
-
-    \begin{figure}[hbtp]
-        \centering % Centra la figura
-        \begin{tikzpicture}[
-            level distance=12mm, % Distanza tra livelli
-            level 1/.style={sibling distance=40mm}, % Distanza tra fratelli livello 1
-            level 2/.style={sibling distance=20mm}, % Distanza tra fratelli livello 2
-            level 3/.style={sibling distance=12mm}, % Distanza tra fratelli livello 3
-            every node/.style={draw, circle, inner sep=1pt, font=\footnotesize, minimum size=5mm}, % Stile per nodi principali (cerchiati)
-            char label/.style={draw=none, font=\footnotesize, anchor=north}, % Stile per etichette caratteri (solo testo, SENZA cerchio)
-            edge label/.style={font=\tiny, draw=none, inner sep=0.5pt}, % Stile per etichette archi (solo testo, SENZA cerchio)
-            edge from parent/.style={draw, -{Latex[length=1.5mm]}}, % Stile freccia archi
-            edge from parent path={(\tikzparentnode.south) -- (\tikzchildnode.north)} % Percorso archi
-            ]
-            % Definizione dell'albero
-            \node {1.00} % Nodo radice
-            child { node {0.45} % Nodo interno ca
-                    child { node (c_leaf) {0.20} % Nodo foglia c (probabilità)
-                            edge from parent node[left, edge label] {0}; % Etichetta arco 0
-                            % Etichetta carattere sotto la foglia (usa lo stile 'char label')
-                            \node[char label, below=1mm of c_leaf] {c};
-                        }
-                    child { node (a_leaf) {0.25} % Nodo foglia a (probabilità)
-                            edge from parent node[right, edge label] {1}; % Etichetta arco 1
-                            % Etichetta carattere sotto la foglia (usa lo stile 'char label')
-                            \node[char label, below=1mm of a_leaf] {a};
-                        }
-                    edge from parent node[left, edge label] {0} % Etichetta arco 0
-                }
-            child { node {0.55} % Nodo interno bde
-                    child { node (b_leaf) {0.25} % Nodo foglia b (probabilità)
-                            edge from parent node[left, edge label] {0}; % Etichetta arco 0
-                            % Etichetta carattere sotto la foglia (usa lo stile 'char label')
-                            \node[char label, below=1mm of b_leaf] {b};
-                        }
-                    child { node {0.30} % Nodo interno de
-                            child { node (d_leaf) {0.15} % Nodo foglia d (probabilità)
-                                    edge from parent node[left, edge label] {0}; % Etichetta arco 0
-                                    % Etichetta carattere sotto la foglia (usa lo stile 'char label')
-                                    \node[char label, below=1mm of d_leaf] {d};
-                                }
-                            child { node (e_leaf) {0.15} % Nodo foglia e (probabilità)
-                                    edge from parent node[right, edge label] {1}; % Etichetta arco 1
-                                    % Etichetta carattere sotto la foglia (usa lo stile 'char label')
-                                    \node[char label, below=1mm of e_leaf] {e};
-                                }
-                            edge from parent node[right, edge label] {1} % Etichetta arco 1
-                        }
-                    edge from parent node[right, edge label] {1} % Etichetta arco 1
-                };
-        \end{tikzpicture}
-        % Caption della figura
-        \caption[Huffman tree example]{Huffman tree for the example probabilities ($P(a)= 0.25, P(b)=0.25, P(c)=0.2, P(d)=0.15, P(e)=0.15$). The resulting codes (0 for left, 1 for right) are: $C(a)=\texttt{01}$, $C(b)=\texttt{10}$, $C(c)=\texttt{00}$, $C(d)=\texttt{110}$, $C(e)=\texttt{111}$.}
-        \label{fig:huffman_tree_example} % Etichetta per il riferimento alla figura
-    \end{figure}
 \end{example}
 
 Let $L_C = \sum_{\sigma \in \Sigma} P(\sigma) \cdot l(\sigma)$ be the average codeword length for a prefix-free code $C$, where $l(\sigma)$ is the length of the codeword assigned to symbol $\sigma$. The Huffman coding algorithm produces a code $C_H$ that is optimal among all possible prefix-free codes for the given probability distribution.

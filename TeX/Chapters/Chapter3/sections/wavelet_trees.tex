@@ -1,4 +1,3 @@
-\clearpage
 \section{Wavelet Trees} \label{sec:wavelet_trees}
 
 Building upon the concepts established for bitvectors in Section~\ref{sec:bitvectors}, we now extend our focus to sequences over general alphabets using \emph{Wavelet Trees}. Introduced by Grossi, Gupta, and Vitter \cite{GrossiWT2003}, the wavelet tree is a highly versatile data structure. It functions as a self-index, capable of representing a sequence $S[1..n]$ drawn from an alphabet $\Sigma = \{1, \dots, \sigma\}$ within space close to its compressed size, while supporting fundamental query operations directly on this representation and allowing reconstruction of the original sequence data. This characteristic makes wavelet trees a cornerstone in applications like compressed full-text indexing, for example within the FM-index \cite{ferragina2000opportunistic}, where they provide efficient support for the essential \textsf{rank} queries during the backward search phase \cite{WTForALL}.
@@ -153,8 +152,8 @@ The wavelet tree supports the primary sequence operations by translating them in
 Computing $\textsf{access}(S, i)$ involves a top-down traversal from the root $v_{root}$. At each internal node $v$ (representing range $[a_v, b_v]$ with midpoint $m_v$), we examine the bit $B_v[i_v]$, where $i_v$ is the current index within the node's implicit sequence $S_v$. If $B_v[i_v] = 0$, we proceed to the left child $v_l$ (range $[a_v, m_v]$) and update the index to $i_{v_l} = \textsf{rank}_0(B_v, i_v)$. If $B_v[i_v] = 1$, we proceed to the right child $v_r$ (range $[m_v+1, b_v]$) and update the index to $i_{v_r} = \textsf{rank}_1(B_v, i_v)$. This repeats until a leaf node representing a single symbol $[a, a]$ is reached; this $a$ is $S[i]$. The process performs $\lceil \log \sigma \rceil$ bitvector \textsf{rank} operations in $O(\log \sigma)$ time. Algorithm~\ref{alg:access_wt} details this.
 
 \begin{algorithm}[h!]
-    \caption{\textsf{access} queries on a wavelet tree}\label{alg:access_wt}
-    % ... (Algorithm code remains the same as provided) ...
+    \caption{\textsf{Access} queries on a wavelet tree}\label{alg:access_wt}
+    \small
     \begin{algorithmic}
         \Function {access}{$T,i$} \Comment{\small{$T$ is the sequence $S$ seen as a wavelet tree}}
         \State $v \gets T_{root}$ \Comment{\small{start at the root node}}
@@ -180,35 +179,25 @@ Computing $\textsf{select}_c(S, j)$ involves an upward traversal from the leaf n
 
 \begin{algorithm}
     \caption{\texttt{Select} queries on a wavelet tree}\label{alg:select_wt}
-    % ... (Algorithm code remains the same as provided) ...
+    \small
     \begin{algorithmic}
-        % add two functions to the algorithmic environment
         \Function{$\textsf{select}_c$}{$S,j$}
-        % \Require Sequence $S$ (as a wavelet tree $T$), symbol $c$, position $j$
-        % \Ensure The position of the $j$-th occurrence of $c$ in $S$
-
         \State \Return $\textsf{select}(T._{root},1, \sigma, c, j)$
         \EndFunction
 
 
-
         \Function{$\textsf{select}$}{$v,a,b,c,j$}
-        % \Comment $v$ is the current node, $[a,b]$ is the alphabet range, $c$ is the symbol, $j$ is the position
         \If{$a = b$}
         \State \Return $j$
         \EndIf
-
         \If {$c \leq \lfloor (a+b)/2 \rfloor$}
         \State $j$ $\gets$ $\textsf{select}(v.left, a, \lfloor (a+b)/2 \rfloor, c, j)$
         \Return $select_0(v.B,j)$
-
         \Else
         \State $j$ $\gets$ $\textsf{select}(v.right, \lfloor (a+b)/2 \rfloor +1, b, c, j)$
         \State \Return $select_1(v.B,j)$
         \EndIf
-
         \EndFunction
-
     \end{algorithmic}
 \end{algorithm}
 
@@ -246,7 +235,7 @@ Its right child's range is
 \[
     [(l+1)n + z_l + \textsf{rank}_1(B_l, s_v-1) + 1, (l+1)n + z_l + \textsf{rank}_1(B_l, e_v)]
 \]
-where $z_l = \textsf{rank}_0(B_l, n)$ is the total $0$-count at level $l$. This achieves $n \lceil \log \sigma \rceil + o(n \log \sigma)$ total space. Navigation requires extra \textsf{rank} operations per level compared to the pointer-based version (as seen \cite{claude2015wavelet}), which can impact practical performance, although the asymptotic query time remains $O(\log \sigma)$.
+where $z_l = \textsf{rank}_0(B_l, n)$ is the total $0$-count at level $l$. This achieves $n \lceil \log \sigma \rceil + o(n \log \sigma)$ total space. Navigation requires extra \textsf{rank} operations per level compared to the pointer-based version (\cite{claude2015wavelet}), which can impact practical performance, although the asymptotic query time remains $O(\log \sigma)$.
 
 \subsection{Compressed Wavelet Trees} \label{sec:compressed_WT}
 

@@ -1,0 +1,74 @@
+\section{Achieving Sub-Entropy Space for Path Queries}
+\label{sec:below_entropy}
+
+To evaluate the space efficiency of our proposed structure, we establish a baseline based on the information content in the weighted DAG itself. Drawing upon the principles of information theory outlined in \autoref{ch:Chapter2}, we can define a measure of entropy for the graph $G=(V, E, w)$.
+
+Any \emph{lossless} representation of the graph $G$ must, at a minimum, encode the information required to uniquely define its structure (the edges $E$) and the associated weights (the function $w$). We formulate a $0^{th}$-order entropy measure, denoted $\mathcal{H}_0(G)$, as a lower bound on the number of bits required to represent these components, assuming no prior knowledge about correlations or higher-order statistical properties.
+
+The information content required to represent the sequence of vertex weights $(w(v))_{v \in V}$ constitutes the first component. A fundamental lower bound, denoted $\mathcal{H}_W(G)$, can be established by considering the minimal binary representation length for each individual weight:
+\[ \mathcal{H}_W(G) = \sum_{v \in V} \lceil \log_2 (w(v)+1) \rceil \quad \text{bits}. \]
+This measure reflects the space needed assuming each weight is encoded independently, using the minimal bits for its value (handling $w(v)=0$), without leveraging potential statistical correlations or distribution patterns suitable for techniques like variable-length integer coding (\autoref{sec:integer_coding}).
+
+The second component relates to the graph's topology, specifically the set of edges $E$. With $n = |V|$ vertices, there exist $n(n-1)$ possible directed edges (excluding self-loops). Encoding the topology requires identifying which $m = |E|$ of these potential edges are present. Assuming all directed graphs with $n$ vertices and $m$ edges are equally probable a priori, the information content is determined by the number of ways to choose these $m$ edges. This leads to the topological information component, $\mathcal{H}_E(G)$:
+\[ \mathcal{H}_E(G) = \log_2 \binom{n(n-1)}{m} \quad \text{bits}. \]
+This quantity can be approximated using Stirling's formula,
+\[\log_2 \binom{N}{k} \approx k \log_2(N/k) + O(k)\]
+yielding
+\[\mathcal{H}_E(G) \approx m \log_2 \left( \frac{n(n-1)}{m} \right) + O(m) \quad \text{bits}\]
+
+Combining these components gives us a formal definition for the $0^{th}$-order entropy of the weighted DAG.
+
+\begin{definition}[$0^{th}$-Order Weighted DAG Entropy]
+    \label{def:dag_entropy}
+    For a weighted DAG $G = (V, E, w)$ with $n=|V|$ vertices and $m=|E|$ edges, its $0^{th}$-order entropy $\mathcal{H}_0(G)$ is defined as the sum of the information content required for the weights and the topology:
+    \[ \mathcal{H}_0(G) = \sum_{v \in V} \lceil \log_2 (w(v)+1) \rceil + \log_2 \binom{n(n-1)}{m} \quad \text{bits}. \]
+\end{definition}
+
+The value $\mathcal{H}_0(G)$ represents a theoretical lower bound on the space required by any lossless encoding of the graph $(V, E, w)$ based solely on its zero-order statistics.
+
+Our proposed succinct data structure (\autoref{sec:succinct_dag_representation}), however, is designed differently. While lossless for \Rank{} query computation (\ref{def:rank_dag}), it is inherently \emph{lossy} concerning the reconstruction of the original graph $G$, as it does not store the complete edge set $E$. It retains only vertex weights $\mathcal{W}$, successor information $\Sigma$, and associated data $\mathcal{D}$. This distinction allows the structure's space usage, $S(G)$, to potentially fall below the $\mathcal{H}_0(G)$ bound.
+
+To illustrate this, we analyze performance on a weighted DAG derived from unrolling a Bitcoin Peer-to-Peer temporal network graph \cite{kumar2018rev2} (details of the unrolling process are beyond the scope of this thesis), having $n = 22,210$ vertices and $m = 50,514$ edges. For this specific DAG, the calculated $0^{th}$-order entropy $\mathcal{H}_0(G)$ amounts to 1,525,730 bits, comprising $\mathcal{H}_W(G) = 60,824$ bits for weights and $\mathcal{H}_E(G) = 1,464,906$ bits for topology according to \ref{def:dag_entropy}.
+
+We compare this theoretical lower bound $\mathcal{H}_0(G)$ against theoretical estimates of the space required by our succinct structure and alternative approaches based on precomputation.
+
+For sequences composed of general non-negative integers $x$, such as the vertex weights $\mathcal{W}$, the successor identifiers $\Sigma$, or the interval endpoints in baseline precomputation results, the space estimation is based on summing the minimal binary representation cost for each integer independently. This cost is calculated as $\lceil \log_2(x+1) \rceil$ bits per integer $x$.
+
+When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. Theorem \ref{thm:ef_space} guarantees an upper bound of
+\[n \log_2(u/n) + 2n\]
+bits for encoding $n$ integers within the range $[0, u)$ using Elias-Fano.
+
+Finally, the space for the offset sequences $\mathcal{I}_v$ when stored using the Run-Length Encoding (RLE) scheme described in \autoref{sec:compression_strategies} is estimated by combining the previous principles. It requires the sum of the space estimate for the strictly monotonic sequence of run start values (using the Elias-Fano estimation) and the space estimate for the sequence of corresponding run lengths (using the minimal binary representation cost for each length).
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{l r}
+        \toprule
+        Component / Method                                      & Estimated Bits \\
+        \midrule
+        \textbf{Theoretical Lower Bound ($\mathcal{H}_0(G)$)}   &                \\
+        \quad $0^{th}$-Order Entropy Total                      & 1,525,730      \\
+        \quad \quad Weights Component ($\mathcal{H}_W(G)$)      & 60,824         \\
+        \quad \quad Topology Component ($\mathcal{H}_E(G)$)     & 1,464,906      \\
+        \midrule
+        \textbf{Precomputed Rank Queries}                       &                \\
+        \quad Explicit Storage (Minimal Binary)                 & 4,854,533      \\
+        \quad Elias-Fano Compressed Storage                     & 2,211,849      \\
+        \midrule
+        \textbf{Succinct DAG Representation (RLE)}              &                \\
+        \quad Total Space ($S(G)$)                              & 602,808        \\
+        \quad \quad Weights $\mathcal{W}$ (Minimal Binary)      & 60,824         \\
+        \quad \quad Successors $\Sigma$ (Minimal Binary)        & 297,700        \\
+        \quad \quad Associated Data $\mathcal{D}$ (RLE Offsets) & 244,284        \\
+        \bottomrule
+    \end{tabular}
+    \caption{Theoretical space estimates (in bits) for the example Bitcoin DAG ($n=22,210$, $m=50,514$).}
+    \label{tab:space_estimates_bitcoin}
+\end{table}
+
+Table \ref{tab:space_estimates_bitcoin} presents the results of this theoretical space estimation for the example DAG. The total estimated space for our succinct DAG representation using RLE for the offsets, $S(G)$, is 602,808 bits. This value is notably less than half of the $0^{th}$-order graph entropy $\mathcal{H}_0(G)$ (1,525,730 bits), demonstrating the benefit of storing only query-relevant information rather than the full graph topology.
+
+Furthermore, the comparison against precomputation strategies underscores the practical advantages of our approach. Precomputing and storing all \Rank{} query results explicitly represents a baseline for achieving minimal query time (potentially $O(1)$ access), but at a significant space cost, estimated at 4,854,533 bits even with minimal binary encoding. Attempting to mitigate this by compressing the precomputed results using Elias-Fano still requires 2,211,849 bits. While this compression offers substantial savings over the explicit form, the resulting space remains considerably larger than both the graph entropy bound $\mathcal{H}_0(G)$ and, more importantly, the space achieved by our succinct structure ($S(G)$).
+
+Therefore, our analysis indicates that the proposed succinct DAG representation provides not only a mechanism to answer complex path queries but does so with remarkable space efficiency. It avoids the prohibitive space overhead associated with direct precomputation strategies, offering a compact alternative that surpasses even optimized precomputation methods in terms of storage footprint, and falls below conventional entropy bounds for lossless graph representation due to its targeted, query-specific information retention.

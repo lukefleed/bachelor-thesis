@@ -1,0 +1,115 @@
+\section{Compression Strategies}
+\label{sec:compression_strategies}
+
+The succinct representation presented in \autoref{sec:succinct_dag_representation} consists of arrays for weights ($\mathcal{W}$), successor information ($\Sigma$), and associated data ($\mathcal{D}$). To further reduce the memory footprint beyond the gains achieved by the explicit/implicit node partitioning, this section discusses compression techniques for each component.
+
+We primarily consider variable-length integer coding (\autoref{sec:integer_coding}), Elias-Fano encoding (\autoref{sec:elias_fano_code}), and Run-Length Encoding (RLE), aiming to preserve efficient access needed for query evaluation (Algorithms~\ref{alg:get_value} and \ref{alg:rank_dag}), potentially using structures like the compressed integer vectors from \autoref{app:compressed_intvec_engineering}.
+
+\subsection{Compressing Weights and Successor Information}
+\label{subsec:compressing_W_Sigma}
+
+The components $\mathcal{W}$ and $\Sigma$ are arrays of integers.
+\begin{itemize}
+    \item $\mathcal{W}$: An array of length $n = |V|$, where $\mathcal{W}[v] = w(v) \in \mathbb{N}_0$. The values are non-negative integers representing vertex weights, without any guarantee of monotonicity or specific distribution patterns a priori.
+    \item $\Sigma$: An array of length $n$, where $\Sigma[v]$ stores either the integer ID $\sigma(v) \in \{0, \dots, n-1\}$ if $v \in V_I$, or a special marker (which can also be represented as an integer) if $v \in V_E$.
+\end{itemize}
+
+% Given that both $\mathcal{W}$ and $\Sigma$ are sequences of integers, the variable-length integer coding schemes discussed in \autoref{sec:integer_coding} are natural candidates for compression. Techniques such as Unary, Elias Gamma/Delta, or Rice codes can be employed. The optimal choice depends heavily on the empirical distribution of the weights $w(v)$ and the successor IDs $\sigma(v)$ (and the chosen marker value) within the specific DAG instance.
+
+% A practical approach to implement this compression while preserving the necessary random access capability (i.e., efficiently retrieving $\mathcal{W}[v]$ or $\Sigma[v]$ for any $v$) is provided by the engineered \textsf{compressed-intvec} structure described in \autoref{app:compressed_intvec_engineering}. This structure allows selecting an appropriate integer codec (e.g., Gamma, Delta, Rice) based on the data distribution and employs a sampling mechanism to ensure $O(1)$ expected time access to any element $v$, at the cost of a typically sub-linear space overhead for the samples.
+
+% Alternatively, if the range of possible integer values in $\mathcal{W}$ or $\Sigma$ (i.e., the maximum weight or $n$) is sufficiently small to be considered a small alphabet $\alpha$, one could choose to use Wavelet Trees (\autoref{sec:wavelet_trees}), particularly efficient variants like Wavelet Matrices or Quad Wavelet Trees (\autoref{sec:wavelet_matrices_and_quad_vectors}). These structures provide efficient Access (retrieving the element at a given position) in $O(\log \alpha)$ time, where $\alpha$ is the size of the alphabet (the number of distinct values). However, for general graphs where weights or vertex counts $n$ can be large, the alphabet size may not be small, making direct integer coding via \textsf{compressed-intvec} a more generally applicable starting point.
+
+Since both $\mathcal{W}$ and $\Sigma$ are integer sequences, variable-length coding schemes from \autoref{sec:integer_coding} (e.g., Unary, Elias Gamma/Delta, Rice codes) are applicable. The choice of the best code depends on the observed distribution of weights and successor IDs.
+
+To combine compression with efficient random access (retrieving $\mathcal{W}[v]$ or $\Sigma[v]$), the \textsf{compressed-intvec} structure (\autoref{app:compressed_intvec_engineering}) is a suitable implementation choice. It allows selecting an appropriate integer codec and uses sampling to achieve constant expected time access, with sub-linear space overhead for samples.
+
+Alternatively, if the range of values (maximum weight or $n$) is small, treating them as symbols from a small alphabet $\alpha$ allows using Wavelet Trees (\autoref{sec:wavelet_trees}) or related structures (\autoref{sec:wavelet_matrices_and_quad_vectors}). These offer $O(\log |\alpha|)$ access time. However, for general graphs with potentially large weights or vertex counts, direct integer coding via \textsf{compressed-intvec} is often more practical.
+
+\subsection{Compressing Associated Data Sequences}
+\label{subsec:compressing_associated_data_sequences}
+
+The associated data component $\mathcal{D}$ stores sequences that encode path weight information. Specifically, for an explicit vertex $v \in V_E$, $\mathcal{D[v]}$ holds the $\mathcal{O}$-set $\mathcal{O}_v = (x_0, \dots, x_{m-1})$, and for an implicit vertex $v \in V_I$, it holds the offset sequence $\mathcal{I}_v = (j_0, \dots, j_{m-1})$. Both $\mathcal{O}_v$ and $\mathcal{I}_v$ are sequences of non-negative integers which are strictly increasing ($x_k < x_{k+1}$ and $j_k < j_{k+1}$ respectively), as established by their definitions and construction rules.
+
+This strictly monotonic property makes these sequences suitable for specialized compression techniques. Elias-Fano encoding (\autoref{sec:elias_fano_code}), discussed previously, is a strong candidate offering both good compression ratios and efficient support for operations like random access. An alternative approach, particularly effective when sequences contain long stretches of consecutive integers, is Run-Length Encoding (RLE). We detail the RLE representation below.
+
+\subsubsection*{Run-Length Encoding (RLE) Representation}
+Run-Length Encoding compresses a monotonic sequence by identifying and representing consecutive values efficiently. Consider a generic strictly increasing sequence $Y = (y_0, y_1, \dots, y_{m-1})$. A \emph{run} is a maximal contiguous subsequence $(y_i, y_{i+1}, \dots, y_{i+l-1})$ where each element is exactly one greater than its predecessor ($y_{j+1} = y_j + 1$ for $i \le j < i+l-1$). A run can have length $l=1$. RLE represents the sequence $Y$ by encoding each run using its starting value and its length.
+
+The RLE process generates two auxiliary sequences:
+\begin{itemize}
+    \item The \emph{run starts sequence}, $S = (s_1, s_2, \dots, s_p)$, contains the first value $s_i$ of the $i$-th run in $Y$. Since runs are maximal and $Y$ is strictly increasing, $S$ is also strictly increasing.
+    \item The \emph{run lengths sequence}, $L = (l_1, l_2, \dots, l_p)$, contains the length $l_i \ge 1$ of the $i$-th run. $L$ is a sequence of positive integers with no other guaranteed properties.
+\end{itemize}
+The pair $(S, L)$ allows for the exact reconstruction of $Y$. Algorithm \ref{alg:rle_encode} outlines the procedure to compute $S$ and $L$ from $Y$.
+
+\begin{algorithm}[htbp]
+    \caption{$\textsc{EncodeRLE}(Y)$: RLE encoding of a monotonic sequence}
+    \label{alg:rle_encode}
+    \small
+    \begin{algorithmic}[1]
+        \Require Monotonic sequence $Y = (y_0, y_1, \dots, y_{m-1})$, where $m = |Y|$.
+        \Ensure Run starts sequence $S$, Run lengths sequence $L$.
+        \State Initialize $S \leftarrow \emptyset$, $L \leftarrow \emptyset$.
+        \If{$m = 0$}
+        \State \Return $(S, L)$
+        \EndIf
+        \State $i \leftarrow 0$
+        \While{$i < m$}
+        \State $current\_start \leftarrow y_i$
+        \State $current\_length \leftarrow 1$
+        \While{$i + 1 < m$ and $y_{i+1} = y_i + 1$}
+        \State $current\_length \leftarrow current\_length + 1$
+        \State $i \leftarrow i + 1$
+        \EndWhile
+        \State Append $current\_start$ to $S$.
+        \State Append $current\_length$ to $L$.
+        \State $i \leftarrow i + 1$
+        \EndWhile
+        \State \Return $(S, L)$
+    \end{algorithmic}
+\end{algorithm}
+
+The space efficiency of RLE relies on effectively compressing the resulting sequences $S$ and $L$.
+The run starts sequence $S = (s_1, \dots, s_p)$ is strictly monotonic. Consequently, it is an ideal candidate for Elias-Fano encoding (\autoref{sec:elias_fano_code}).
+
+The run lengths sequence $L = (l_1, \dots, l_p)$ is a sequence of positive integers without guaranteed structure. Standard variable-length integer codes (\autoref{sec:integer_coding}), such as Elias Gamma or Delta codes, can be applied. In practice, employing a structure like the \textsf{compressed-intvec} (\autoref{app:compressed_intvec_engineering}) allows choosing an appropriate codec and provides efficient random access.
+
+\subsubsection*{Random Access with RLE Sequences}
+Retrieving the element $y_k$ (the element at index $k$ in the original sequence $Y$, $0 \le k < m$) from the RLE representation $(S, L)$ requires identifying the run to which $y_k$ belongs. This necessitates finding the unique run index $i^*$ (where $1 \le i^* \le p$) such that:
+\[ \sum_{j=1}^{i^*-1} l_j \le k < \sum_{j=1}^{i^*} l_j \]
+where the sum is defined as $0$ if $i^*=1$. Once $i^*$ is found, the value $y_k$ is given by:
+\[ y_k = s_{i^*} + \left( k - \sum_{j=1}^{i^*-1} l_j \right) \]
+Computing the prefix sums $\sum l_j$ on the fly requires iterating through $L$, potentially leading to $O(p)$ time complexity for access, which is inefficient if the number of runs $p$ is large.
+
+To accelerate random access, one can precompute and store the sequence of prefix sums of the run lengths:
+\[ P = (p_1, p_2, \dots, p_p) \qquad  p_i = \sum_{j=1}^{i} l_j. \]
+Since $l_j \ge 1$ for all $j$, the sequence $P$ is strictly increasing. As a strictly monotonic sequence, $P$ itself can be compressed effectively, for instance, using Elias-Fano encoding.
+
+With the prefix sum sequence $P$ available, finding the index $i^*$ corresponding to the query index $k$ reduces to searching for the smallest $i^*$ such that $p_{i^*} > k$. This is a successor search problem on the monotonic sequence $P$. Using binary search on $P$ (if stored as an array) takes $O(\log p)$ time. If $P$ is stored in a structure supporting faster searches (like rank/select structures built upon certain Elias-Fano constructions), this lookup time might be further improved. Algorithm \ref{alg:rle_get_value} formalizes access using prefix sums.
+
+\begin{algorithm}[htbp]
+    \caption{$\textsc{GetValueRLE}(S, L, P, k)$: Retrieve element from RLE representation} % Renamed for clarity
+    \label{alg:rle_get_value}
+    \small
+    \begin{algorithmic}[1]
+        \Require Run starts $S=(s_1,\dots,s_p)$, Run lengths $L=(l_1,\dots,l_p)$, Prefix sums $P=(p_1, \dots, p_p)$, index $k \in [0, m-1]$.
+        \Ensure The value $y_k$ of the element at index $k$.
+        \State Find smallest $i^* \in \{1, \dots, p\}$ such that $P[i^*] > k$.
+        \If{$i^* = 1$}
+        \State $previous\_cumulative\_length \leftarrow 0$
+        \Else
+        \State $previous\_cumulative\_length \leftarrow P[i^*-1]$
+        \EndIf
+        \State $offset \leftarrow k - previous\_cumulative\_length$
+        \State $start\_value \leftarrow S[i^*]$
+        \State \Return $start\_value + offset$
+    \end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Choosing Between Elias-Fano and RLE}
+The choice between direct Elias-Fano encoding and Run-Length Encoding (RLE) for representing the strictly increasing sequences $\mathcal{O}_v$ and $\mathcal{I}_v$ depends on their structure. RLE is advantageous when the sequence exhibits significant clustering, meaning the number of runs $p$ is substantially smaller than the total number of elements $m$ ($p \ll m$). In such cases, the combined compressed size of the run starts $S$ and run lengths $L$ (and potentially the prefix sums $P$) might be less than direct Elias-Fano encoding of the original sequence.
+
+On the other hand, if sequences are sparse or lack significant runs ($p$ is close to $m$), direct Elias-Fano is likely more straightforward and potentially more space-efficient.
+
+Regardless of the chosen compression method, representing the entire associated data component $\mathcal{D}$ practically involves concatenating the compressed representations of all sequences ($\{\mathcal{D}_E(v)\}_{v \in V_E}$ and $\{\mathcal{D}_I(v)\}_{v \in V_I}$) into a single buffer. An auxiliary index structure is then needed to map each vertex ID $v$ to the starting position and metadata of its compressed sequence. The space overhead for this index is typically negligible compared to the compressed data itself

@@ -2,7 +2,7 @@
 
 \noindent In the previous section, information-theoretic limits based on the probabilistic nature of data sources were established. Attention now turns to the practical mechanisms for achieving data compression: the interplay between a \emph{source} of information and the \emph{code} used to represent it. A source, in this context, is any process generating a sequence of symbols drawn from a specific alphabet (e.g., letters of text, pixel values in an image, sensor readings). Source coding, or data compression, involves converting this sequence into a different, typically shorter, sequence of symbols from a target coding alphabet (often binary).
 
-\noindent The core principle behind efficient coding is the exploitation of the source's statistical properties. Symbols or patterns occurring frequently should ideally be assigned shorter representations (codewords), while less frequent ones can be assigned longer codewords. A classic, intuitive example is Morse code: the most common letter in English text, 'E', is represented by the shortest possible signal, a single dot (`.`), whereas infrequent letters like 'Q' (`--.-`) receive much longer sequences.
+\noindent The core principle behind efficient coding is the exploitation of the source's statistical properties. Symbols or patterns occurring frequently should ideally be assigned shorter representations (codewords), while less frequent ones can be assigned longer codewords. A classic, intuitive example is Morse code: the most common letter in English text, \emph{E}, is represented by the shortest possible signal, a single dot, whereas infrequent letters like \emph{Q} receive much longer sequences.
 
 \subsection{Codes}
 
@@ -20,7 +20,7 @@ A source characterized by a random process generates symbols from a specific alp
     where $l(x)$ is the length of the codeword assigned to $x$.
 \end{definition}
 
-\noindent Assume henceforth for simplicity that the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, K-1\}$, where $K=|\mathcal{D}|$.
+\noindent For simplicity, we assume the $\mathcal{D}$-ary alphabet is $\mathcal{D} = \{0, 1, \ldots, K-1\}$, where $K=|\mathcal{D}|$.
 
 \begin{example}\label{ex:source_code}
     Consider a source code for a random variable $X$ with $\mathcal{X} = \{a, b, c, d\}$ and $P_X(a) = 0.5$, $P_X(b) = 0.25$, $P_X(c) = 0.125$, and $P_X(d) = 0.125$. The code is defined as
@@ -88,7 +88,7 @@ A source characterized by a random process generates symbols from a specific alp
 \end{figure}
 
 \begin{example}[Morse Code]\label{ex:morse_code}
-    Morse code serves as a classic illustration. Historically used for telegraphy, it represents text characters using sequences from a ternary alphabet: a short signal (dot, ~.~), a longer signal (dash, ~-~), and a space (pause used as a delimiter). Frequent letters like \emph{E} receive short codes (~.~), while less common ones like \emph{Q} get longer codes (~--.-~).
+    Morse code serves as a classic example. Historically used for telegraphy, it represents text characters using sequences from a ternary alphabet: a short signal (dot, ~.~), a longer signal (dash, ~-~), and a space (pause used as a delimiter). Frequent letters like \emph{E} receive short codes (~.~), while less common ones like \emph{Q} get longer codes (~--.-~).
     The following table summarizes the Morse code for some letters and the SOS distress signal:
     \begin{center}
         \begin{tabular}{ll}
@@ -102,7 +102,6 @@ A source characterized by a random process generates symbols from a specific alp
             SOS                & \texttt{... --- ...} \\
         \end{tabular}
     \end{center}
-    We can evaluate the properties of this code:
 
     \emph{Nonsingularity}: The code is nonsingular because each letter corresponds to a unique sequence of dots and dashes.
 
