@@ -1,4 +1,4 @@
-The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on \textsf{rank} and \textsf{Select} operations over sequences (\autoref{ch:Chapter3}). These sequence-based tools provide efficient ways to handle queries on linear data.
+The preceding chapters have established a foundation in data compression (\autoref{ch:Chapter2}) and succinct data structures, particularly focusing on \textsf{rank} and \textsf{select} operations (\autoref{ch:Chapter3}). These sequence-based tools provide efficient ways to handle queries on linear data.
 
 Building upon this foundation, we now shift our focus to graph structures, specifically directed acyclic graphs (DAGs) where nodes carry weights. A key motivation for this shift comes from revisiting the \emph{degenerate string problem} introduced in \autoref{sec:degenerate_strings}. This problem can be viewed through a different lens, that of graph representation. As we detail below, a degenerate string and a target character can be naturally modeled as a specific type of weighted DAG.
 
@@ -7,7 +7,7 @@ Building upon this foundation, we now shift our focus to graph structures, speci
 
 Given a degenerate string $X = X_1 X_2 \dots X_n$ over an alphabet $\Sigma$ (as defined in \autoref{sec:degenerate_strings}), we construct a weighted DAG $G_c = (V_c, E_c, w_c)$ for a specified character $c \in \Sigma$. This construction provides a mapping from the sequence structure to a graph structure.
 
-First, we define the set of vertices $V_c$. Let $s$ be a unique source vertex. For each index $k$ ($1 \le k \le n$) and each character $a \in X_k$, we introduce a unique vertex, denoted abstractly as $v_{k,a}$. The vertex set $V_c$ is the union of the source and all such vertices:
+First, we define the set of vertices $V_c$. Let $s$ be a unique source vertex. For each index $k$ ($1 \le k \le n$) and each character $a \in X_k$, we introduce a unique vertex, denoted as $v_{k,a}$. The vertex set $V_c$ is the union of the source and all such vertices:
 \[ V_c = \{s\} \cup \{ v_{k,a} \mid 1 \le k \le n, a \in X_k \}. \]
 These vertices $v_{k,a}$ represent the choice of character $a$ at position $k$ of the degenerate string.
 
@@ -98,7 +98,7 @@ Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate strin
             }
 
     \end{tikzpicture}
-    \caption{The weighted DAG $G_A$ derived from the degenerate string in Figure \ref{fig:degenerate_example_tabular_v3} for character $c=\emph{A}$. Nodes visually labeled $(k,a)$ represent the abstract vertices $v_{k,a}$. Nodes with $w_A(v_{k,a})=1$ are yellow; those with $w_A(v_{k,a})=0$ are gray. Edges represent the connections defined in $E_A$.}
+    \caption{The weighted DAG $G_A$ derived from the degenerate string in Figure \ref{fig:degenerate_example_tabular_v3} for character $c=\emph{A}$. Nodes visually labeled $(k,a)$ represent the vertices $v_{k,a}$. Nodes with $w_A(v_{k,a})=1$ are yellow; those with $w_A(v_{k,a})=0$ are gray. Edges represent the connections defined in $E_A$.}
     \label{fig:degenerate_dag_horizontal_v3}
 \end{figure}
 
@@ -106,4 +106,4 @@ This graph-based perspective on degenerate strings serves as a concrete starting
 
 Our primary focus is on generalizing the \Rank{} query to this graph setting; the \textsf{select} query, while definable, will not be treated further in this work. For a given vertex $N$, the \textsf{rank} query aims to describe the set of possible cumulative weights achievable on paths originating from a designated source vertex $s$ and terminating at $N$.
 
-The combinatorial complexity of paths in a DAG - potentially exponential in the number of vertices - makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This necessitates the development of a \emph{succinct} data structure. Our approach involves partitioning the vertices based on how their path weight information is represented: some vertices (\emph{explicit}) will store this information directly, while others (\emph{implicit}) will rely on indirect derivation through references facilitated by a carefully defined \emph{successor} relationship, as detailed in Section \ref{sec:succinct_dag_representation}.
+The combinatorial complexity of paths in a DAG - potentially exponential in the number of vertices - makes naive approaches based on explicit path enumeration or storage infeasible for large graphs. This motivated us to development of a \emph{succinct} data structure. Our approach involves partitioning the vertices based on how their path weight information is represented: some vertices (\emph{explicit}) will store this information directly, while others (\emph{implicit}) will rely on indirect derivation through references facilitated by a carefully defined \emph{successor} relationship, as detailed in Section \ref{sec:succinct_dag_representation}.

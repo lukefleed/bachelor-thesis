@@ -7,7 +7,7 @@ Any \emph{lossless} representation of the graph $G$ must, at a minimum, encode t
 
 The information content required to represent the sequence of vertex weights $(w(v))_{v \in V}$ constitutes the first component. A fundamental lower bound, denoted $\mathcal{H}_W(G)$, can be established by considering the minimal binary representation length for each individual weight:
 \[ \mathcal{H}_W(G) = \sum_{v \in V} \lceil \log_2 (w(v)+1) \rceil \quad \text{bits}. \]
-This measure reflects the space needed assuming each weight is encoded independently, using the minimal bits for its value (handling $w(v)=0$), without leveraging potential statistical correlations or distribution patterns suitable for techniques like variable-length integer coding (\autoref{sec:integer_coding}).
+This measure reflects the space needed assuming each weight is encoded independently, using the minimal bits for its value, without leveraging potential statistical correlations or distribution patterns suitable for techniques like variable-length integer coding (\autoref{sec:integer_coding}).
 
 The second component relates to the graph's topology, specifically the set of edges $E$. With $n = |V|$ vertices, there exist $n(n-1)$ possible directed edges (excluding self-loops). Encoding the topology requires identifying which $m = |E|$ of these potential edges are present. Assuming all directed graphs with $n$ vertices and $m$ edges are equally probable a priori, the information content is determined by the number of ways to choose these $m$ edges. This leads to the topological information component, $\mathcal{H}_E(G)$:
 \[ \mathcal{H}_E(G) = \log_2 \binom{n(n-1)}{m} \quad \text{bits}. \]
@@ -34,7 +34,7 @@ We compare this theoretical lower bound $\mathcal{H}_0(G)$ against theoretical e
 
 For sequences composed of general non-negative integers $x$, such as the vertex weights $\mathcal{W}$, the successor identifiers $\Sigma$, or the interval endpoints in baseline precomputation results, the space estimation is based on summing the minimal binary representation cost for each integer independently. This cost is calculated as $\lceil \log_2(x+1) \rceil$ bits per integer $x$.
 
-When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. Theorem \ref{thm:ef_space} guarantees an upper bound of
+When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. \autoref{thm:ef_space} guarantees an upper bound of
 \[n \log_2(u/n) + 2n\]
 bits for encoding $n$ integers within the range $[0, u)$ using Elias-Fano.
 

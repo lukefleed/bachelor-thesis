@@ -55,7 +55,7 @@ Consider the task of retrieving the $k$-th element of $\mathcal{O}_v$, denoted $
         \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
 
     \end{tikzpicture}
-    \caption{Visualization of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$ using the succinct representation (\autoref{fig:succinct_dag_example}). The query follows the successor path $7 \to 9 \to 5 \to 8$. At each step from an implicit node $v$ to its successor $u=\sigma(v)$, the current index $k_{current}$ is updated using the stored offset $k_{next} = \mathcal{I}_v[k_{current}]$, and the weight $w(u)$ is added to an accumulator (`sum`). The path starts with $k=0$ at node 7. It proceeds to node 9 using index $\mathcal{I}_7[0]=1$, accumulating $w(9)=9$. Then to node 5 using index $\mathcal{I}_9[1]=2$, accumulating $w(5)=5$ (total sum 14). Then to node 8 using index $\mathcal{I}_5[2]=7$, accumulating $w(8)=8$ (total sum 22). Node 8 is explicit, so the value at the final index 7, $\mathcal{O}_8[7]=30$, is retrieved. The result is obtained by subtracting the total accumulated weight: $30 - 22 = 8$. This correctly reconstructs $\mathcal{O}_7[0]$.}
+    \caption{Visualization of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$ using the succinct representation (\autoref{fig:succinct_dag_example}). The query follows the successor path $7 \to 9 \to 5 \to 8$. At each step from an implicit node $v$ to its successor $u=\sigma(v)$, the current index $k_{current}$ is updated using the stored offset $k_{next} = \mathcal{I}_v[k_{current}]$, and the weight $w(u)$ is added to an accumulator (sum). The path starts with $k=0$ at node 7. It proceeds to node 9 using index $\mathcal{I}_7[0]=1$, accumulating $w(9)=9$. Then to node 5 using index $\mathcal{I}_9[1]=2$, accumulating $w(5)=5$ (total sum 14). Then to node 8 using index $\mathcal{I}_5[2]=7$, accumulating $w(8)=8$ (total sum 22). Node 8 is explicit, so the value at the final index 7, $\mathcal{O}_8[7]=30$, is retrieved. The result is obtained by subtracting the total accumulated weight: $30 - 22 = 8$. This correctly reconstructs $\mathcal{O}_7[0]$.}
     \label{fig:query_path_node7}
 \end{figure}
 
@@ -123,7 +123,7 @@ The interval merging step is a standard procedure. Given a list of intervals sor
     \small
     \begin{algorithmic}[1]
         \Require A list $Intervals = \{[l_1, r_1], [l_2, r_2], \dots\}$ sorted by start points $l_i$.
-        \Ensure A minimal list $MergedIntervals$ of disjoint intervals covering the same union.
+        \Ensure A minimal list $MergedIntervals$ of disjoint intervals
         \State Initialize an empty list $MergedIntervals$.
         \If{$Intervals$ is not empty}
         \State $current\_interval \gets Intervals[0]$.
@@ -147,9 +147,9 @@ The interval merging step is a standard procedure. Given a list of intervals sor
 % \[S_N = \bigcup_{x \in \mathcal{O}_N} [ \max(0, x - w_N + 1), x ]\]
 % Finally, it employs the standard interval merging algorithm to produce the canonical representation $\mathcal{R}_N$ as a minimal set of disjoint intervals. Note that the sorting step (line 9) is necessary because intervals generated from consecutive elements in $\mathcal{O}_N$ are not guaranteed to have non-decreasing start points.
 
-Algorithm \ref{alg:rank_dag} implements the Rank query defined in \ref{def:rank_dag}. It begins by reconstructing the set $\mathcal{O}_N$ using $\textsc{GetOSet}$ (Algorithm \ref{alg:get_o_set}). Subsequently, for each path weight $x \in \mathcal{O}_N$, it generates the interval $[\max(0, x - w_N + 1), x]$ according to the transformation rule specified in Definition \ref{def:rank_dag}, where $w_N = \mathcal{W}[N]$. The union of these generated intervals constitutes the set $S_N$:
+Algorithm \ref{alg:rank_dag} implements the Rank query defined in \ref{def:rank_dag}. It begins by reconstructing the set $\mathcal{O}_N$ using $\textsc{GetOSet}$ (Algorithm \ref{alg:get_o_set}). Then, for each path weight $x \in \mathcal{O}_N$, it generates the interval $[\max(0, x - w_N + 1), x]$ according to the transformation rule specified in Definition \ref{def:rank_dag}, where $w_N = \mathcal{W}[N]$. The union of these generated intervals constitutes the set $S_N$:
 \[ S_N = \bigcup_{x \in \mathcal{O}_N} [ \max(0, x - w_N + 1), x ]. \]
-Since these intervals may overlap or be adjacent, they are first sorted by their starting points. The sorted intervals are then passed to $\textsc{MergeIntervals}$ (Algorithm \ref{alg:merge_intervals}, line 10) to compute the final result $\mathcal{R}_N$, which is the minimal representation of $S_N$ as disjoint intervals, fulfilling the requirements of Definition \ref{def:rank_dag}.
+Since these intervals may overlap or be adjacent, they are first sorted by their starting points. The sorted intervals are then merged via Algorithm \ref{alg:merge_intervals} (line 10) to compute the final result $\mathcal{R}_N$, which is the minimal representation of $S_N$ as disjoint intervals.
 
 \begin{algorithm}
     \caption{$\mathrm{Rank}_G(N)$: Compute the Rank query for vertex $N$}

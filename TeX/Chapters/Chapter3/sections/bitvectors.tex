@@ -8,7 +8,7 @@ Our examination proceeds in three stages. First, we consider the foundational ca
 We begin our study with the most fundamental sequence type, the \emph{bitvector} $B[1..n]$, a sequence of $n$ bits from $\{0, 1\}$. Our primary objective is to support two essential query operations on $B$ efficiently: \emph{\textsf{rank}}$_b(B, i)$, which counts the occurrences of bit $b$ in the prefix $B[1..i]$, and \emph{\textsf{select}}$_b(B, i)$, which finds the index of the $i$-th occurrence of bit $b$ in $B$. While these operations can be answered by scanning $B$ in $O(n)$ time, we seek constant-time solutions, $O(1)$, by augmenting $B$ with \emph{succinct} auxiliary data structures. These structures should occupy $o(n)$ bits, leading to a total space usage of $n+o(n)$ bits when storing $B$ explicitly. We now formally define these operations.
 
 \begin{definition}[\textsf{Rank}]\label{def:rank}
-    Given a bitvector $B[1..n]$, the \textbf{\textsf{rank}} of an index $i$ ($1 \le i \le n$) relative to a bit $c \in \{0, 1\}$ is the number of occurrences of $c$ in the prefix $B[1..i]$. We denote it as $rank_c(i)$.
+    Given a bitvector $B[1..n]$, the \textsf{rank} of an index $i$ ($1 \le i \le n$) relative to a bit $c \in \{0, 1\}$ is the number of occurrences of $c$ in the prefix $B[1..i]$. We denote it as $rank_c(i)$.
     Specifically, for $c=1$:
     \begin{equation*}
         rank_1(i) = \sum_{j=1}^{i} B[j]
@@ -17,7 +17,7 @@ We begin our study with the most fundamental sequence type, the \emph{bitvector}
 \end{definition}
 
 \begin{definition}[\textsf{Select}]\label{def:select}
-    Given a bitvector $B[1..n]$, the \textbf{\textsf{select}} of the $i$-th occurrence of a bit $c \in \{0, 1\}$ is the index $j$ such that $B[j]=c$ and $rank_c(j) = i$. We denote it as $select_c(i)$. If the $i$-th occurrence of $c$ does not exist, $select_c(i)$ is undefined (or returns a special value). Unlike \textsf{rank}, $select_0(i)$ cannot generally be computed directly from $select_1(i)$ in constant time.
+    Given a bitvector $B[1..n]$, the \textsf{select} of the $i$-th occurrence of a bit $c \in \{0, 1\}$ is the index $j$ such that $B[j]=c$ and $rank_c(j) = i$. We denote it as $select_c(i)$. If the $i$-th occurrence of $c$ does not exist, $select_c(i)$ is undefined (or returns a special value). Unlike \textsf{rank}, $select_0(i)$ cannot generally be computed directly from $select_1(i)$ in constant time.
 \end{definition}
 
 \begin{figure}[htbp]
@@ -69,7 +69,7 @@ We begin our study with the most fundamental sequence type, the \emph{bitvector}
     \label{fig:bitvector_example}
 \end{figure}
 
-\begin{example}[\textsf{Rank} and \textsf{Select} on a plain bitvector]
+\begin{example}
     Let $B$ be the bitvector of length $n=20$ shown in Figure \ref{fig:bitvector_example}:
     \begin{equation*}
         B = 10110100110101110010
@@ -85,12 +85,12 @@ We begin our study with the most fundamental sequence type, the \emph{bitvector}
               Scanning $B$: the 1st $1$ is at index 1, 2nd at 3, 3rd at 4, 4th at 6, 5th at 9, 6th at 10, and the 7th $1$ is at index 12.
               Therefore, $\textsf{select}_1(7) = 12$.
     \end{itemize}
-    These manual calculations illustrate the definitions. Efficient data structures avoid such linear scans.
+    % These manual calculations illustrate the definitions. Efficient data structures avoid such linear scans.
 \end{example}
 
 Bitvectors supporting efficient \textsf{rank} and \textsf{select} operations are indeed foundational components for many compressed and succinct data structures. Attaining high performance for these operations is therefore a central concern. The following sections will describe methods to construct the $o(n)$-bit auxiliary structures that achieve constant query times. Furthermore, it is often the case that bitvectors encountered in applications exhibit skewed distributions of $0$s and $1$s (i.e., they are sparse). While the $n+o(n)$ structures operate on the explicit bitvector, separate lines of research have explored compressing the bitvector $B$ itself by leveraging these statistical properties, thereby reducing the initial $n$-bit storage requirement.
 
-Significant research, exemplified by the work of Sadakane and Grossi \cite{sadakane2006squeezing}, has addressed the integration of compression with query support. Such approaches aim to achieve space bounds related to the empirical entropy of the bitvector, for instance $n\mathcal{H}_k(B) + o(n)$ bits using $k$-th order entropy, while simultaneously maintaining constant query times for \textsf{rank} and \textsf{select}. This direction differs from the direct application of general-purpose compression algorithms presented in Chapter \ref{ch:Chapter2}.
+% Significant research, exemplified by the work of Sadakane and Grossi \cite{sadakane2006squeezing}, has addressed the integration of compression with query support. Such approaches aim to achieve space bounds related to the empirical entropy of the bitvector, for instance $n\mathcal{H}_k(B) + o(n)$ bits using $k$-th order entropy, while simultaneously maintaining constant query times for \textsf{rank} and \textsf{select}. This direction differs from the direct application of general-purpose compression algorithms presented in Chapter \ref{ch:Chapter2}.
 
 \begin{remark}
     Applying standard symbol-wise coding techniques from Chapter \ref{ch:Chapter2} (such as Huffman or Arithmetic coding) directly to a bitvector $B$ typically yields a compressed size related to its zero-order entropy, approximately $n\mathcal{H}_0(B)$ bits. While potentially reducing space, especially for biased bitvectors, this form of compression generally obstructs efficient random access and the direct computation of \textsf{rank} and \textsf{select} queries without significant decompression overhead. The specialized structures detailed in this chapter are expressly designed to provide both space efficiency and fast query capabilities.
@@ -98,7 +98,7 @@ Significant research, exemplified by the work of Sadakane and Grossi \cite{sadak
 
 \subsection{\textsf{Rank}} \label{subsec:rank}
 
-A fundamental approach to support \textsf{rank} queries in constant time using sublinear additional space was introduced by Jacobson \cite{Jacobson}. The technique relies on a hierarchical decomposition of the bitvector $B[1..n]$ and precomputation of ranks at different granularities. The auxiliary structures occupy $o(n)$ bits in total.
+A fundamental approach to support \textsf{rank} queries in constant time using sublinear additional space was introduced by Jacobson \cite{jacobson1988succinct}. The technique relies on a hierarchical decomposition of the bitvector $B[1..n]$ and precomputation of ranks at different granularities. The auxiliary structures occupy $o(n)$ bits in total.
 
 The structure typically employs two levels of blocking on top of the original bitvector $B$. First, $B$ is conceptually divided into \emph{superblocks} of size $Z$. Second, each superblock is further divided into \emph{blocks} of size $z$. Common parameter choices yielding $o(n)$ overhead are $Z = \Theta(\log^2 n)$ and $z = \Theta(\log n)$, for example $Z = \lfloor \log^2 n \rfloor$ and $z = \lfloor (1/2) \log n \rfloor$. We assume for simplicity that $z$ divides $Z$ and $Z$ divides $n$.
 
@@ -171,7 +171,7 @@ Figure \ref{fig:RRR} shows a visual representation of the hierarchical data stru
                 }
         \end{tikzpicture}
     \end{flushright}
-    \caption{The hierarchical \textsf{rank} data structure. The first level is composed of superblocks of size $Z$ (conceptually storing absolute ranks $r_i$), the second level of blocks of size $z$ (storing relative ranks $r_{i,j}$), and the third level uses a lookup table (represented abstractly by the bottom row).} \label{fig:RRR}
+    \caption{The hierarchical \textsf{rank} data structure. The first level is composed of superblocks of size $Z$ (storing absolute ranks $r_i$), the second level of blocks of size $z$ (storing relative ranks $r_{i,j}$), and the third level uses a lookup table (represented by the bottom row).} \label{fig:RRR}
 \end{figure}
 
 

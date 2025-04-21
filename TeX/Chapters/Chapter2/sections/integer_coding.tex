@@ -2,22 +2,22 @@
 
 \noindent This section presents methods for representing a sequence of positive integers, $S = \{x_1, x_2, \ldots, x_n\}$, potentially containing repetitions, as a compact sequence of bits. The primary objective is to minimize the total number of bits used. A fundamental requirement for such representations is that they must be \emph{self-delimiting} \cite{witten1999managing}. This property ensures that when the binary codes for individual integers are concatenated, a decoder can unambiguously determine the boundaries between consecutive codes, allowing for the correct reconstruction of the original sequence.
 
-\noindent The practical importance of efficient integer coding significantly impacts both storage requirements and processing speed in numerous computing applications. A prominent example is found in \emph{search engines}, which maintain vast indexes mapping terms to lists of document identifiers (IDs). These lists, often called \emph{posting lists}, can enumerate billions of integer IDs \cite{schutze2008introduction}. Efficient storage is crucial. A widely adopted technique involves sorting the document IDs within each list and then encoding the differences (gaps) between consecutive IDs using variable-length integer codes. This approach assigns shorter binary codes to smaller, more frequent gaps \cite{witten1999managing}. The engineering considerations for constructing practical data structures based on these principles, particularly concerning random access capabilities, are explored further in \autoref{app:compressed_intvec_engineering}, which details a library developed as part of this research.
+\noindent The practical importance of efficient integer coding significantly impacts both storage requirements and processing speed in numerous computing applications. A prominent example is found in \emph{search engines}, which maintain vast indexes mapping terms to lists of document identifiers (IDs). These lists, often called \emph{posting lists}, can enumerate billions of integer IDs \cite{schutze2008introduction}. Efficient storage is crucial. A widely adopted technique involves sorting the document IDs within each list and then encoding the differences (gaps) between consecutive IDs using variable-length integer codes. This approach assigns shorter binary codes to smaller, more frequent gaps \cite{witten1999managing}. The engineering considerations for constructing practical data structures based on these principles, particularly concerning random access capabilities, are explored further in \autoref{app:compressed_intvec_engineering}, which details a library developed as part of this work.
 
-\noindent Another significant application arises in the final encoding stage of various \emph{data compression algorithms}. Techniques such as LZ77, Move-to-Front (MTF), Run-Length Encoding (RLE), and the Burrows-Wheeler Transform (BWT) often produce intermediate outputs consisting of sequences of integers, where smaller values typically appear more frequently \cite{witten1999managing}. An effective integer coding scheme is therefore necessary to convert these intermediate integer sequences into a final, compact bitstream. Similarly, compressing natural language text can involve mapping words or characters to integer token IDs; the resulting sequence of IDs, often reflecting token frequencies, is then compressed using integer codes that assign shorter representations to smaller values \cite{witten1999managing}.
+\noindent Another significant application arises in the final encoding stage of various \emph{data compression algorithms}. Techniques such as LZ77, Move-to-Front (MTF), Run-Length Encoding (RLE), and the Burrows-Wheeler Transform (BWT) often produce intermediate outputs consisting of sequences of integers, where smaller values typically appear more frequently. An effective integer coding scheme is therefore necessary to convert these intermediate integer sequences into a final, compact bitstream. Similarly, compressing natural language text can involve mapping words or characters to integer token IDs; the resulting sequence of IDs, often reflecting token frequencies, is then compressed using integer codes that assign shorter representations to smaller values \cite{witten1999managing}.
 
 \noindent This section explores various techniques for designing variable-length, prefix-free binary representations for integer sequences, focusing on methods that optimize space efficiency while ensuring correct decodability.
 
 \subsection{Unary Code}
-The unary code, one of the simplest integer encoding methods, is examined first. It represents a positive integer $x \geq 1$ as a sequence of $x-1$ zeros followed by a single one, denoted as $U(x)$. The decoding process is straightforward: the decoder identifies the end of the code upon encountering the first $1$, and the value $x$ corresponds to the total number of bits read.
+The unary code is one of the simplest integer encoding methods. It represents a positive integer $x \geq 1$ as a sequence of $x-1$ zeros followed by a single one, denoted as $U(x)$. The decoding process is straightforward: the decoder identifies the end of the code upon encountering the first $1$, and the value $x$ corresponds to the total number of bits read.
 
-\noindent This coding method requires $x$ bits to represent $x$. While simple, this length is exponentially greater than the $\lceil\log_2 x \rceil$ bits needed by the standard binary representation $B(x)$. Consequently, unary coding is efficient only for very small values of $x$ and becomes rapidly impractical as $x$ increases \cite{witten1999managing}. According to Shannon's source coding theorem (Theorem \ref{thm:source_coding_theorem}), the ideal code length for a symbol $x$ with probability $P(x)$ is $-\log_2 P(x)$ bits. The unary code's length of $x$ bits corresponds precisely to this ideal length only if the integers follow the specific geometric probability distribution $P(x) = 2^{-x}$ \cite{witten1999managing, sayood2002lossless}.
+\noindent This coding method requires $x$ bits to represent $x$. While simple, this length is exponentially greater than the $\lceil\log_2 x \rceil$ bits needed by the standard binary representation $B(x)$. Consequently, unary coding is efficient only for very small values of $x$ and becomes rapidly impractical as $x$ increases. According to Shannon's source coding theorem (\autoref{thm:source_coding_theorem}), the ideal code length for a symbol $x$ with probability $P(x)$ is $-\log_2 P(x)$ bits. The unary code's length of $x$ bits corresponds precisely to this ideal length only if the integers follow the specific geometric probability distribution $P(x) = 2^{-x}$ \cite{witten1999managing, sayood2002lossless}.
 
 \begin{theorem}
     The unary code $U(x)$ of a positive integer $x \ge 1$ requires $x$ bits, and it is optimal for the geometric distribution $P(x)=2^{-x}$.
 \end{theorem}
 
-\noindent Despite its theoretical optimality for the $P(x)=2^{-x}$ distribution, the unary code can face practical performance challenges. Its implementation often involves numerous bit shifts or bit-level operations during decoding, which can be relatively slow on modern processors, particularly for large values of $x$.
+\noindent Despite its theoretical optimality for the $P(x)=2^{-x}$ distribution, the unary code can face practical performance challenges. Its implementation often involves numerous bit shifts or bit-level operations during decoding, which can be relatively slow for large values of $x$.
 
 \begin{figure}[hbtp]
     \centering
@@ -34,7 +34,7 @@ The unary code, one of the simplest integer encoding methods, is examined first.
 \end{figure}
 
 \subsection{Elias Codes}
-While unary code is simple, its inefficiency for larger integers motivated the development of \emph{universal codes}. These codes, introduced by Elias \cite{Elias1975} based on earlier work by Levenstein, are designed such that the length of the codeword for an integer $x$ grows proportionally to the length of its minimal binary representation, typically $O(\log x)$, rather than $O(x)$ as in unary code. Compared to the standard binary code $B(x)$, which requires $\lceil\log_2 x \rceil$ bits but lacks the prefix property, the Elias $\gamma$ and $\delta$ codes are only marginally longer while possessing the crucial property of being prefix-free.
+While unary code is simple, its inefficiency for larger integers motivated the development of \emph{universal codes}. These codes, introduced by Elias \cite{Elias1975}, are designed such that the length of the codeword for an integer $x$ grows proportionally to the length of its minimal binary representation, typically $O(\log x)$, rather than $O(x)$ as in unary code. Compared to the standard binary code $B(x)$, which requires $\lceil\log_2 x \rceil$ bits but lacks the prefix property, the Elias $\gamma$ and $\delta$ codes are only marginally longer while possessing the crucial property of being prefix-free.
 
 \paragraph{Gamma ($\gamma$) Code} The $\gamma$ code represents a positive integer $x \ge 1$ by encoding its magnitude (specifically, the length of its binary representation) along with its value. Let $l = \lfloor \log_2 x \rfloor + 1$ be the number of bits in the standard binary representation $B(x)$. The $\gamma$ code, $\gamma(x)$, is formed by concatenating the unary code of this length, $U(l)$, with the $l-1$ least significant bits of $x$ (effectively, $B(x)$ without its leading $1$ bit). The leading $1$ is implicitly encoded by the terminating $1$ of $U(l)$.
 
@@ -106,7 +106,7 @@ Given an integer $x \ge 1$ and the parameter $k$, the Rice code $R_k(x)$ is comp
 The codeword $R_k(x)$ is then constructed by concatenating the unary code of the quotient plus one, $U(q+1)$, followed by the remainder $r$ represented using exactly $k$ bits. This $k$-bit binary representation of $r$, denoted $B_k(r)$, might require padding with leading zeros if $r < 2^{k-1}$ (assuming $k>0$). This structure is particularly efficient when integers frequently yield small values for the quotient $q$, which occurs when $x$ is often slightly larger than a multiple of $2^k$. An example illustrating this construction for $x=13$ and $k=3$ is shown in \autoref{fig:rice_code_example}.
 
 The total number of bits required to represent $x$ using $R_k(x)$ is given by $|U(q+1)| + k = (q+1) + k$. Rice codes are known to be optimal for geometric distributions, where the probability of integer $x$ is given by $P(x) = p(1-p)^{x-1}$ for some parameter $p$. Optimality is achieved when the parameter $k$ is chosen such that $2^k$ closely approximates the mean or median of the distribution \cite{witten1999managing}. More precisely, the optimal $k$ satisfies the condition
-\[ 2^k \approx -\frac{\ln 2}{\ln(1-p)} \]
+\[ 2^k \approx -\frac{\log 2}{\log(1-p)} \]
 The fixed length ($k$ bits) of the remainder part $B_k(r)$ can facilitate faster decoding procedures in certain hardware or software implementations compared to the variable-length components found in Elias codes.
 
 \begin{figure}[hbtp]
@@ -128,7 +128,7 @@ The fixed length ($k$ bits) of the remainder part $B_k(r)$ can facilitate faster
 
 \subsection{Elias-Fano Representation} \label{sec:elias_fano_code}
 
-The Elias-Fano representation, developed independently by Elias \cite{Elias1975} and Fano \cite{Fano1971}, provides an elegant method for compressing monotonically increasing sequences of integers. Its modern utility stems from its ability to achieve near-optimal space usage, often only slightly exceeding the information-theoretic minimum, while critically enabling efficient query operations directly on the compressed data. The capability for efficient queries relies on advancements in succinct data structures, particularly for rank and select operations \cite{sadakane2006squeezing}. This combination has proven highly effective in applications such as inverted index compression for search engines \cite{vigna2013quasi, EFVenturini2014}.
+The Elias-Fano representation, based on the work developed independently by Elias \cite{Elias1975} and Fano \cite{Fano1971}, provides an elegant method for compressing monotonically increasing sequences of integers. Its modern utility stems from its ability to achieve near-optimal space usage, often only slightly exceeding the information-theoretic minimum, while critically enabling efficient query operations directly on the compressed data. The capability for efficient queries relies on advancements in succinct data structures, particularly for rank and select operations \cite{sadakane2006squeezing}. This combination has proven highly effective in applications such as inverted index compression for search engines \cite{vigna2013quasi, EFVenturini2014}.
 
 \paragraph{Representation Structure}
 Consider a strictly increasing sequence of $n$ non-negative integers $S = \{s_0, s_1, \ldots, s_{n-1}\}$, where $0 \le s_0 < s_1 < \ldots < s_{n-1} < u$. The integers belong to a universe of size $u$. It is assumed $u > n$. Each integer $s_i$ requires $b = \lceil \log_2 u \rceil$ bits in its standard binary form.
@@ -171,10 +171,243 @@ An example of this encoding is provided in \autoref{fig:ef_code_example_revised}
 \end{figure}
 
 \paragraph{Query Operations}
-The practical power of the Elias-Fano representation arises when the upper bits bitvector $H$ is augmented with auxiliary data structures supporting constant-time \emph{rank} ($\texttt{rank}_0$, $\texttt{rank}_1$) and \emph{select} ($\texttt{select}_0$, $\texttt{select}_1$) queries, as detailed in \autoref{sec:bitvectors}. These structures typically add a $o(n)$ bits overhead. With this machinery, key operations can be performed efficiently.
+The practical power of the Elias-Fano representation arises when the upper bits bitvector $H$ is augmented with auxiliary data structures supporting constant-time \emph{rank} ($\texttt{rank}_0$, $\texttt{rank}_1$) and \emph{select} ($\texttt{select}_0$, $\texttt{select}_1$) queries, as detailed in \autoref{sec:bitvectors}. These structures typically add a $o(n)$ bits overhead. With this machinery, key operations can be performed efficiently \cite{sadakane2006squeezing,vigna2013quasi}.
 
-\emph{Access(i)} retrieves the $i$-th element $s_i$ (with $0 \le i < n$). First, the lower $l$ bits, $L(s_i)$, are read directly from array $L$ starting at bit position $i \cdot l$. Second, the position $p$ corresponding to the $(i+1)$-th $1$ in $H$ is found using $p = \textsf{select}_1(H, i+1)$. Third, the value of the upper $h$ bits, $H(s_i)$, is determined by counting the number of zeros preceding position $p$; this count is given by $H(s_i) = p - (i+1)$ or equivalently $H(s_i) = \textsf{rank}_0(H, p)$. Finally, the integer is reconstructed by combining the parts: $s_i = (H(s_i) \ll l) \lor L(s_i)$. Since each step operates in constant time, \emph{Access(i)} has an overall $O(1)$ time complexity \cite{vigna2013quasi}.
+\emph{Access(i)} retrieves the $i$-th element $s_i$ (with $0 \le i < n$). First, the lower $l$ bits, $L(s_i)$, are read directly from array $L$ starting at bit position $i \cdot l$. Second, the position $p$ corresponding to the $(i+1)$-th $1$ in $H$ is found using $p = \textsf{select}_1(H, i+1)$. Third, the value of the upper $h$ bits, $H(s_i)$, is determined by counting the number of zeros preceding position $p$; this count is given by $H(s_i) = p - (i+1)$ or equivalently $H(s_i) = \textsf{rank}_0(H, p)$. Finally, the integer is reconstructed by combining the parts: $s_i = (H(s_i) \ll l) \lor L(s_i)$. Since each step operates in constant time, \emph{Access(i)} has an overall $O(1)$ time complexity.
 
-\emph{Successor(x)} (or \emph{NextGEQ(x)}) finds the smallest element $s_i \in S$ such that $s_i \ge x$, given $x \in [0, u)$. First, the query value $x$ is decomposed into its upper bits $H(x)$ and lower bits $L(x)$. Using $\textsf{select}_0$ queries on $H$, the range of indices $[p_1, p_2)$ in $S$ corresponding to elements whose upper bits are exactly $H(x)$ is identified. Specifically, $p_1$ (the index of the first element with upper bits $H(x)$) is derived from the position of the $H(x)$-th zero, and $p_2$ (the index of the first element with upper bits $H(x)+1$) is derived from the position of the $(H(x)+1)$-th zero. A search is then conducted within the segment $L[p_1 \cdot l \dots p_2 \cdot l - 1]$ of the lower bits array to find the smallest index $k \in [p_1, p_2)$ for which $L(s_k) \ge L(x)$. If such a $k$ is found, the successor is $s_k = (H(x) \ll l) \lor L(s_k)$. If no such $k$ exists in the range, the successor must be the first element with upper bits greater than $H(x)$, which is $s_{p_2}$ (assuming $p_2 < n$), retrievable via \emph{Access($p_2$)}. The dominant cost is the search within the lower bits, potentially involving $O(u/n)$ candidates. Using binary search, this takes $O(\log(u/n))$ time. The select operations contribute $O(1)$ time, leading to a total complexity of $O(1 + \log(u/n))$ for \emph{Successor(x)} \cite{vigna2013quasi}.
-
+\emph{Successor(x)} (or \emph{NextGEQ(x)}) finds the smallest element $s_i \in S$ such that $s_i \ge x$, given $x \in [0, u)$. First, the query value $x$ is decomposed into its upper bits $H(x)$ and lower bits $L(x)$. Using $\textsf{select}_0$ queries on $H$, the range of indices $[p_1, p_2)$ in $S$ corresponding to elements whose upper bits are exactly $H(x)$ is identified. Specifically, $p_1$ (the index of the first element with upper bits $H(x)$) is derived from the position of the $H(x)$-th zero, and $p_2$ (the index of the first element with upper bits $H(x)+1$) is derived from the position of the $(H(x)+1)$-th zero. A search is then conducted within the segment $L[p_1 \cdot l \dots p_2 \cdot l - 1]$ of the lower bits array to find the smallest index $k \in [p_1, p_2)$ for which $L(s_k) \ge L(x)$. If such a $k$ is found, the successor is $s_k = (H(x) \ll l) \lor L(s_k)$. If no such $k$ exists in the range, the successor must be the first element with upper bits greater than $H(x)$, which is $s_{p_2}$ (assuming $p_2 < n$), retrievable via \emph{Access($p_2$)}. The dominant cost is the search within the lower bits, potentially involving $O(u/n)$ candidates. Using binary search, this takes $O(\log(u/n))$ time. The select operations contribute $O(1)$ time, leading to a total complexity of $O(1 + \log(u/n))$ for \emph{Successor(x)}
 \emph{Predecessor(x)} finds the largest element $s_i \in S$ such that $s_i \le x$. It uses a symmetric approach. The same index range $[p_1, p_2)$ based on $H(x)$ is located. A search is performed on the corresponding lower bits in $L$ to find the largest index $k \in [p_1, p_2)$ such that $L(s_k) \le L(x)$. If found, the predecessor is $s_k = (H(x) \ll l) \lor L(s_k)$. If no element within the range $[p_1, p_2)$ satisfies $s_k \le x$, the predecessor must be the last element with upper bits strictly less than $H(x)$, namely $s_{p_1-1}$ (assuming $p_1 > 0$), which is retrieved using \emph{Access($p_1-1$)}. The time complexity is also $O(1 + \log(u/n))$.
+
+% \begin{figure}[hbtp]
+%     \centering
+%     \begin{tikzpicture}[
+%         node distance=2mm and 5mm, % Adjusted horizontal distance slightly
+%         bit/.style={draw, minimum size=5mm, font=\footnotesize\ttfamily, inner sep=1pt},
+%         lbl/.style={font=\small\bfseries},
+%         arr/.style={-{Stealth[length=1.5mm, width=1.5mm]}, gray, thick},
+%         grp/.style={draw, dashed, gray, inner sep=1pt, rounded corners=2pt}, % Added rounded corners
+%         brace/.style={decorate, decoration={brace, amplitude=4pt, raise=2pt}, thick}
+%         ]
+
+%         % Parameters and Sequence (Position relative to origin 0,0)
+%         \coordinate (origin) at (0,0);
+%         % % \node (params) [anchor=north west, align=left, font=\small] at (origin) {$n=8$, $u=32 \implies b=5$, $l=\lfloor\log_2(32/8)\rfloor = 2$, $h=b-l=3$};
+%         % \node (S_lbl) [anchor=west, lbl, below=3mm of origin.west, xshift=0mm] {$S =$}; % Align S label under start of params
+%         % \node (S_val) [anchor=west, right=1mm of S_lbl, font=\small] {$\{1, 4, 7, 18, 24, 26, 30, 31\}$};
+
+%         % --- Table Structure ---
+%         % Use coordinates to define column positions relative to origin
+%         \coordinate (col_i)   at ([xshift=0cm]origin);
+%         \coordinate (col_si)  at ([xshift=1.5cm]origin);
+%         \coordinate (col_bin) at ([xshift=3.0cm]origin);
+%         \coordinate (col_hi)  at ([xshift=6.5cm]origin); % Increased space for binary bits
+%         \coordinate (col_li)  at ([xshift=8.0cm]origin);
+
+%         % Headers positioned at column coordinates, below S
+%         \coordinate (hdr_level) at ([yshift=-1.2cm]origin);
+%         \node (idx_hdr) [lbl, anchor=west] at (hdr_level -| col_i) {$i$};
+%         \node (si_hdr)  [lbl, anchor=west] at (hdr_level -| col_si) {$s_i$};
+%         \node (bin_hdr) [lbl, anchor=west] at (hdr_level -| col_bin) {Binary ($H \mid L$)};
+%         \node (Hi_hdr)  [lbl, anchor=west] at (hdr_level -| col_hi) {$H(s_i)$};
+%         \node (Li_hdr)  [lbl, anchor=west] at (hdr_level -| col_li) {$L(s_i)$};
+
+%         % Reference coordinate for placing first row
+%         \coordinate (row0_y) at ([yshift=-0.8cm]hdr_level);
+
+%         % --- Decomposition Rows ---
+%         % Position nodes using column coordinates and vertical shifts/references
+%         % i=0
+%         \node (idx0) [anchor=center] at (row0_y -| col_i) {0};
+%         \node (si0)  [anchor=center] at (row0_y -| col_si) {1};
+%         % Binary bits centered(ish) in their column space
+%         \node (bin0H1) [bit, anchor=center] at (row0_y -| col_bin) {0};
+%         \node (bin0H2) [bit, base right=0mm of bin0H1] {0};
+%         \node (bin0H3) [bit, base right=0mm of bin0H2] {0};
+%         \node (bin0L1) [bit, base right=2mm of bin0H3] {0}; % Space for separator
+%         \node (bin0L2) [bit, base right=0mm of bin0L1] {1};
+%         \node (Hi0)    [anchor=center] at (row0_y -| col_hi) {0};
+%         \node (Li0)    [anchor=center] at (row0_y -| col_li) {1};
+%         \coordinate (L0_coord) at ($(bin0L1.south)!0.5!(bin0L2.south)$);
+
+%         % i=1 (Position below previous row using 'below=of idx0')
+%         \node (idx1) [anchor=center, below=of idx0] {1};
+%         \node (si1)  [anchor=center] at (idx1 -| col_si) {4};
+%         \node (bin1H1) [bit, anchor=center] at (idx1 -| col_bin) {0};
+%         \node (bin1H2) [bit, base right=0mm of bin1H1] {0};
+%         \node (bin1H3) [bit, base right=0mm of bin1H2] {1};
+%         \node (bin1L1) [bit, base right=2mm of bin1H3] {0};
+%         \node (bin1L2) [bit, base right=0mm of bin1L1] {0};
+%         \node (Hi1)    [anchor=center] at (idx1 -| col_hi) {1};
+%         \node (Li1)    [anchor=center] at (idx1 -| col_li) {0};
+%         \coordinate (L1_coord) at ($(bin1L1.south)!0.5!(bin1L2.south)$);
+
+%         % i=2
+%         \node (idx2) [anchor=center, below=of idx1] {2};
+%         \node (si2)  [anchor=center] at (idx2 -| col_si) {7};
+%         \node (bin2H1) [bit, anchor=center] at (idx2 -| col_bin) {0};
+%         \node (bin2H2) [bit, base right=0mm of bin2H1] {0};
+%         \node (bin2H3) [bit, base right=0mm of bin2H2] {1};
+%         \node (bin2L1) [bit, base right=2mm of bin2H3] {1};
+%         \node (bin2L2) [bit, base right=0mm of bin2L1] {1};
+%         \node (Hi2)    [anchor=center] at (idx2 -| col_hi) {1};
+%         \node (Li2)    [anchor=center] at (idx2 -| col_li) {3};
+%         \coordinate (L2_coord) at ($(bin2L1.south)!0.5!(bin2L2.south)$);
+
+%         % i=3
+%         \node (idx3) [anchor=center, below=of idx2] {3};
+%         \node (si3)  [anchor=center] at (idx3 -| col_si) {18};
+%         \node (bin3H1) [bit, anchor=center] at (idx3 -| col_bin) {1};
+%         \node (bin3H2) [bit, base right=0mm of bin3H1] {0};
+%         \node (bin3H3) [bit, base right=0mm of bin3H2] {0};
+%         \node (bin3L1) [bit, base right=2mm of bin3H3] {1};
+%         \node (bin3L2) [bit, base right=0mm of bin3L1] {0};
+%         \node (Hi3)    [anchor=center] at (idx3 -| col_hi) {4};
+%         \node (Li3)    [anchor=center] at (idx3 -| col_li) {2};
+%         \coordinate (L3_coord) at ($(bin3L1.south)!0.5!(bin3L2.south)$);
+
+%         % i=4
+%         \node (idx4) [anchor=center, below=of idx3] {4};
+%         \node (si4)  [anchor=center] at (idx4 -| col_si) {24};
+%         \node (bin4H1) [bit, anchor=center] at (idx4 -| col_bin) {1};
+%         \node (bin4H2) [bit, base right=0mm of bin4H1] {1};
+%         \node (bin4H3) [bit, base right=0mm of bin4H2] {0};
+%         \node (bin4L1) [bit, base right=2mm of bin4H3] {0};
+%         \node (bin4L2) [bit, base right=0mm of bin4L1] {0};
+%         \node (Hi4)    [anchor=center] at (idx4 -| col_hi) {6};
+%         \node (Li4)    [anchor=center] at (idx4 -| col_li) {0};
+%         \coordinate (L4_coord) at ($(bin4L1.south)!0.5!(bin4L2.south)$);
+
+%         % i=5
+%         \node (idx5) [anchor=center, below=of idx4] {5};
+%         \node (si5)  [anchor=center] at (idx5 -| col_si) {26};
+%         \node (bin5H1) [bit, anchor=center] at (idx5 -| col_bin) {1};
+%         \node (bin5H2) [bit, base right=0mm of bin5H1] {1};
+%         \node (bin5H3) [bit, base right=0mm of bin5H2] {0};
+%         \node (bin5L1) [bit, base right=2mm of bin5H3] {1};
+%         \node (bin5L2) [bit, base right=0mm of bin5L1] {0};
+%         \node (Hi5)    [anchor=center] at (idx5 -| col_hi) {6};
+%         \node (Li5)    [anchor=center] at (idx5 -| col_li) {2};
+%         \coordinate (L5_coord) at ($(bin5L1.south)!0.5!(bin5L2.south)$);
+
+%         % i=6
+%         \node (idx6) [anchor=center, below=of idx5] {6};
+%         \node (si6)  [anchor=center] at (idx6 -| col_si) {30};
+%         \node (bin6H1) [bit, anchor=center] at (idx6 -| col_bin) {1};
+%         \node (bin6H2) [bit, base right=0mm of bin6H1] {1};
+%         \node (bin6H3) [bit, base right=0mm of bin6H2] {1};
+%         \node (bin6L1) [bit, base right=2mm of bin6H3] {1};
+%         \node (bin6L2) [bit, base right=0mm of bin6L1] {0};
+%         \node (Hi6)    [anchor=center] at (idx6 -| col_hi) {7};
+%         \node (Li6)    [anchor=center] at (idx6 -| col_li) {2};
+%         \coordinate (L6_coord) at ($(bin6L1.south)!0.5!(bin6L2.south)$);
+
+%         % i=7 (Last row node)
+%         \node (idx7) [anchor=center, below=of idx6] {7};
+%         \node (si7)  [anchor=center] at (idx7 -| col_si) {31};
+%         \node (bin7H1) [bit, anchor=center] at (idx7 -| col_bin) {1};
+%         \node (bin7H2) [bit, base right=0mm of bin7H1] {1};
+%         \node (bin7H3) [bit, base right=0mm of bin7H2] {1};
+%         \node (bin7L1) [bit, base right=2mm of bin7H3] {1};
+%         \node (bin7L2) [bit, base right=0mm of bin7L1] {1};
+%         \node (Hi7)    [anchor=center] at (idx7 -| col_hi) {7};
+%         \node (Li7)    [anchor=center] at (idx7 -| col_li) {3};
+%         \coordinate (L7_coord) at ($(bin7L1.south)!0.5!(bin7L2.south)$);
+
+%         % Draw vertical separator line for binary split
+%         \coordinate (sep_mid_top) at ($(bin0H3.north east)!0.5!(bin0L1.north west)$);
+%         \coordinate (sep_mid_bot) at ($(bin7H3.south east)!0.5!(bin7L1.south west)$);
+%         \draw [gray, dashed] (sep_mid_top) -- (sep_mid_bot);
+
+%         % --- Lower Bits Array (L) ---
+%         % Position L below the table, starting aligned near center of table width
+%         \coordinate (L_start_pos) at ([yshift=-1.5cm]idx7.south -| col_si); % Align start under si column
+%         \node (L_lbl) [lbl, anchor=east] at (L_start_pos) {$L =$};
+%         % Place L bits relative to L_lbl
+%         \node (L0)  [bit, anchor=west, base right=1mm of L_lbl] {0};
+%         \node (L1)  [bit, base right=0mm of L0] {1}; \node (L_pair0) [fit=(L0)(L1), inner sep=0pt] {};
+%         \node (L2)  [bit, base right=1mm of L1] {0};
+%         \node (L3)  [bit, base right=0mm of L2] {0}; \node (L_pair1) [fit=(L2)(L3), inner sep=0pt] {};
+%         \node (L4)  [bit, base right=1mm of L3] {1};
+%         \node (L5)  [bit, base right=0mm of L4] {1}; \node (L_pair2) [fit=(L4)(L5), inner sep=0pt] {};
+%         \node (L6)  [bit, base right=1mm of L5] {1};
+%         \node (L7)  [bit, base right=0mm of L6] {0}; \node (L_pair3) [fit=(L6)(L7), inner sep=0pt] {};
+%         \node (L8)  [bit, base right=1mm of L7] {0};
+%         \node (L9)  [bit, base right=0mm of L8] {0}; \node (L_pair4) [fit=(L8)(L9), inner sep=0pt] {};
+%         \node (L10) [bit, base right=1mm of L9] {1};
+%         \node (L11) [bit, base right=0mm of L10] {0}; \node (L_pair5) [fit=(L10)(L11), inner sep=0pt] {};
+%         \node (L12) [bit, base right=1mm of L11] {1};
+%         \node (L13) [bit, base right=0mm of L12] {0}; \node (L_pair6) [fit=(L12)(L13), inner sep=0pt] {};
+%         \node (L14) [bit, base right=1mm of L13] {1};
+%         \node (L15) [bit, base right=0mm of L14] {1}; \node (L_pair7) [fit=(L14)(L15), inner sep=0pt] {};
+
+%         % Box around L array
+%         \draw ($(L0.north west)+(-1pt,1pt)$) rectangle ($(L15.south east)+(1pt,-1pt)$);
+%         \node [font=\tiny, below right=0.5mm and -1mm of L15] {$n \cdot l = 16$ bits};
+
+%         % Arrows from L(si) bits to L array segments
+%         \draw [arr] (L0_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair0.north);
+%         \draw [arr] (L1_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair1.north);
+%         \draw [arr] (L2_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair2.north);
+%         \draw [arr] (L3_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair3.north);
+%         \draw [arr] (L4_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair4.north);
+%         \draw [arr] (L5_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair5.north);
+%         \draw [arr] (L6_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair6.north);
+%         \draw [arr] (L7_coord) .. controls +(south:6mm) and +(north:6mm) .. (L_pair7.north);
+
+%         % --- Upper Bits Bitvector (H) ---
+%         % Position H below L, starting at same horizontal alignment
+%         \coordinate (H_start_pos) at ([yshift=-1.5cm]L0.south -| L_lbl); % Align start with L_lbl
+%         \node (H_lbl) [lbl, anchor=east] at (H_start_pos) {$H =$};
+%         % Place H bits relative to H_lbl
+%         \node (H0)  [bit, anchor=west, base right=1mm of H_lbl] {1};
+%         \node (H1)  [bit, base right=0mm of H0] {0}; \node (H_grp0) [fit=(H0)(H1), inner sep=0pt] {};
+%         \node (H2)  [bit, base right=1mm of H1] {1};
+%         \node (H3)  [bit, base right=0mm of H2] {1};
+%         \node (H4)  [bit, base right=0mm of H3] {0}; \node (H_grp1) [fit=(H2)(H4), inner sep=0pt] {};
+%         \node (H5)  [bit, base right=1mm of H4] {0}; \node (H_grp2) [fit=(H5), inner sep=0pt] {};
+%         \node (H6)  [bit, base right=1mm of H5] {0}; \node (H_grp3) [fit=(H6), inner sep=0pt] {};
+%         \node (H7)  [bit, base right=1mm of H6] {1};
+%         \node (H8)  [bit, base right=0mm of H7] {0}; \node (H_grp4) [fit=(H7)(H8), inner sep=0pt] {};
+%         \node (H9)  [bit, base right=1mm of H8] {0}; \node (H_grp5) [fit=(H9), inner sep=0pt] {};
+%         \node (H10) [bit, base right=1mm of H9] {1};
+%         \node (H11) [bit, base right=0mm of H10] {1};
+%         \node (H12) [bit, base right=0mm of H11] {0}; \node (H_grp6) [fit=(H10)(H12), inner sep=0pt] {};
+%         \node (H13) [bit, base right=1mm of H12] {1};
+%         \node (H14) [bit, base right=0mm of H13] {1};
+%         \node (H15) [bit, base right=0mm of H14] {0}; \node (H_grp7) [fit=(H13)(H15), inner sep=0pt] {};
+
+%         % Box around H bitvector
+%         \draw ($(H0.north west)+(-1pt,1pt)$) rectangle ($(H15.south east)+(1pt,-1pt)$);
+%         \node [font=\tiny, below right=0.5mm and -1mm of H15] {$n + 2^h = 16$ bits};
+
+%         % Braces and labels for H blocks
+%         \draw [brace] (H_grp0.north west) -- (H_grp0.north east) node[midway, above=4pt, font=\tiny] {$j=0, c_0=1$};
+%         \draw [brace] (H_grp1.north west) -- (H_grp1.north east) node[midway, above=4pt, font=\tiny] {$j=1, c_1=2$};
+%         \draw [brace] (H_grp2.north west) -- (H_grp2.north east) node[midway, above=4pt, font=\tiny] {$j=2, c_2=0$};
+%         \draw [brace] (H_grp3.north west) -- (H_grp3.north east) node[midway, above=4pt, font=\tiny] {$j=3, c_3=0$};
+%         \draw [brace] (H_grp4.north west) -- (H_grp4.north east) node[midway, above=4pt, font=\tiny] {$j=4, c_4=1$};
+%         \draw [brace] (H_grp5.north west) -- (H_grp5.north east) node[midway, above=4pt, font=\tiny] {$j=5, c_5=0$};
+%         \draw [brace] (H_grp6.north west) -- (H_grp6.north east) node[midway, above=4pt, font=\tiny] {$j=6, c_6=2$};
+%         \draw [brace] (H_grp7.north west) -- (H_grp7.north east) node[midway, above=4pt, font=\tiny] {$j=7, c_7=2$};
+
+%         % Grouping H(si) values and arrows to H blocks
+%         \node (grp_fit_H0) [grp, fit=(Hi0)] {};
+%         \draw [arr] (grp_fit_H0.south) .. controls +(south:10mm) and +(north:10mm) .. (H_grp0.north);
+
+%         \node (grp_fit_H1) [grp, fit=(Hi1) (Hi2)] {};
+%         \draw [arr] (grp_fit_H1.south) .. controls +(south:10mm) and +(north:10mm) .. (H_grp1.north);
+
+%         \node (grp_fit_H4) [grp, fit=(Hi3)] {}; % H(s_i)=4 -> j=4
+%         \draw [arr] (grp_fit_H4.south) .. controls +(south:10mm) and +(north:10mm) .. (H_grp4.north);
+
+%         \node (grp_fit_H6) [grp, fit=(Hi4) (Hi5)] {}; % H(s_i)=6 -> j=6
+%         \draw [arr] (grp_fit_H6.south) .. controls +(south:10mm) and +(north:10mm) .. (H_grp6.north);
+
+%         \node (grp_fit_H7) [grp, fit=(Hi6) (Hi7)] {}; % H(s_i)=7 -> j=7
+%         \draw [arr] (grp_fit_H7.south) .. controls +(south:10mm) and +(north:10mm) .. (H_grp7.north);
+
+%         % Optional: uncomment to see the calculated bounding box
+%         % \draw [red, very thin] (current bounding box.south west) rectangle (current bounding box.north east);
+
+%     \end{tikzpicture}
+% \end{figure}

@@ -6,7 +6,7 @@ To develop our data structure and associated algorithms, we first establish the 
 \subsection*{Weighted Directed Acyclic Graphs}
 \label{subsec:dag_def}
 
-We begin with the formal definition of the combinatorial structure central to this chapter.
+We begin with the formal definition of the structure central to this chapter.
 
 \begin{definition}[Weighted DAG]
     \label{def:weighted_dag}
@@ -61,9 +61,9 @@ This definition implies that $\mathcal{O}_v$ contains only the distinct values g
 
 The following proposition establishes the semantic meaning of the $\mathcal{O}$-set, confirming that it correctly captures the set of all possible path weights (as defined in \ref{def:paths_weights}) ending at a vertex.
 
-\begin{proposition}[Semantic Interpretation of $\mathcal{O}$-Set]
+\begin{proposition}[Characterization of the $\mathcal{O}$-Set]
     \label{prop:o_set_correctness}
-    For any vertex $v \in V$, the set $\mathcal{O}_v$ is precisely the set of cumulative path weights from the source $s$ to $v$:
+    For any vertex $v \in V$, the set $\mathcal{O}_v$ is equal to the set of cumulative path weights from the source $s$ to $v$:
     \[ \mathcal{O}_v = \{ W(P) \mid P \in Path(s, v) \}. \]
 \end{proposition}
 \begin{proof}
@@ -71,7 +71,7 @@ The following proposition establishes the semantic meaning of the $\mathcal{O}$-
     \textit{Base Case:} For the source vertex $v=s$, the only path in $Path(s, s)$ is the trivial path $P=(s)$. According to Definition \ref{def:paths_weights}, $W(P)=0$. By Definition \ref{def:o_set}, $\mathcal{O}_s = \{0\}$. Thus, the proposition holds for $s$.
     \textit{Inductive Step:} Assume the proposition holds for all vertices $u$ that strictly precede $v$ in the topological order. In particular, this assumption holds for all $u \in Pred(v)$, since the existence of an edge $(u, v)$ implies $u$ precedes $v$ in any topological sort. We must show that $\mathcal{O}_v = \{ W(P) \mid P \in Path(s, v) \}$.
 
-    ($\subseteq$) Let $x \in \mathcal{O}_v$. By Definition \ref{def:o_set}, since $v \neq s$, there must exist a predecessor $u \in Pred(v)$ and a value $y \in \mathcal{O}_u$ such that $x = y + w(v)$. By the inductive hypothesis applied to $u$, $y = W'(P')$ for some path $P' = (v_0=s, \dots, v_{k-1}=u) \in Path(s, u)$. Consider the path $P = (v_0, \dots, v_{k-1}, v_k=v)$ formed by appending the edge $(u, v)$ to $P'$. This is a valid path in $Path(s, v)$. Its weight according to Definition \ref{def:paths_weights} is
+    ($\subseteq$) Let $x \in \mathcal{O}_v$. By Definition \ref{def:o_set}, since $v \neq s$, there must exist a predecessor $u \in Pred(v)$ and a value $y \in \mathcal{O}_u$ such that $x = y + w(v)$. By the inductive hypothesis applied to $u$, $y = W(P')$ for some path $P' = (v_0=s, \dots, v_{k-1}=u) \in Path(s, u)$. Consider the path $P = (v_0, \dots, v_{k-1}, v_k=v)$ formed by appending the edge $(u, v)$ to $P'$. This is a valid path in $Path(s, v)$. Its weight according to Definition \ref{def:paths_weights} is
     \begin{align*}
         W(P) & = \sum_{j=1}^{k} w(v_j) = \left(\sum_{j=1}^{k-1} w(v_j)\right) + w(v_k) \\
              & = W(P') + w(v) = y + w(v) = x.
@@ -207,19 +207,19 @@ An important property related to the sizes of these $\mathcal{O}$-sets is monoto
 \subsection{The Rank Query}
 \label{subsec:rank_dag_def}
 
-Having defined the $\mathcal{O}$-set, which precisely captures the set of all possible cumulative path weights terminating at a given vertex $N$, we now introduce the \Rank{} query. This query builds upon the $\mathcal{O}$-set to provide a richer description related to the path weights.
+Having defined the $\mathcal{O}$-set, which precisely captures the set of all possible cumulative path weights terminating at a given vertex $N$, we now introduce the \textsf{rank} query. This query builds upon the $\mathcal{O}$-set to provide a richer description related to the path weights.
 
-Intuitively, each value $x \in \mathcal{O}_N$ represents the total accumulated weight along some path from the source $s$ ending exactly at $N$. We can think of the weight $w(N)$ of the node $N$ itself as the contribution or cost associated with the final step or "activity" performed at $N$. The \Rank{} query, $\mathrm{rank}_G(N)$, aims to capture not just the final cumulative weights $x \in \mathcal{O}_N$, but rather the set of all possible cumulative values that could be considered "active" or relevant \emph{during} the activity represented by node $N$.
+Intuitively, each value $x \in \mathcal{O}_N$ represents the total accumulated weight along some path from the source $s$ ending exactly at $N$. We can think of the weight $w(N)$ of the node $N$ itself as the contribution or cost associated with the final step or "activity" performed at $N$. The \textsf{rank} query, $\mathrm{rank}_G(N)$, aims to capture not just the final cumulative weights $x \in \mathcal{O}_N$, but rather the set of all possible cumulative values that could be considered "active" or relevant \emph{during} the activity represented by node $N$.
 
 Specifically, for a path $P$ reaching $N$ with total weight $W(P)=x$, the query considers the range of cumulative values from the point just before incorporating $N$'s full weight up to the final value $x$. This corresponds mathematically to the integer interval
 \[[\max(0, x - w(N) + 1), x]\]
-This interval represents all possible integer cumulative weights observed during the \emph{processing} of node $N$ along that specific path. The \Rank{} query then aggregates these intervals over all possible paths ending at $N$.
+This interval represents all possible integer cumulative weights observed during the \emph{processing} of node $N$ along that specific path. The \textsf{rank} query then aggregates these intervals over all possible paths ending at $N$.
 
 This intuition leads to the following formal definition:
 
 \begin{definition}[Rank Query on Weighted DAG]
     \label{def:rank_dag}
-    Given a vertex $N \in V$ in a weighted DAG $G=(V, E, w)$, the Rank query, denoted $\mathrm{rank}_G(N)$, returns a representation of a specific set of integers derived from the $\mathcal{O}$-set $\mathcal{O}_N$. The target set, $S_N \subseteq \mathbb{N}_0$, is defined as the union of intervals generated from each element $x \in \mathcal{O}_N$:
+    Given a vertex $N \in V$ in a weighted DAG $G=(V, E, w)$, the rank query, denoted $\mathrm{rank}_G(N)$, returns a representation of a specific set of integers derived from the $\mathcal{O}$-set $\mathcal{O}_N$. The target set, $S_N \subseteq \mathbb{N}_0$, is defined as the union of intervals generated from each element $x \in \mathcal{O}_N$:
     \[ S_N = \bigcup_{x \in \mathcal{O}_N} \{ z \in \mathbb{N}_0 \mid \max(0, x - w(N) + 1) \le z \le x \}. \]
     These intervals are then maximally merged, meaning $r_k < l_{k+1}-1$ for all $k=1, \dots, p-1$. The query result is specified as a minimal collection of disjoint, closed integer intervals,
     \[ \mathcal{R}_N = \{[l_1, r_1], [l_2, r_2], \dots, [l_p, r_p]\} \]
@@ -231,9 +231,8 @@ This intuition leads to the following formal definition:
 %     As motivated above, the transformation from $\mathcal{O}_N$ to the set $S_N$ via the interval generation rule $\{ z \mid \max(0, x - w(N) + 1) \le z \le x \}$ formalizes the idea of capturing the range of values associated with the final node $N$ for each possible incoming path weight $x$. The length of the generated interval is typically $w(N)$ (unless $x < w(N)-1$, in which case it starts from 0), ending precisely at $x$. This mathematical formulation directly implements the intuition of considering values accumulated during the phase associated with node $N$. The subsequent union and merging into disjoint intervals provide a canonical and compact representation of the overall set $S_N$.
 % \end{remark}
 
-We now illustrate the \Rank query with an example.
 
-\begin{example}[Rank Query Calculation with Disjoint Result]
+\begin{example}[Rank Query Calculation]
     \label{ex:rank_calc_disjoint}
     Let us compute the rank query for vertex $N=2$ in the DAG shown\footnote{In this example, the weight function $w$ assigns to each vertex $v$ a weight equal to its identifier, i.e., $w(v)=v$. This is possible since it's just a small graph and we have taken unique weights} in \autoref{fig:dag_example}. From Example \ref{ex:o_set_calc}, we know that the weight of node 2 is $w(2) = 2$, and its $\mathcal{O}$-set is $\mathcal{O}_2 = \{ 5, 9, 11 \}$. These are the possible total weights of paths ending at node 2.
     Applying Definition \ref{def:rank_dag}, we associate an interval with each $x \in \mathcal{O}_2$, representing the values active during the processing of node 2:

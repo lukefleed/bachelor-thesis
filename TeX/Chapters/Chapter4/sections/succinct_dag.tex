@@ -12,8 +12,10 @@ For an implicit representation of path information, we define a function $\sigma
     \label{def:sigma_function}
     For each vertex $v \in V$ that is not a sink (i.e., $Succ(v) \neq \emptyset$), we select a designated successor $\sigma(v) \in Succ(v)$ according to the following heuristic rule:
     \[ \sigma(v) \in \underset{u \in Succ(v)}{\operatorname{argmin}} \{ |\mathcal{O}_u| \}. \]
-    In case of ties (multiple successors minimize the $\mathcal{O}$-set cardinality) we select the successor with the smallest vertex ID among the candidates. The function $\sigma$ is thus well-defined for all non-sink vertices.
+    In case of ties (multiple successors minimize the $\mathcal{O}$-set cardinality) we select the successor with the smallest vertex ID among the candidates.
 \end{definition}
+
+The function $\sigma$ is thus well-defined for all non-sink vertices.
 
 \subsection*{Node Partitioning}
 \label{subsec:node_partitioning}
@@ -32,7 +34,7 @@ The path weight information ($\mathcal{O}$-sets) for vertices in $V_E$ is stored
 \subsection{Structure Components}
 \label{subsec:structure_components}
 
-We now outline the main components of our data structure designed to represent the weighted DAG $G=(V,E,w)$ succinctly. These components are typically implemented as arrays indexed by vertex ID (from $0$ to $n-1$), enabling a Structure of Arrays (SoA) memory layout \footnote{The SoA organization can be advantageous for cache performance and allows for independent compression strategies for different data types (weights, pointers, path data) that we will discuss in \autoref{sec:compression_strategies}.}.
+We now outline the main components of our data structure designed to represent the weighted DAG $G=(V,E,w)$ succinctly. These components can be seen as arrays indexed by vertex ID (from $0$ to $n-1$), enabling a Struct of Arrays (SoA) memory layout \footnote{The SoA organization can be advantageous for cache performance and allows for independent compression strategies for different data types (weights, pointers, path data) that we will discuss in \autoref{sec:compression_strategies}.}.
 
 \begin{enumerate}
     \item \emph{Weights $\mathcal{W}$:} An array storing the weight $w(v)$ for each vertex $v \in V$, $\mathcal{W}[v] = w(v)$.
@@ -57,7 +59,7 @@ For $v \in V_I$ (\emph{Implicit Vertex}), let $u = \sigma(v)$ be the designated 
 \end{proof}
 This inequality guarantees that the length of the offset sequence $\mathcal{I}_v$ (which is $m = |\mathcal{O}_v|$) is no greater than the length of the sequence $\mathcal{O}_u$ (which is $|\mathcal{O}_u|$) from which values are derived. Furthermore, the reconstruction rule $x_k = y_{j_k} - w(u)$ implies that each $x_k \in \mathcal{O}_v$ originates from some element in $\mathcal{O}_u$ (shifted by $-w(u)$). The offset sequence $\mathcal{I}_v$ stores the index $j_k$ in $\mathcal{O}_u$ corresponding to the $k$-th element $x_k$ in $\mathcal{O}_v$.
 
-The heuristic choice of $\sigma(v)$ (\ref{def:sigma_function}) aims to minimize $|\mathcal{O}_{\sigma(v)}|$. While this is a greedy, local optimization, the intuition is that choosing a successor with a smaller $\mathcal{O}$-set might lead to offset sequences $\mathcal{I}_v$ that are structurally simpler or involve smaller index values, potentially improving the compressibility of the $\mathcal{D}_I(v)$ component. In \autoref{chap:conclusion}, we will discuss alternative strategies for selecting successors.
+The heuristic choice of $\sigma(v)$ (\ref{def:sigma_function}) aims to minimize $|\mathcal{O}_{\sigma(v)}|$. While this is a greedy, local optimization, the intuition is that choosing a successor with a smaller $\mathcal{O}$-set might lead to offset sequences $\mathcal{I}_v$ that are structurally simpler or involve smaller index values, potentially improving the compressibility of the $\mathcal{D}_I(v)$ component. In \autoref{chap:conclusion}, we will discuss alternative strategies for selecting successors that considers the overall structure of the DAG.
 
 \begin{remark}[Unique Sink Transformation]
     A DAG with multiple sinks can be transformed into one with a unique sink by adding a virtual sink $t'$ ($w(t')=0$) and connecting all original sinks to it. This transformation preserves the $\mathcal{O}$-sets for all original vertices. The main advantage for our succinct structure is space efficiency: instead of storing potentially numerous and large $\mathcal{O}$-sets for all original sinks (explicit nodes), we only need to store the $\mathcal{O}$-set for the single virtual sink $t'$. This significantly reduces the cost associated with explicit nodes, which are generally more space-intensive than implicit nodes, especially for sinks deep within the DAG. We can thus assume, without loss of generality, that our DAG has a unique sink.
