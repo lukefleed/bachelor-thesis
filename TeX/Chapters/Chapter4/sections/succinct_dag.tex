@@ -73,14 +73,14 @@ To illustrate the succinct representation, we apply the principles from \autoref
 \begin{figure}[htbp]
     \centering
     \begin{tikzpicture}[
-        node distance=1.5cm and 1cm, % Restored original node distance
+        node distance=1.5cm and 1cm,
         base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
-        root_node/.style={base_node, fill=red!60, text=black}, % Pastel red fill
-        implicit_node/.style={base_node}, % Standard style for implicit nodes
-        explicit_node/.style={base_node, fill=green!40, text=black}, % Style for explicit nodes
-        data_label/.style={font=\tiny\sffamily\bfseries, text=black, inner sep=1pt}, % Adjusted data label style slightly
-        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!15}, % Normal edges faint
-        successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Highlighted successor edge
+        root_node/.style={base_node, fill=red!60, text=black},
+        implicit_node/.style={base_node},
+        explicit_node/.style={base_node, fill=green!40, text=black},
+        data_label/.style={font=\tiny\sffamily\bfseries, text=black, inner sep=1pt},
+        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!15},
+        successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65}
         ]
 
         % Nodes with weights and associated data (Offset I or O-set O)
@@ -95,7 +95,6 @@ To illustrate the succinct representation, we apply the principles from \autoref
         \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (5) at (9, 0.5) {5};
         \node[implicit_node, label={[data_label, xshift=-0.9cm, yshift=0.2cm]above right:{$\mathcal{I}_{10}=(1, 5, 6)$}}] (10) at (8.5, 5) {10};
 
-        % Faint original edges
         \draw [edge_style] (0) -- (1); \draw [edge_style] (0) -- (3);
         \draw [edge_style] (1) -- (6); \draw [edge_style] (1) -- (7);
         \draw [edge_style] (3) -- (2); \draw [edge_style] (3) -- (6);
@@ -120,7 +119,7 @@ To illustrate the succinct representation, we apply the principles from \autoref
         \draw [successor_edge] (0) -- (1); % sigma(0)=1
         \draw [successor_edge] (1) -- (7); % sigma(1)=7
         \draw [successor_edge] (3) -- (6); % sigma(3)=6
-        \draw [successor_edge] (6) -- (2); % sigma(6)=2 (Corrected from original text example; assuming tie-break by ID)
+        \draw [successor_edge] (6) -- (2); % sigma(6)=2
         \draw [successor_edge] (7) -- (9); % sigma(7)=9
         \draw [successor_edge] (2) -- (10); % sigma(2)=10
         \draw [successor_edge] (9) -- (5); % sigma(9)=5
@@ -149,7 +148,5 @@ The construction proceeds in three main steps:
 \end{enumerate}
 
 This representation stores $\mathcal{O}$-sets only for explicit (sink) nodes. For implicit nodes, it stores references (via $\sigma$) and transformations (via $\mathcal{I}_v$ and weights $\mathcal{W}$), enabling reconstruction of path information, as detailed in the next section.
-
-
 
 % The example in \autoref{fig:query_path_node7} illustrates how a specific value from an implicit node's $\mathcal{O}$-set can be reconstructed. The query for $\mathcal{O}_7[0]$ triggers a traversal along the $\sigma$-defined path $7 \to 9 \to 5 \to 8$. During this traversal, the offset sequences ($\mathcal{I}_7, \mathcal{I}_9, \mathcal{I}_5$) are used to update the target index within the respective successor's $\mathcal{O}$-set representation, and the weights of the successors ($w(9), w(5), w(8)$) are accumulated. Once the explicit node (8) is reached, the value at the final computed index (7) is retrieved from the stored $\mathcal{O}_8$. Subtracting the accumulated weight sum (22) from this base value (30) yields the desired result (8).

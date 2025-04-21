@@ -21,7 +21,6 @@ Since edges only connect vertices associated with index $k$ to vertices associat
 
 Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate string. The weighted DAG $G_A$ derived from this degenerate string for character $c = \emph{A}$, following the construction detailed above, is illustrated in Figure \ref{fig:degenerate_dag_horizontal_v3}. In the figure, the notation $(k,a)$ inside a node identifies the vertex $v_{k,a}$.
 
-% --- Figure for Degenerate String Example (Tabular Style) ---
 \begin{figure}[htbp]
     \centering
     \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
@@ -44,7 +43,7 @@ Figure \ref{fig:degenerate_example_tabular_v3} shows an example degenerate strin
             weight_zero/.style={node_style, fill=gray!20},
             source_node/.style={node_style, fill=red!60},
             edge_style/.style={->, >=latex, thin, gray},
-            level_label/.style={font=\footnotesize, below=12mm of #1} % Style for level labels, increased spacing
+            level_label/.style={font=\footnotesize, below=12mm of #1}
         ]
 
         % Nodes arranged by level (k) vertically aligned

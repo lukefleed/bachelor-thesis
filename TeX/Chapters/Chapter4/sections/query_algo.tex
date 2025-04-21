@@ -19,31 +19,26 @@ Consider the task of retrieving the $k$-th element of $\mathcal{O}_v$, denoted $
         base_node/.style={circle, draw=black, thick, minimum size=9mm, inner sep=0pt, font=\sffamily},
         implicit_node/.style={base_node},
         explicit_node/.style={base_node, fill=green!40, text=black},
-        % Define specific label styles for reuse
         node_label_above/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, above, yshift=1mm},
         node_label_below/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, below, yshift=-2mm},
-        node_label_inside/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=0pt, align=center}, % Changed color to match others
-        % Edge labels
-        step_label/.style={font=\sffamily\scriptsize, text=black, above, midway, sloped, yshift=1mm, inner sep=1pt}, % Added inner sep
-        weight_label/.style={font=\sffamily\scriptsize, text=red!80!black, below, midway, sloped, yshift=-1mm, inner sep=1pt}, % Added inner sep
-        annotation/.style={font=\sffamily\tiny, text=black, align=center}, % Consistent annotation style
+        node_label_inside/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=0pt, align=center},
+        step_label/.style={font=\sffamily\scriptsize, text=black, above, midway, sloped, yshift=1mm, inner sep=1pt},
+        weight_label/.style={font=\sffamily\scriptsize, text=red!80!black, below, midway, sloped, yshift=-1mm, inner sep=1pt},
+        annotation/.style={font=\sffamily\tiny, text=black, align=center},
         result_label/.style={font=\sffamily\scriptsize\bfseries, text=purple!80},
         successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Pastel blue
         ]
 
-        % Nodes involved in the query path with adjusted coordinates and labels to match the image
         \node[implicit_node, label={[node_label_inside]:{$\mathcal{I}_7=(1)$}}] (N7) at (0,0) {7};
         \node[implicit_node, label={[node_label_above]:{$\mathcal{I}_9=(1, 2, 3)$}}] (N9) at (3,1.5) {9};
         \node[implicit_node, label={[node_label_below, yshift=-8mm]:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (N5) at (5.5,-0.5) {5};
         \node[explicit_node, label={[node_label_above]:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (N8) at (8.5,1.5) {8};
 
-        % % Annotations adjusted based on new node positions to match the image layout
         \node[annotation, anchor=south] at ([yshift=-0.5cm]N7.south) {index $k=0$, $sum=0$};
         \node[annotation, anchor=north] at ([yshift=0.8cm]N9.north) {index $k=1$, $sum=9$};
         \node[annotation, anchor=south] at ([yshift=-0.8cm]N5.south) {index $k=2$, $sum=14$};
         \node[annotation, anchor=east] at ([xshift=1.6cm, yshift=-0.7cm]N8.east) {index $k=7$, $sum=22$};
 
-        % Successor Edges for the path with sloped labels
         \draw [successor_edge] (N7) -- node[step_label] {Use $\mathcal{I}_7[0]=\mathbf{1}$}
         node[weight_label] {$+ w(9)=9$} (N9);
         \draw [successor_edge] (N9) -- node[step_label] {Use $\mathcal{I}_9[1]=\mathbf{2}$}
@@ -51,7 +46,7 @@ Consider the task of retrieving the $k$-th element of $\mathcal{O}_v$, denoted $
         \draw [successor_edge] (N5) -- node[step_label] {Use $\mathcal{I}_5[2]=\mathbf{7}$}
         node[weight_label] {$+ w(8)=8$} (N8);
 
-        \node[annotation, below=1.1cm of N8, xshift=0.4cm] (Calc) {Retrieve $\mathcal{O}_8[7] = 30$. \\ Final Result = $30 - sum = 30 - 22 = \mathbf{8}$.}; % Slightly adjusted vertical position
+        \node[annotation, below=1.1cm of N8, xshift=0.4cm] (Calc) {Retrieve $\mathcal{O}_8[7] = 30$. \\ Final Result = $30 - sum = 30 - 22 = \mathbf{8}$.};
         \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
 
     \end{tikzpicture}
