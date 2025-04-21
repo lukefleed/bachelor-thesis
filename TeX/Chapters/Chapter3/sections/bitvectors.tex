@@ -322,7 +322,7 @@ As for the rank data structure, we can state the following theorem:
     for handling the smallest dense blocks can be extremely small for practical values of $n$. In implementations, if $k$ is small enough (e.g., fits within a machine word or cache line), scanning the dense sub-chunk directly to find the $i''$-th occurrence of 1 might be faster than using the more complex theoretical $o(n)$ mechanism or precomputed tables. This again relates to broadword programming techniques, similar to the optimization mentioned for \textsf{rank}.
 \end{remark}
 
-\subsection{Compressing Sparse Bitvectors with Elias-Fano} \label{subsec:elias_fano_compression}
+\subsection{Compressing Sparse Bitvectors} \label{subsec:elias_fano_compression}
 
 The \textsf{rank} and \textsf{select} structures discussed previously (\ref{subsec:rank}, \ref{subsec:select}) operate on the plain bitvector $B[1..n]$, achieving a total space occupancy of $n + o(n)$ bits. However, in many practical scenarios, the bitvector $B$ exhibits a skewed distribution, containing significantly fewer 1s than 0s (or vice-versa). Let $m = \textsf{rank}_1(B, n)$ be the total number of set bits. When $m \ll n$, storing the full $n$-bit vector is inefficient.
 
@@ -332,7 +332,7 @@ As detailed by Vigna \cite{vigna2013quasi} in the context of quasi-succinct indi
 
 This compressed representation directly supports efficient operations. The $\textsf{select}_1(i)$ operation, finding the position of the $i$-th set bit, can typically be implemented in constant time on average, often leveraging auxiliary pointers within the Elias-Fano structure as engineered in \cite{vigna2013quasi}. However, this space efficiency comes at the cost of potentially slower $\textsf{rank}_1$ and accessing $B[i]$ operations compared to the $n+o(n)$ structures. These operations usually involve decoding parts of the Elias-Fano structure and may take $O(\log(n/m))$ time or depend on the specific implementation details \cite{navarro2016compact}. Therefore, Elias-Fano presents a compelling space-time trade-off, offering near-optimal compression for sparse bitvectors at the expense of $\textsf{rank}_1$ and access time complexity. The choice between plain bitvector structures and Elias-Fano depends critically on the sparsity of the data and the required query performance profile.
 
-\subsection{Practical Implementation Considerations} \label{subsec:practical_considerations}
+\subsection{Practical Considerations} \label{subsec:practical_considerations}
 
 While the asymptotic analysis guarantees $O(1)$ query time and $o(n)$ extra space for the \textsf{rank} and \textsf{select} structures presented earlier, achieving high performance in practice requires careful consideration of architectural factors and constant overheads hidden in the $o(n)$ term. Memory latency, cache efficiency, and instruction-level parallelism often dominate the actual running time on modern processors.
 

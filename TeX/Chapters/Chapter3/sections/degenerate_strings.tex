@@ -33,7 +33,7 @@ The motivation for studying these queries in \cite{SubsetWT} arose from pangenom
 
 A naive solution involves storing a bitvector $B_c$ of length $n$ for each $c \in \Sigma$, marking the presence of $c$ in $X_k$ at $B_c[k]$. Standard $O(1)$-time \textsf{rank} and \textsf{select} on these bitvectors suffice ($\Drank_X(i, c) = \textsf{rank}_1(B_c, i)$ and $\Dselect_X(j, c) = \textsf{select}_1(B_c, j)$), but the total space is $O(\sigma n)$ bits, which is impractical for large $\sigma$ or $n$.
 
-\subsection{The Subset Wavelet Tree Approach}
+\subsection{Subset Wavelet Trees}
 
 To address the space issue, Alanko et al. \cite{SubsetWT} introduced the \emph{Subset Wavelet Tree (SWT)}, generalizing the standard Wavelet Tree (\autoref{sec:wavelet_trees}) to degenerate strings.
 

@@ -5,7 +5,7 @@ The succinct representation presented in \autoref{sec:succinct_dag_representatio
 
 We primarily consider variable-length integer coding (\autoref{sec:integer_coding}), Elias-Fano encoding (\autoref{sec:elias_fano_code}), and Run-Length Encoding (RLE), aiming to preserve efficient access needed for query evaluation (Algorithms~\ref{alg:get_value} and \ref{alg:rank_dag}), potentially using structures like the compressed integer vectors from \autoref{app:compressed_intvec_engineering}.
 
-\subsection{Compressing Weights and Successor Information}
+\subsection{Weights and Successors}
 \label{subsec:compressing_W_Sigma}
 
 The components $\mathcal{W}$ and $\Sigma$ are arrays of integers, both without any guarantee of monotonicity or specific distribution patterns a priori.
@@ -26,7 +26,7 @@ To combine compression with efficient random access (retrieving $\mathcal{W}[v]$
 
 Alternatively, if the range of values (maximum weight or $n$) is small, treating them as symbols from a small alphabet $\alpha$ allows using Wavelet Trees (\autoref{sec:wavelet_trees}) or related structures (\autoref{sec:wavelet_matrices_and_quad_vectors}). These offer $O(\log |\alpha|)$ access time. However, for general graphs with potentially large weights or vertex counts, direct integer coding via \textsf{compressed-intvec} is often more practical.
 
-\subsection{Compressing Associated Data Sequences}
+\subsection{Associated Data Sequences}
 \label{subsec:compressing_associated_data_sequences}
 
 The associated data component $\mathcal{D}$ stores sequences that encode path weight information. Specifically, for an explicit vertex $v \in V_E$, $\mathcal{D}[v]$ holds the $\mathcal{O}$-set $\mathcal{O}_v = (x_0, \dots, x_{m-1})$, and for an implicit vertex $v \in V_I$, it holds the offset sequence $\mathcal{I}_v = (j_0, \dots, j_{m-1})$. Both $\mathcal{O}_v$ and $\mathcal{I}_v$ are sequences of non-negative integers which are strictly increasing ($x_k < x_{k+1}$ and $j_k < j_{k+1}$ respectively), as established by their definitions and construction rules.
