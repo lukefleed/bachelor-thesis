@@ -82,66 +82,67 @@ The space usage of this pointer-based wavelet tree consists of the bitmaps and t
 \begin{figure}[h]
     % ... (Tikz code remains the same as provided) ...
     \centering
-    \tikzstyle{every node}=[font=\footnotesize]
-    \begin{tikzpicture}[
-            scale=0.5,
-            level distance=4.5cm,
-            level 1/.style={sibling distance=12.3cm},
-            level 2/.style={sibling distance=6.3cm},
-            level 3/.style={sibling distance=3cm},
-            level 4/.style={sibling distance=1.6cm},
-            level 5/.style={sibling distance=0.7cm},
-            level 6/.style={sibling distance=0.7cm},
-            level 7/.style={sibling distance=0.7cm}]  % Added level 7 style
-        \node[align=center] {\texttt{wookies\_wield\_wicked\_weapons\_with\_wisdom\$}\\\texttt{111100101001001001000100111101010010}}
-        child {node[align=center] {\texttt{ie\_ied\_iced\_ea\_ih\_id\$}\\\texttt{110111010110100110110}}
-                child {node[align=center] {\texttt{\_\_c\_a\_\_\&}\\\texttt{00101000}}
-                        child {node[align=center] {\texttt{\_\_\_\_\_\$}\\\texttt{000001}}
-                                child {node[align=center] {\texttt{\$}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{\_}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[left] {0}}
-                        child {node[align=center] {\texttt{ca}\\\texttt{10}}
-                                child {node[align=center] {\texttt{a}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{c}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[right] {1}}
-                        edge from parent node[left] {0}}
-                child {node[align=center] {\texttt{ieiediedeihid}\\\texttt{1010010001110}}
-                        child {node[align=center] {\texttt{iiiihi}\\\texttt{111101}}
-                                child {node[align=center] {\texttt{h}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{i}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[left] {0}}
-                        child {node[align=center] {\texttt{eededed}\\\texttt{1101010}}
-                                child {node[align=center] {\texttt{d}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{e}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[right] {1}}
-                        edge from parent node[right] {1}}
-                edge from parent node[left] {0}}
-        child {node[align=center] {\texttt{wookswlwkwponswtwsom}\\\texttt{11101101011101111110}}
-                child {node[align=center] {\texttt{klknm}\\\texttt{00011}}
-                        child {node[align=center] {\texttt{klk}\\\texttt{010}}
-                                child {node[align=center] {\texttt{k}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{l}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[left] {0}}
-                        child {node[align=center] {\texttt{nm}\\\texttt{10}}
-                                child {node[align=center] {\texttt{m}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{n}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[right] {1}}
-                        edge from parent node[left] {0}}
-                child {node[align=center] {\texttt{wooswwwposwtwso}\\\texttt{100111100111110}}
-                        child {node[align=center] {\texttt{oopoo}\\\texttt{00100}}
-                                child {node[align=center] {\texttt{o}} edge from parent node[left] {0}}  % Added level 7 node
-                                child {node[align=center] {\texttt{p}} edge from parent node[right] {1}}  % Added level 7 node
-                                edge from parent node[left] {0}}
-                        child {node[align=center] {\texttt{swwwswtws}\\\texttt{1011101110}}
-                                child {node[align=center] {\texttt{s}}}
-                                child {node[align=center] {\texttt{wwwwtw}\\\texttt{111101}}
-                                        child {node[align=center] {\texttt{t}} edge from parent node[left] {0}}  % Added level 7 node
-                                        child {node[align=center] {\texttt{w}} edge from parent node[right] {1}}  % Added level 7 node
-                                        edge from parent node[right] {1}}
-                                edge from parent node[right] {1}}
-                        edge from parent node[right] {1}}
-                edge from parent node[right] {1}};
-    \end{tikzpicture}
+    % \tikzstyle{every node}=[font=\footnotesize]
+    % \begin{tikzpicture}[
+    %         scale=0.5,
+    %         level distance=4.5cm,
+    %         level 1/.style={sibling distance=12.3cm},
+    %         level 2/.style={sibling distance=6.3cm},
+    %         level 3/.style={sibling distance=3cm},
+    %         level 4/.style={sibling distance=1.6cm},
+    %         level 5/.style={sibling distance=0.7cm},
+    %         level 6/.style={sibling distance=0.7cm},
+    %         level 7/.style={sibling distance=0.7cm}]  % Added level 7 style
+    %     \node[align=center] {\texttt{wookies\_wield\_wicked\_weapons\_with\_wisdom\$}\\\texttt{111100101001001001000100111101010010}}
+    %     child {node[align=center] {\texttt{ie\_ied\_iced\_ea\_ih\_id\$}\\\texttt{110111010110100110110}}
+    %             child {node[align=center] {\texttt{\_\_c\_a\_\_\&}\\\texttt{00101000}}
+    %                     child {node[align=center] {\texttt{\_\_\_\_\_\$}\\\texttt{000001}}
+    %                             child {node[align=center] {\texttt{\$}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{\_}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[left] {0}}
+    %                     child {node[align=center] {\texttt{ca}\\\texttt{10}}
+    %                             child {node[align=center] {\texttt{a}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{c}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[right] {1}}
+    %                     edge from parent node[left] {0}}
+    %             child {node[align=center] {\texttt{ieiediedeihid}\\\texttt{1010010001110}}
+    %                     child {node[align=center] {\texttt{iiiihi}\\\texttt{111101}}
+    %                             child {node[align=center] {\texttt{h}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{i}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[left] {0}}
+    %                     child {node[align=center] {\texttt{eededed}\\\texttt{1101010}}
+    %                             child {node[align=center] {\texttt{d}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{e}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[right] {1}}
+    %                     edge from parent node[right] {1}}
+    %             edge from parent node[left] {0}}
+    %     child {node[align=center] {\texttt{wookswlwkwponswtwsom}\\\texttt{11101101011101111110}}
+    %             child {node[align=center] {\texttt{klknm}\\\texttt{00011}}
+    %                     child {node[align=center] {\texttt{klk}\\\texttt{010}}
+    %                             child {node[align=center] {\texttt{k}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{l}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[left] {0}}
+    %                     child {node[align=center] {\texttt{nm}\\\texttt{10}}
+    %                             child {node[align=center] {\texttt{m}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{n}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[right] {1}}
+    %                     edge from parent node[left] {0}}
+    %             child {node[align=center] {\texttt{wooswwwposwtwso}\\\texttt{100111100111110}}
+    %                     child {node[align=center] {\texttt{oopoo}\\\texttt{00100}}
+    %                             child {node[align=center] {\texttt{o}} edge from parent node[left] {0}}  % Added level 7 node
+    %                             child {node[align=center] {\texttt{p}} edge from parent node[right] {1}}  % Added level 7 node
+    %                             edge from parent node[left] {0}}
+    %                     child {node[align=center] {\texttt{swwwswtws}\\\texttt{1011101110}}
+    %                             child {node[align=center] {\texttt{s}}}
+    %                             child {node[align=center] {\texttt{wwwwtw}\\\texttt{111101}}
+    %                                     child {node[align=center] {\texttt{t}} edge from parent node[left] {0}}  % Added level 7 node
+    %                                     child {node[align=center] {\texttt{w}} edge from parent node[right] {1}}  % Added level 7 node
+    %                                     edge from parent node[right] {1}}
+    %                             edge from parent node[right] {1}}
+    %                     edge from parent node[right] {1}}
+    %             edge from parent node[right] {1}};
+    % \end{tikzpicture}
+    \includegraphics[width=\textwidth]{assets/WT_full.pdf}
     \caption{\small Wavelet tree for the sequence \texttt{wookies\_wield\_\dots}} \label{fig:wavelet_tree_example}
 \end{figure}
 
@@ -203,6 +204,19 @@ Computing $\textsf{select}_c(S, j)$ involves an upward traversal from the leaf n
 
 \subsubsection{Rank}
 Computing $\textsf{rank}_c(S, i)$ uses a top-down traversal similar to \textsf{access}. We start at the root $v_{root}$ with index $i_{root} = i$. At each node $v$ (range $[a_v, b_v]$, midpoint $m_v$), we check if the target symbol $c$ belongs to the left sub-range ($c \le m_v$) or the right sub-range ($c > m_v$). If $c \le m_v$, we descend to the left child $v_l$ and update the index to $i_{v_l} = \textsf{rank}_0(B_v, i_v)$. If $c > m_v$, we descend to the right child $v_r$ and update the index to $i_{v_r} = \textsf{rank}_1(B_v, i_v)$. The traversal continues until the leaf node $u$ corresponding to symbol $c$ is reached. The final index $i_u$ at this leaf is the value $\textsf{rank}_c(S, i)$. This requires $\lceil \log \sigma \rceil$ bitvector \textsf{rank} operations in $O(\log \sigma)$ time. Algorithm~\ref{alg:rank_wt} formalizes this.
+
+\begin{example}
+    Consider the computation of $\textsf{rank}_e(S, 13)$ shown in \autoref{fig:rank_example_wt}. We start at the root with index $i=13$. Here, \emph{e} corresponds to bit 0, so we compute $\textsf{rank}_0(13) = 6$ and descend left with the new index $i=6$. At this node, \emph{e} corresponds to bit 1; evaluating $\textsf{rank}_1(6) = 5$, we proceed right with index $i=5$. In the next node, \emph{e} maps to bit 0; calculating $\textsf{rank}_0(5) = 3$, we descend left with $i=3$. We reach the node for \emph{e}, where it corresponds locally to bit 1. The final computation is $\textsf{rank}_1(3) = 2$. Thus, $\textsf{rank}_e(S, 13) = 2$.
+\end{example}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{assets/WT_rank_example.pdf}
+    \caption{\textsf{rank}$_e(S,13)$ on the wavelet tree of \autoref{fig:wavelet_tree_example}.}
+    \label{fig:rank_example_wt}
+\end{figure}
+
 
 \begin{algorithm}[h!]
     \caption{\texttt{Rank} queries on a wavelet tree}\label{alg:rank_wt}

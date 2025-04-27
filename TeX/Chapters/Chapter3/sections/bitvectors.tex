@@ -22,49 +22,50 @@ We begin our study with the most fundamental sequence type, the \emph{bitvector}
 
 \begin{figure}[htbp]
     \centering
-    \begin{tikzpicture}[scale=0.6,
-            bitnode/.style={draw, rectangle, minimum width=6mm, minimum height=6mm, inner sep=0pt, outer sep=0pt}, % Ensure outer sep is 0
-            indexlabel/.style={below=2mm of #1.south, font=\footnotesize, anchor=north} % Adjusted label positioning
-        ]
-        % Use a pgf array for easier indexing
-        \def\bitvectorarray{{1,0,1,1,0,1,0,0,1,1,0,1,0,1,1,1,0,0,1,0}}
+    % \begin{tikzpicture}[scale=0.6,
+    %         bitnode/.style={draw, rectangle, minimum width=6mm, minimum height=6mm, inner sep=0pt, outer sep=0pt}, % Ensure outer sep is 0
+    %         indexlabel/.style={below=2mm of #1.south, font=\footnotesize, anchor=north} % Adjusted label positioning
+    %     ]
+    %     % Use a pgf array for easier indexing
+    %     \def\bitvectorarray{{1,0,1,1,0,1,0,0,1,1,0,1,0,1,1,1,0,0,1,0}}
 
-        % Draw the first node
-        \node[bitnode] (B1) at (0, 0) {\pgfmathparse{\bitvectorarray[0]}\pgfmathresult}; % Access first element
-        \node[indexlabel=B1] {1};
+    %     % Draw the first node
+    %     \node[bitnode] (B1) at (0, 0) {\pgfmathparse{\bitvectorarray[0]}\pgfmathresult}; % Access first element
+    %     \node[indexlabel=B1] {1};
 
-        % Draw subsequent nodes relative to the previous one
-        \foreach \idx in {1,...,19} { % Loop from index 1 to 19 (to draw nodes 2 to 20)
-                \pgfmathtruncatemacro{\nodeidx}{\idx+1} % Current node index (2 to 20)
-                \pgfmathtruncatemacro{\contentidx}{\idx} % Array content index (1 to 19)
-                \node[bitnode, right=0pt of B\idx, anchor=west] (B\nodeidx) {\pgfmathparse{\bitvectorarray[\contentidx]}\pgfmathresult};
-                \node[indexlabel=B\nodeidx] {\nodeidx};
-            }
+    %     % Draw subsequent nodes relative to the previous one
+    %     \foreach \idx in {1,...,19} { % Loop from index 1 to 19 (to draw nodes 2 to 20)
+    %             \pgfmathtruncatemacro{\nodeidx}{\idx+1} % Current node index (2 to 20)
+    %             \pgfmathtruncatemacro{\contentidx}{\idx} % Array content index (1 to 19)
+    %             \node[bitnode, right=0pt of B\idx, anchor=west] (B\nodeidx) {\pgfmathparse{\bitvectorarray[\contentidx]}\pgfmathresult};
+    %             \node[indexlabel=B\nodeidx] {\nodeidx};
+    %         }
 
-        % --- Annotations ---
+    %     % --- Annotations ---
 
-        % Rank_1(15) = 9
-        % Draw arrow pointing slightly above the bottom right corner of B15
-        \coordinate (rank_arrow_start) at ([yshift=-9mm]B15.south east);
-        \coordinate (rank_arrow_end) at ([xshift=-0.5mm,yshift=0.5mm]B15.south east); % Point just inside border
-        \draw[->, red, thick] (rank_arrow_start) -- (rank_arrow_end);
-        % Place text below the arrow start
-        \node[red, font=\footnotesize, align=center, anchor=north] at (rank_arrow_start) {$\textsf{rank}_1(15) = 9$};
-        % Highlight the prefix B[1..15] slightly
-        \foreach \idx in {1,...,15} {
-                \fill[red!10, opacity=0.5] (B\idx.south west) rectangle (B\idx.north east);
-            }
+    %     % Rank_1(15) = 9
+    %     % Draw arrow pointing slightly above the bottom right corner of B15
+    %     \coordinate (rank_arrow_start) at ([yshift=-9mm]B15.south east);
+    %     \coordinate (rank_arrow_end) at ([xshift=-0.5mm,yshift=0.5mm]B15.south east); % Point just inside border
+    %     \draw[->, red, thick] (rank_arrow_start) -- (rank_arrow_end);
+    %     % Place text below the arrow start
+    %     \node[red, font=\footnotesize, align=center, anchor=north] at (rank_arrow_start) {$\textsf{rank}_1(15) = 9$};
+    %     % Highlight the prefix B[1..15] slightly
+    %     \foreach \idx in {1,...,15} {
+    %             \fill[red!10, opacity=0.5] (B\idx.south west) rectangle (B\idx.north east);
+    %         }
 
-        % Select_1(7) = 12
-        % Draw arrow pointing slightly below the top middle of B12
-        \coordinate (select_arrow_start) at ([yshift=5mm]B12.north);
-        \coordinate (select_arrow_end) at ([yshift=-0.5mm]B12.north); % Point just inside border
-        \draw[->, blue, thick] (select_arrow_start) -- (select_arrow_end);
-        % Place text above the arrow start
-        \node[blue, font=\footnotesize, align=center, anchor=south] at (select_arrow_start) {$\textsf{select}_1(7) = 12$};
-        % Highlight the 7th '1' (at index 12)
-        \draw[blue, thick, rounded corners] (B12.north west) rectangle (B12.south east);
-    \end{tikzpicture}
+    %     % Select_1(7) = 12
+    %     % Draw arrow pointing slightly below the top middle of B12
+    %     \coordinate (select_arrow_start) at ([yshift=5mm]B12.north);
+    %     \coordinate (select_arrow_end) at ([yshift=-0.5mm]B12.north); % Point just inside border
+    %     \draw[->, blue, thick] (select_arrow_start) -- (select_arrow_end);
+    %     % Place text above the arrow start
+    %     \node[blue, font=\footnotesize, align=center, anchor=south] at (select_arrow_start) {$\textsf{select}_1(7) = 12$};
+    %     % Highlight the 7th '1' (at index 12)
+    %     \draw[blue, thick, rounded corners] (B12.north west) rectangle (B12.south east);
+    % \end{tikzpicture}
+    \includegraphics[width=\textwidth]{assets/rank_select_3.pdf}
     \caption{Example of a bitvector $B[1..20]$. The prefix $B[1..15]$ (shaded red) contains 9 ones, so $\textsf{rank}_1(15)=9$. The 7th $1$ (circled blue) occurs at index 12, so $\textsf{select}_1(7)=12$.}
     \label{fig:bitvector_example}
 \end{figure}
@@ -115,62 +116,63 @@ Finally, a \emph{lookup table}, often denoted $T$, is used to determine the rank
 Figure \ref{fig:RRR} shows a visual representation of the hierarchical data structure.
 
 \begin{figure}[hbtp]
-    \begin{flushright}
-        \begin{tikzpicture}[scale=0.5] % Adjust the scale as needed
-            \foreach \x/\bit in {0/\footnotesize{\dots}, 1/0, 2/1, 3/0, 4/1, 5/0, 6/1, 7/0, 8/1, 9/0, 10/1, 11/0, 12/1, 13/0, 14/1, 15/0, 16/1, 17/0, 18/1, 19/\footnotesize{\dots}} {
-                    \ifnum\x<1
-                        \draw (\x,0) rectangle (\x+1,1) node[midway] {\bit};
-                    \else
-                        \ifnum\x<10
-                            \draw[fill=lightgray] (\x,0) rectangle (\x+1,1) node[midway] {\bit};
-                        \else
-                            \draw (\x,0) rectangle (\x+1,1) node[midway] {\bit};
-                        \fi
-                    \fi
-                }
-            % Add dashed lines
-            \draw[dashed] (1,-1) -- (1,2);
-            \draw[dashed] (10,-1) -- (10,2);
-            \draw[dashed] (19,-1) -- (19,2);
+    % \begin{flushright}
+    %     \begin{tikzpicture}[scale=0.5] % Adjust the scale as needed
+    %         \foreach \x/\bit in {0/\footnotesize{\dots}, 1/0, 2/1, 3/0, 4/1, 5/0, 6/1, 7/0, 8/1, 9/0, 10/1, 11/0, 12/1, 13/0, 14/1, 15/0, 16/1, 17/0, 18/1, 19/\footnotesize{\dots}} {
+    %                 \ifnum\x<1
+    %                     \draw (\x,0) rectangle (\x+1,1) node[midway] {\bit};
+    %                 \else
+    %                     \ifnum\x<10
+    %                         \draw[fill=lightgray] (\x,0) rectangle (\x+1,1) node[midway] {\bit};
+    %                     \else
+    %                         \draw (\x,0) rectangle (\x+1,1) node[midway] {\bit};
+    %                     \fi
+    %                 \fi
+    %             }
+    %         % Add dashed lines
+    %         \draw[dashed] (1,-1) -- (1,2);
+    %         \draw[dashed] (10,-1) -- (10,2);
+    %         \draw[dashed] (19,-1) -- (19,2);
 
-            % add double arrow
-            \draw[<->] (1,-0.5) -- (10,-0.5) node[midway, below] {\footnotesize{$Z=9$}};
-            \draw[<->] (10,-0.5) -- (19,-0.5) node[midway, below] {\footnotesize{$Z=9$}};
+    %         % add double arrow
+    %         \draw[<->] (1,-0.5) -- (10,-0.5) node[midway, below] {\footnotesize{$Z=9$}};
+    %         \draw[<->] (10,-0.5) -- (19,-0.5) node[midway, below] {\footnotesize{$Z=9$}};
 
-            % Add label over the blocks 2, 10
-            \node[above] at (1.5,1) {\footnotesize{$r_i$}};
-            \node[above] at (11,1) {\footnotesize{$r_{i+1}$}};
+    %         % Add label over the blocks 2, 10
+    %         \node[above] at (1.5,1) {\footnotesize{$r_i$}};
+    %         \node[above] at (11,1) {\footnotesize{$r_{i+1}$}};
 
-            % Add one line that starts from the bottom angle of block 1, and goes down inclined
-            \draw[-] (1,0) -- (-4,-3);
-            \draw[-] (10,0) -- (15,-3); % Adjusted target for second arrow
+    %         % Add one line that starts from the bottom angle of block 1, and goes down inclined
+    %         \draw[-] (1,0) -- (-4,-3);
+    %         \draw[-] (10,0) -- (15,-3); % Adjusted target for second arrow
 
-            \foreach \x/\bit in {0/0, 1/1, 2/0, 3/1, 4/0, 5/1, 6/0, 7/1, 8/0} {
-                    \draw (\x*2-3.5,-5) rectangle (\x*2-1.5,-4) node[midway] {\bit};
-                }
+    %         \foreach \x/\bit in {0/0, 1/1, 2/0, 3/1, 4/0, 5/1, 6/0, 7/1, 8/0} {
+    %                 \draw (\x*2-3.5,-5) rectangle (\x*2-1.5,-4) node[midway] {\bit};
+    %             }
 
-            % Add dashed lines
-            \draw[dashed] (-3.5,-6) -- (-3.5,-3);
-            \draw[dashed] (2.5,-6) -- (2.5,-3);
-            \draw[dashed] (8.5,-6) -- (8.5,-3);
-            \draw[dashed] (14.5,-6) -- (14.5,-3); % Adjusted target for second arrow line end point
+    %         % Add dashed lines
+    %         \draw[dashed] (-3.5,-6) -- (-3.5,-3);
+    %         \draw[dashed] (2.5,-6) -- (2.5,-3);
+    %         \draw[dashed] (8.5,-6) -- (8.5,-3);
+    %         \draw[dashed] (14.5,-6) -- (14.5,-3); % Adjusted target for second arrow line end point
 
-            % add double arrow
-            \draw[<->] (-3.5,-5.5) -- (2.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
-            \draw[<->] (2.5,-5.5) -- (8.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
-            \draw[<->] (8.5,-5.5) -- (14.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
+    %         % add double arrow
+    %         \draw[<->] (-3.5,-5.5) -- (2.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
+    %         \draw[<->] (2.5,-5.5) -- (8.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
+    %         \draw[<->] (8.5,-5.5) -- (14.5,-5.5) node[midway, below] {\footnotesize{$z=3$}};
 
-            % Add label over the blocks 2, 10
-            \node[above] at (-2.2,-4) {\footnotesize{$r_{i,0} = 0$}};
-            \node[above] at (3.8,-4) {\footnotesize{$r_{i,1} = 1$}};
-            \node[above] at (9.8,-4) {\footnotesize{$r_{i,2} = 3$}};
+    %         % Add label over the blocks 2, 10
+    %         \node[above] at (-2.2,-4) {\footnotesize{$r_{i,0} = 0$}};
+    %         \node[above] at (3.8,-4) {\footnotesize{$r_{i,1} = 1$}};
+    %         \node[above] at (9.8,-4) {\footnotesize{$r_{i,2} = 3$}};
 
 
-            \foreach \x/\bit in {-4.5/0, 1.5/2, 7.5/3, 13.5/5} { % Coordinates need adjustment if representing LUT
-                    \draw (\x,-8) rectangle (\x+2,-7) node[midway] {\bit}; % Example values
-                }
-        \end{tikzpicture}
-    \end{flushright}
+    %         \foreach \x/\bit in {-4.5/0, 1.5/2, 7.5/3, 13.5/5} { % Coordinates need adjustment if representing LUT
+    %                 \draw (\x,-8) rectangle (\x+2,-7) node[midway] {\bit}; % Example values
+    %             }
+    %     \end{tikzpicture}
+    % \end{flushright}
+    \includegraphics[width=\textwidth]{assets/rank.pdf}
     \caption{The hierarchical \textsf{rank} data structure. The first level is composed of superblocks of size $Z$ (storing absolute ranks $r_i$), the second level of blocks of size $z$ (storing relative ranks $r_{i,j}$), and the third level uses a lookup table (represented by the bottom row).} \label{fig:RRR}
 \end{figure}
 
@@ -367,7 +369,7 @@ This compressed representation directly supports efficient operations. The $\tex
 
 \subsection{Practical Considerations} \label{subsec:practical_considerations}
 
-While the asymptotic analysis guarantees $O(1)$ query time and $o(n)$ extra space for the \textsf{rank} and \textsf{select} structures presented earlier, achieving high performance in practice requires careful consideration of architectural factors and constant overheads hidden in the $o(n)$ term. Memory latency, cache efficiency, and instruction-level parallelism often dominate the actual running time on modern processors.
+While the asymptotic analysis guarantees $O(1)$ query time and $o(n)$ extra space for the \textsf{rank} and \textsf{select} structures presented before, achieving high performance in practice requires careful consideration of architectural factors and constant overheads hidden in the $o(n)$ term. Memory latency, cache efficiency, and instruction-level parallelism often dominate the actual running time on modern processors.
 
 A particularly effective approach for optimizing \textsf{rank} and \textsf{select} implementations leverages \emph{broadword programming} (also known as \textsc{Swar} - \textsc{Simd} within a Register). This technique treats machine registers as small parallel processors, performing operations on multiple data fields packed within a single word using standard arithmetic and logical instructions. Vigna \cite{vigna2008broadword} applied these techniques to \textsf{rank} and \textsf{select} queries, leading to highly efficient practical implementations.
 
