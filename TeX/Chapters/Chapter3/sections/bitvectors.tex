@@ -316,15 +316,48 @@ As for the rank data structure, we can state the following theorem:
     The constant query time follows from the algorithm described, where each step (calculating indices, accessing pointer structures $P_1, P_2$, retrieving stored offsets for sparse cases, or using the constant-time Level 3 dense mechanism) takes $O(1)$ time. The total auxiliary space is the sum of the space required for $P_1$, the relative offsets for sparse chunks, the $P_2$ arrays, the relative offsets for sparse sub-chunks, the Level 3 dense sub-chunk mechanisms, and the structures needed to distinguish between sparse and dense cases. As analyzed during the description, each component requires $o(n)$ bits with parameters $K=\Theta(\log n \log \log n)$ and $k=\Theta((\log \log n)^2)$, relying on established results \cite{clark1997compact}. Therefore, the total auxiliary space is $o(n)$ bits, yielding an overall space of $n+o(n)$ bits.
 \end{proof}
 
-\begin{remark}[Practical Considerations]
+\begin{remark}
     The threshold
     \[k^2 = \Theta((\log \log n)^4)\]
     for handling the smallest dense blocks can be extremely small for practical values of $n$. In implementations, if $k$ is small enough (e.g., fits within a machine word or cache line), scanning the dense sub-chunk directly to find the $i''$-th occurrence of 1 might be faster than using the more complex theoretical $o(n)$ mechanism or precomputed tables. This again relates to broadword programming techniques, similar to the optimization mentioned for \textsf{rank}.
 \end{remark}
 
+\subsection{Entropy-Compressed Rank/Select Structures} \label{subsec:rrr}
+
+While the preceding structures achieve optimal query time with sublinear additive space overhead, they still require the explicit storage of the $n$-bit vector $B$. An alternative line of research focuses on compressing the bitvector itself, aiming for space usage closer to the information-theoretic minimum while preserving efficient query capabilities. The structure developed by Raman, Raman, and Rao \cite{RRR2002} provides such a solution, offering constant-time \textsf{rank} and \textsf{select} operations within space related to the zero-order entropy of the bitvector.
+
+The core strategy involves partitioning the bitvector $B[1..n]$ into blocks of a fixed size $b$, commonly chosen as $b = \lfloor \frac{1}{2}\log_2 n \rfloor$ to facilitate the construction of lookup tables within $o(n)$ space. Each block $B_j$ (representing $B[(j-1)b+1 .. jb]$) is not stored directly but is replaced by a pair $(c_j, o_j)$ that implicitly encodes its content.
+The first component, $c_j$, denotes the \emph{class} of the block, defined as the population count (number of set bits) within $B_j$. The number of possible classes is $b+1$, requiring $\lceil \log_2(b+1) \rceil$ bits per class value.
+The second component, $o_j$, is the \emph{offset}, which uniquely identifies the specific pattern of $B_j$ among all possible $b$-bit blocks belonging to class $c_j$. There are precisely $\binom{b}{c_j}$ such blocks. The offset $o_j$ is an integer in the range $[0, \binom{b}{c_j}-1]$, assigned based on a fixed enumeration (e.g., lexicographical order) of the blocks within each class. Storing $o_j$ requires $\lceil \log_2 \binom{b}{c_j} \rceil$ bits.
+
+The compressed representation of $B$ primarily consists of two sequences: a sequence $C = c_1 c_2 \dots c_{n/b}$ containing the classes of all blocks, and a sequence $O = o_1 o_2 \dots o_{n/b}$ containing the corresponding offsets. Note that the space required for each offset $o_j$ varies depending on its class $c_j$. This variable-length nature contributes significantly to the overall compression, as blocks with very few or very many set bits (low $c_j$ or high $c_j$) result in small values of $\binom{b}{c_j}$, thus requiring fewer bits for their offsets.
+
+To support constant-time queries, we need to store some auxiliary information. The structure utilizes a hierarchical approach, grouping the small blocks into superblocks, typically of size $Z = \Theta(\log^2 n)$ bits (containing $s = Z/b = \Theta(\log^2 n / \log n)$ small blocks). Thus, we employ two main auxiliary structures:
+\begin{enumerate}
+    \item A superblock directory stores, for each superblock boundary $k \cdot Z$, the absolute rank $\textsf{rank}_1(B, k \cdot Z)$. This resembles the $R_S$ array from Section \ref{subsec:rank} and occupies $O(n/\log n)$ bits.
+    \item An index structure provides pointers to the beginning of the offset data $o_j$ for the first block $j$ of each superblock within the sequence $O$. Since the offsets have variable lengths, this typically involves storing prefix sums of the offset lengths, which can be done within $o(n)$ bits overhead while supporting constant-time access. Similar structures might be needed for the class sequence if it is further processed.
+\end{enumerate}
+Furthermore, precomputed lookup tables are essential for constant-time intra-block operations. Let $T_{rank}$ be a table such that $T_{rank}[c][o][k]$ returns the rank within the $k$-th position of the block uniquely identified by class $c$ and offset $o$. Similarly, let $T_{select}$ be a table such that $T_{select}[c][k']$ returns the offset $o$ and the position $p$ of the $k'$-th set bit within any block of class $c$. With $b = \lfloor \frac{1}{2}\log_2 n \rfloor$, the total size of these tables can be bounded by $o(n)$ bits.
+
+To compute $\textsf{rank}_1(B, i)$, the algorithm first determines the superblock $k$ and the block $j$ containing index $i$. The absolute rank up to the start of superblock $k$ is retrieved from the superblock directory. The ranks contributed by the full blocks between the start of superblock $k$ and block $j$ are calculated by summing their respective class values $c_l$ (retrieved from sequence $C$). Finally, the class $c_j$ and offset $o_j$ for block $j$ are retrieved, and the intra-block rank up to the relative position within $B_j$ is found using the $T_{rank}$ lookup table. All these steps take constant time.
+
+The $\textsf{select}_1(B, i)$ query uses the superblock directory to identify the superblock $k$ containing the $i$-th set bit via binary search or related techniques on the precomputed ranks (achievable in $O(1)$ time with appropriate auxiliary structures). Then, it determines the specific block $j$ within that superblock by examining the class sequence $C$ and potentially using the offset pointers. Finally, the $T_{select}$ table is used with the class $c_j$ and the relative rank within the block to find the intra-block position.
+
+Combining these techniques, Raman, Raman, and Rao established the following result for their indexable dictionary structure, which is equivalent to a compressed bitvector supporting rank and select:
+
+\begin{theorem}[\cite{RRR2002}] \label{th:rrr}
+    Given a bitvector $B[1..n]$ containing $m$ set bits, there exists a data structure using
+    $$B(n, m) + o(n) + O(\log \log n)$$
+    bits, where $B(n,m) = \lceil \log_2 \binom{n}{m} \rceil$, that supports $\textsf{rank}_b(B, i)$ and $\textsf{select}_b(B, i)$ queries for any valid $i$ and $b \in \{0,1\}$ in $O(1)$ time on the Word RAM model.
+\end{theorem}
+
+The term $B(n,m)$ represents the information-theoretic minimum space required to store an arbitrary subset of size $m$ from a universe of size $n$. For $m = p \cdot n$, Stirling's approximation shows that
+$$B(n, m) \approx n(-p \log_2 p - (1-p) \log_2(1-p)) = n \mathcal{H}_0(B)$$
+bits, where $\mathcal{H}_0(B)$ is the zero-order empirical entropy of the bitvector. Thus, this structure achieves space close to the entropy bound, providing significant compression for biased bitvectors while maintaining optimal query performance. The small additive $O(\log \log n)$ term originates from auxiliary structures related to universe reduction techniques employed in the full construction \cite{RRR2002}.
+
 \subsection{Compressing Sparse Bitvectors} \label{subsec:elias_fano_compression}
 
-The \textsf{rank} and \textsf{select} structures discussed previously (\ref{subsec:rank}, \ref{subsec:select}) operate on the plain bitvector $B[1..n]$, achieving a total space occupancy of $n + o(n)$ bits. However, in many practical scenarios, the bitvector $B$ exhibits a skewed distribution, containing significantly fewer 1s than 0s (or vice-versa). Let $m = \textsf{rank}_1(B, n)$ be the total number of set bits. When $m \ll n$, storing the full $n$-bit vector is inefficient.
+The preceding sections presented methods for supporting \textsf{rank} and \textsf{select} queries, ranging from structures operating on the plain $n$-bit vector with $o(n)$ additive overhead (\ref{subsec:rank}, \ref{subsec:select}) to entropy-compressed representations aiming for space close to the information-theoretic minimum $B(n,m)$ (\ref{subsec:rrr}). While structures like the one presented by Raman, Raman and Rao provide general compression adapting to the bitvector's density, scenarios involving high sparsity, where the number of set bits $m = \textsf{rank}_1(B, n)$ is substantially smaller than the total length $n$ ($m \ll n$), admit specialized compression techniques. These methods focus directly on the properties inherent to sparse sets, potentially offering different space-time trade-offs compared to general entropy-based approaches.
 
 In such sparse settings, we can leverage compression techniques that exploit the low density of set bits. The Elias-Fano representation, previously introduced in Section~\ref{sec:elias_fano_code}, provides a highly effective method for this task. Recall that Elias-Fano encodes a monotonically increasing sequence of $m$ integers up to a maximum value $n$. We can represent the bitvector $B$ by encoding the sequence of indices $\{ i \mid B[i]=1 \}$.
 
