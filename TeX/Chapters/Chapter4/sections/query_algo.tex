@@ -14,42 +14,43 @@ Consider the task of retrieving the $k$-th element of $\mathcal{O}_v$, denoted $
 
 \begin{figure}[htbp]
     \centering
-    \begin{tikzpicture}[
-        node distance=1.6cm and 1.1cm, % Base distance, actual positions set via coordinates
-        base_node/.style={circle, draw=black, thick, minimum size=9mm, inner sep=0pt, font=\sffamily},
-        implicit_node/.style={base_node},
-        explicit_node/.style={base_node, fill=green!40, text=black},
-        node_label_above/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, above, yshift=1mm},
-        node_label_below/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, below, yshift=-2mm},
-        node_label_inside/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=0pt, align=center},
-        step_label/.style={font=\sffamily\scriptsize, text=black, above, midway, sloped, yshift=1mm, inner sep=1pt},
-        weight_label/.style={font=\sffamily\scriptsize, text=red!80!black, below, midway, sloped, yshift=-1mm, inner sep=1pt},
-        annotation/.style={font=\sffamily\tiny, text=black, align=center},
-        result_label/.style={font=\sffamily\scriptsize\bfseries, text=purple!80},
-        successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Pastel blue
-        ]
+    % \begin{tikzpicture}[
+    %     node distance=1.6cm and 1.1cm, % Base distance, actual positions set via coordinates
+    %     base_node/.style={circle, draw=black, thick, minimum size=9mm, inner sep=0pt, font=\sffamily},
+    %     implicit_node/.style={base_node},
+    %     explicit_node/.style={base_node, fill=green!40, text=black},
+    %     node_label_above/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, above, yshift=1mm},
+    %     node_label_below/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=1pt, align=center, below, yshift=-2mm},
+    %     node_label_inside/.style={font=\tiny\sffamily\bfseries, text=blue!70!black, inner sep=0pt, align=center},
+    %     step_label/.style={font=\sffamily\scriptsize, text=black, above, midway, sloped, yshift=1mm, inner sep=1pt},
+    %     weight_label/.style={font=\sffamily\scriptsize, text=red!80!black, below, midway, sloped, yshift=-1mm, inner sep=1pt},
+    %     annotation/.style={font=\sffamily\tiny, text=black, align=center},
+    %     result_label/.style={font=\sffamily\scriptsize\bfseries, text=purple!80},
+    %     successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65} % Pastel blue
+    %     ]
 
-        \node[implicit_node, label={[node_label_inside]:{$\mathcal{I}_7=(1)$}}] (N7) at (0,0) {7};
-        \node[implicit_node, label={[node_label_above]:{$\mathcal{I}_9=(1, 2, 3)$}}] (N9) at (3,1.5) {9};
-        \node[implicit_node, label={[node_label_below, yshift=-8mm]:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (N5) at (5.5,-0.5) {5};
-        \node[explicit_node, label={[node_label_above]:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (N8) at (8.5,1.5) {8};
+    %     \node[implicit_node, label={[node_label_inside]:{$\mathcal{I}_7=(1)$}}] (N7) at (0,0) {7};
+    %     \node[implicit_node, label={[node_label_above]:{$\mathcal{I}_9=(1, 2, 3)$}}] (N9) at (3,1.5) {9};
+    %     \node[implicit_node, label={[node_label_below, yshift=-8mm]:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (N5) at (5.5,-0.5) {5};
+    %     \node[explicit_node, label={[node_label_above]:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (N8) at (8.5,1.5) {8};
 
-        \node[annotation, anchor=south] at ([yshift=-0.5cm]N7.south) {index $k=0$, $sum=0$};
-        \node[annotation, anchor=north] at ([yshift=0.8cm]N9.north) {index $k=1$, $sum=9$};
-        \node[annotation, anchor=south] at ([yshift=-0.8cm]N5.south) {index $k=2$, $sum=14$};
-        \node[annotation, anchor=east] at ([xshift=1.6cm, yshift=-0.7cm]N8.east) {index $k=7$, $sum=22$};
+    %     \node[annotation, anchor=south] at ([yshift=-0.5cm]N7.south) {index $k=0$, $sum=0$};
+    %     \node[annotation, anchor=north] at ([yshift=0.8cm]N9.north) {index $k=1$, $sum=9$};
+    %     \node[annotation, anchor=south] at ([yshift=-0.8cm]N5.south) {index $k=2$, $sum=14$};
+    %     \node[annotation, anchor=east] at ([xshift=1.6cm, yshift=-0.7cm]N8.east) {index $k=7$, $sum=22$};
 
-        \draw [successor_edge] (N7) -- node[step_label] {Use $\mathcal{I}_7[0]=\mathbf{1}$}
-        node[weight_label] {$+ w(9)=9$} (N9);
-        \draw [successor_edge] (N9) -- node[step_label] {Use $\mathcal{I}_9[1]=\mathbf{2}$}
-        node[weight_label] {$+ w(5)=5$} (N5);
-        \draw [successor_edge] (N5) -- node[step_label] {Use $\mathcal{I}_5[2]=\mathbf{7}$}
-        node[weight_label] {$+ w(8)=8$} (N8);
+    %     \draw [successor_edge] (N7) -- node[step_label] {Use $\mathcal{I}_7[0]=\mathbf{1}$}
+    %     node[weight_label] {$+ w(9)=9$} (N9);
+    %     \draw [successor_edge] (N9) -- node[step_label] {Use $\mathcal{I}_9[1]=\mathbf{2}$}
+    %     node[weight_label] {$+ w(5)=5$} (N5);
+    %     \draw [successor_edge] (N5) -- node[step_label] {Use $\mathcal{I}_5[2]=\mathbf{7}$}
+    %     node[weight_label] {$+ w(8)=8$} (N8);
 
-        \node[annotation, below=1.1cm of N8, xshift=0.4cm] (Calc) {Retrieve $\mathcal{O}_8[7] = 30$. \\ Final Result = $30 - sum = 30 - 22 = \mathbf{8}$.};
-        \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
+    %     \node[annotation, below=1.1cm of N8, xshift=0.4cm] (Calc) {Retrieve $\mathcal{O}_8[7] = 30$. \\ Final Result = $30 - sum = 30 - 22 = \mathbf{8}$.};
+    %     \node[result_label, below=0.1cm of Calc] {Result: $\mathcal{O}_7[0] = 8$};
 
-    \end{tikzpicture}
+    % \end{tikzpicture}
+    \includegraphics[width=\textwidth]{assets/dag_query4.pdf}
     \caption{Visualization of the query process for retrieving the element at index $k=0$ of $\mathcal{O}_7$ using the succinct representation (\autoref{fig:succinct_dag_example}). The query follows the successor path $7 \to 9 \to 5 \to 8$. At each step from an implicit node $v$ to its successor $u=\sigma(v)$, the current index $k_{current}$ is updated using the stored offset $k_{next} = \mathcal{I}_v[k_{current}]$, and the weight $w(u)$ is added to an accumulator (sum). The path starts with $k=0$ at node 7. It proceeds to node 9 using index $\mathcal{I}_7[0]=1$, accumulating $w(9)=9$. Then to node 5 using index $\mathcal{I}_9[1]=2$, accumulating $w(5)=5$ (total sum 14). Then to node 8 using index $\mathcal{I}_5[2]=7$, accumulating $w(8)=8$ (total sum 22). Node 8 is explicit, so the value at the final index 7, $\mathcal{O}_8[7]=30$, is retrieved. The result is obtained by subtracting the total accumulated weight: $30 - 22 = 8$. This correctly reconstructs $\mathcal{O}_7[0]$.}
     \label{fig:query_path_node7}
 \end{figure}
