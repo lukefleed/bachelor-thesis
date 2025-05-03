@@ -6,8 +6,16 @@ This repository contains the LaTeX source code for my bachelor thesis in mathema
 
 The template is Classic Thesis by André Miede. The template is available at [CTAN](https://ctan.org/pkg/classicthesis?lang=en). It's an elegant layout designed in homage to Bringhurst’s “The Elements of Typographic Style”.
 
-## Building the project
+## Structure and Building
 
-There is a Github Action that compiles the LaTeX project at every push to the repository. The compiled PDF is available at the following: [view](https://github.com/lukefleed/bachelor-thesis/blob/build/main.pdf) | [download](https://github.com/lukefleed/bachelor-thesis/raw/build/main.pdf)
+There are two main folders in the repository:
+
+- `thesis`: contains the LaTeX source code for the thesis
+- `slides`: contains the LaTeX source code for the presentation slides
+
+There is a GitHub Action that compiles both the thesis and the slides at every push to the repository. The compiled PDFs are available at the following:
+
+- **Thesis PDF:** [view](https://github.com/lukefleed/bachelor-thesis/blob/build/main.pdf) | [download](https://github.com/lukefleed/bachelor-thesis/raw/build/main.pdf)
+- **Slides PDF:** [view](https://github.com/lukefleed/bachelor-thesis/blob/build/thesis_slides.pdf) | [download](https://github.com/lukefleed/bachelor-thesis/raw/build/thesis_slides.pdf)
 
 Otherwise, you can compile locally using `texlive`
