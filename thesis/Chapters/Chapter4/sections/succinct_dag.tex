@@ -72,61 +72,62 @@ To illustrate the succinct representation, we apply the principles from \autoref
 
 \begin{figure}[htbp]
     \centering
-    \begin{tikzpicture}[
-        node distance=1.5cm and 1cm,
-        base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
-        root_node/.style={base_node, fill=red!60, text=black},
-        implicit_node/.style={base_node},
-        explicit_node/.style={base_node, fill=green!40, text=black},
-        data_label/.style={font=\tiny\sffamily\bfseries, text=black, inner sep=1pt},
-        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!15},
-        successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65}
-        ]
+    % \begin{tikzpicture}[
+    %     node distance=1.5cm and 1cm,
+    %     base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
+    %     root_node/.style={base_node, fill=red!60, text=black},
+    %     implicit_node/.style={base_node},
+    %     explicit_node/.style={base_node, fill=green!40, text=black},
+    %     data_label/.style={font=\tiny\sffamily\bfseries, text=black, inner sep=1pt},
+    %     edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black!15},
+    %     successor_edge/.style={->, >={Stealth[length=2mm, width=1.5mm]}, very thick, draw=blue!65}
+    %     ]
 
-        % Nodes with weights and associated data (Offset I or O-set O)
-        \node[root_node, label={[data_label, red!80!black, yshift=-0.3cm]below:{$\mathcal{I}_0=(0)$}}] (0) at (0, 2) {0};
-        \node[implicit_node, label={[data_label, yshift=-0.1cm]below:{$\mathcal{I}_1=(0)$}}] (1) at (1.5, 0) {1};
-        \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_3=(1)$}}] (3) at (1.5, 4) {3};
-        \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_6=(1, 2)$}}] (6) at (3.5, 1.5) {6};
-        \node[implicit_node, label={[data_label, yshift=-0.1cm]below:{$\mathcal{I}_7=(1)$}}] (7) at (4.5, 0) {7};
-        \node[implicit_node, label={[data_label, xshift=-0.8cm, yshift=0.2cm]above right:{$\mathcal{I}_2=(0, 1, 2)$}}] (2) at (5.5, 4) {2};
-        \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_9=(1, 2, 3)$}}] (9) at (6.5, 2) {9};
-        \node[explicit_node, label={[data_label, align=left, xshift=0.8cm, yshift=-0.1cm]below:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (8) at (11.5, 3) {8};
-        \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (5) at (9, 0.5) {5};
-        \node[implicit_node, label={[data_label, xshift=-0.9cm, yshift=0.2cm]above right:{$\mathcal{I}_{10}=(1, 5, 6)$}}] (10) at (8.5, 5) {10};
+    %     % Nodes with weights and associated data (Offset I or O-set O)
+    %     \node[root_node, label={[data_label, red!80!black, yshift=-0.3cm]below:{$\mathcal{I}_0=(0)$}}] (0) at (0, 2) {0};
+    %     \node[implicit_node, label={[data_label, yshift=-0.1cm]below:{$\mathcal{I}_1=(0)$}}] (1) at (1.5, 0) {1};
+    %     \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_3=(1)$}}] (3) at (1.5, 4) {3};
+    %     \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_6=(1, 2)$}}] (6) at (3.5, 1.5) {6};
+    %     \node[implicit_node, label={[data_label, yshift=-0.1cm]below:{$\mathcal{I}_7=(1)$}}] (7) at (4.5, 0) {7};
+    %     \node[implicit_node, label={[data_label, xshift=-0.8cm, yshift=0.2cm]above right:{$\mathcal{I}_2=(0, 1, 2)$}}] (2) at (5.5, 4) {2};
+    %     \node[implicit_node, label={[data_label, yshift=0.2cm]above:{$\mathcal{I}_9=(1, 2, 3)$}}] (9) at (6.5, 2) {9};
+    %     \node[explicit_node, label={[data_label, align=left, xshift=0.8cm, yshift=-0.1cm]below:{$\mathcal{O}_8=\{21, 23, 24, 25,$ \\ $26, 27, 29, 30, 31\}$}}] (8) at (11.5, 3) {8};
+    %     \node[implicit_node, label={[data_label, xshift=-0.5cm, yshift=-0.3cm]below right:{$\mathcal{I}_5=(0, 6, 7, 8)$}}] (5) at (9, 0.5) {5};
+    %     \node[implicit_node, label={[data_label, xshift=-0.9cm, yshift=0.2cm]above right:{$\mathcal{I}_{10}=(1, 5, 6)$}}] (10) at (8.5, 5) {10};
 
-        \draw [edge_style] (0) -- (1); \draw [edge_style] (0) -- (3);
-        \draw [edge_style] (1) -- (6); \draw [edge_style] (1) -- (7);
-        \draw [edge_style] (3) -- (2); \draw [edge_style] (3) -- (6);
-        \draw [edge_style] (6) -- (2); \draw [edge_style] (6) -- (9);
-        \draw [edge_style] (7) -- (5); \draw [edge_style] (7) -- (9);
-        \draw [edge_style] (2) -- (10);
-        \draw [edge_style] (9) -- (5); \draw [edge_style] (9) -- (8);
-        \draw [edge_style] (10) -- (8);
-        \draw [edge_style] (5) -- (8);
+    %     \draw [edge_style] (0) -- (1); \draw [edge_style] (0) -- (3);
+    %     \draw [edge_style] (1) -- (6); \draw [edge_style] (1) -- (7);
+    %     \draw [edge_style] (3) -- (2); \draw [edge_style] (3) -- (6);
+    %     \draw [edge_style] (6) -- (2); \draw [edge_style] (6) -- (9);
+    %     \draw [edge_style] (7) -- (5); \draw [edge_style] (7) -- (9);
+    %     \draw [edge_style] (2) -- (10);
+    %     \draw [edge_style] (9) -- (5); \draw [edge_style] (9) -- (8);
+    %     \draw [edge_style] (10) -- (8);
+    %     \draw [edge_style] (5) -- (8);
 
-        % Highlighted successor edges (sigma function)
-        % Assume heuristic choices based on O-set sizes from Fig 1 example:
-        % sigma(0): Succ={1,3}. |O1|=1, |O3|=1. Tie-break: min ID -> sigma(0)=1
-        % sigma(1): Succ={6,7}. |O6|=2, |O7|=1. -> sigma(1)=7
-        % sigma(3): Succ={2,6}. |O2|=3, |O6|=2. -> sigma(3)=6
-        % sigma(6): Succ={2,9}. |O2|=3, |O9|=3. Tie-break: min ID -> sigma(6)=2
-        % sigma(7): Succ={5,9}. |O5|=4, |O9|=3. -> sigma(7)=9
-        % sigma(2): Succ={10}. |O10|=3. -> sigma(2)=10
-        % sigma(9): Succ={5,8}. |O5|=4, |O8|=9. -> sigma(9)=5
-        % sigma(10): Succ={8}. |O8|=9. -> sigma(10)=8
-        % sigma(5): Succ={8}. |O8|=9. -> sigma(5)=8
-        \draw [successor_edge] (0) -- (1); % sigma(0)=1
-        \draw [successor_edge] (1) -- (7); % sigma(1)=7
-        \draw [successor_edge] (3) -- (6); % sigma(3)=6
-        \draw [successor_edge] (6) -- (2); % sigma(6)=2
-        \draw [successor_edge] (7) -- (9); % sigma(7)=9
-        \draw [successor_edge] (2) -- (10); % sigma(2)=10
-        \draw [successor_edge] (9) -- (5); % sigma(9)=5
-        \draw [successor_edge] (5) -- (8); % sigma(5)=8
-        \draw [successor_edge] (10) -- (8); % sigma(10)=8
+    %     % Highlighted successor edges (sigma function)
+    %     % Assume heuristic choices based on O-set sizes from Fig 1 example:
+    %     % sigma(0): Succ={1,3}. |O1|=1, |O3|=1. Tie-break: min ID -> sigma(0)=1
+    %     % sigma(1): Succ={6,7}. |O6|=2, |O7|=1. -> sigma(1)=7
+    %     % sigma(3): Succ={2,6}. |O2|=3, |O6|=2. -> sigma(3)=6
+    %     % sigma(6): Succ={2,9}. |O2|=3, |O9|=3. Tie-break: min ID -> sigma(6)=2
+    %     % sigma(7): Succ={5,9}. |O5|=4, |O9|=3. -> sigma(7)=9
+    %     % sigma(2): Succ={10}. |O10|=3. -> sigma(2)=10
+    %     % sigma(9): Succ={5,8}. |O5|=4, |O8|=9. -> sigma(9)=5
+    %     % sigma(10): Succ={8}. |O8|=9. -> sigma(10)=8
+    %     % sigma(5): Succ={8}. |O8|=9. -> sigma(5)=8
+    %     \draw [successor_edge] (0) -- (1); % sigma(0)=1
+    %     \draw [successor_edge] (1) -- (7); % sigma(1)=7
+    %     \draw [successor_edge] (3) -- (6); % sigma(3)=6
+    %     \draw [successor_edge] (6) -- (2); % sigma(6)=2
+    %     \draw [successor_edge] (7) -- (9); % sigma(7)=9
+    %     \draw [successor_edge] (2) -- (10); % sigma(2)=10
+    %     \draw [successor_edge] (9) -- (5); % sigma(9)=5
+    %     \draw [successor_edge] (5) -- (8); % sigma(5)=8
+    %     \draw [successor_edge] (10) -- (8); % sigma(10)=8
 
-    \end{tikzpicture}
+    % \end{tikzpicture}
+    \includegraphics[width=\textwidth]{assets/succinct-dag2.pdf}
     \caption{Illustration of the succinct DAG representation for the graph in \autoref{fig:dag_example}. Implicit nodes are shown with standard borders, while the explicit sink node (8) is shaded green. The source node (0) is red. Highlighted blue edges indicate the chosen successor $\sigma(v)$ for each implicit node $v$, selected according to \ref{def:sigma_function}. Labels show the stored associated data $\mathcal{D}[v]$: the full $\mathcal{O}$-set for the explicit node, and the offset sequence $\mathcal{I}_v$ for all implicit nodes.}
     \label{fig:succinct_dag_example}
 \end{figure}

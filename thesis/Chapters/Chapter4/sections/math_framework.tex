@@ -60,47 +60,48 @@ This definition implies that $\mathcal{O}_v$ contains only the distinct values g
 
 \begin{figure}[htbp]
     \centering
-    \begin{tikzpicture}[
-        node distance=1.5cm and 1cm,
-        base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
-        root_node/.style={base_node, fill=red!60, text=black},
-        data_label/.style={font=\tiny\sffamily, text=black},
-        edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black}
-        ]
+    % \begin{tikzpicture}[
+    %     node distance=1.5cm and 1cm,
+    %     base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
+    %     root_node/.style={base_node, fill=red!60, text=black},
+    %     data_label/.style={font=\tiny\sffamily, text=black},
+    %     edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black}
+    %     ]
 
-        \node[root_node, label={[data_label, red, yshift=-0.3cm]below:(0)}] (0) at (0, 2) {0}; % O-set: {0}
-        \node[base_node, label={[data_label]below:(1)}] (1) at (1.5, 0) {1}; % O-set: {1}
-        \node[base_node, label={[data_label]above:(3)}] (3) at (1.5, 4) {3}; % O-set: {3}
-        \node[base_node, label={[data_label]below:(7, 9)}] (6) at (3.5, 1.5) {6}; % O-set: {7, 9}
-        \node[base_node, label={[data_label]below:(8)}] (7) at (4.5, 0) {7}; % O-set: {8}
-        % Node 2: O-set {5, 9, 11}
-        \node[base_node, label={[data_label, xshift=0.3cm]above:(5, 9, 11)}] (2) at (5.5, 4) {2};
-        % Node 9: O-set {16, 17, 18}
-        \node[base_node, label={[data_label]above:(16, 17, 18)}] (9) at (6.5, 2) {9};
-        % Node 5: O-set {13, 21, 22, 23}
-        \node[base_node, label={[data_label, xshift=0.3cm]below:(13, 21, 22, 23)}] (5) at (9, 0.5) {5};
-        % Node 10: O-set {15, 19, 21}
-        \node[base_node, label={[data_label, xshift=0.3cm]above:(15, 19, 21)}] (10) at (8.5, 5) {10};
-        % Node 8: O-set {21, 23, ..., 31}
-        \node[base_node, label={[data_label, align=left]right:(21, 23, 24, 25,\\ 26, 27, 29, 30, 31)}] (8) at (11, 3) {8};
+    %     \node[root_node, label={[data_label, red, yshift=-0.3cm]below:(0)}] (0) at (0, 2) {0}; % O-set: {0}
+    %     \node[base_node, label={[data_label]below:(1)}] (1) at (1.5, 0) {1}; % O-set: {1}
+    %     \node[base_node, label={[data_label]above:(3)}] (3) at (1.5, 4) {3}; % O-set: {3}
+    %     \node[base_node, label={[data_label]below:(7, 9)}] (6) at (3.5, 1.5) {6}; % O-set: {7, 9}
+    %     \node[base_node, label={[data_label]below:(8)}] (7) at (4.5, 0) {7}; % O-set: {8}
+    %     % Node 2: O-set {5, 9, 11}
+    %     \node[base_node, label={[data_label, xshift=0.3cm]above:(5, 9, 11)}] (2) at (5.5, 4) {2};
+    %     % Node 9: O-set {16, 17, 18}
+    %     \node[base_node, label={[data_label]above:(16, 17, 18)}] (9) at (6.5, 2) {9};
+    %     % Node 5: O-set {13, 21, 22, 23}
+    %     \node[base_node, label={[data_label, xshift=0.3cm]below:(13, 21, 22, 23)}] (5) at (9, 0.5) {5};
+    %     % Node 10: O-set {15, 19, 21}
+    %     \node[base_node, label={[data_label, xshift=0.3cm]above:(15, 19, 21)}] (10) at (8.5, 5) {10};
+    %     % Node 8: O-set {21, 23, ..., 31}
+    %     \node[base_node, label={[data_label, align=left]right:(21, 23, 24, 25,\\ 26, 27, 29, 30, 31)}] (8) at (11, 3) {8};
 
-        \draw [edge_style] (0) -- (1);
-        \draw [edge_style] (0) -- (3);
-        \draw [edge_style] (1) -- (6);
-        \draw [edge_style] (1) -- (7);
-        \draw [edge_style] (3) -- (2);
-        \draw [edge_style] (3) -- (6);
-        \draw [edge_style] (6) -- (2);
-        \draw [edge_style] (6) -- (9);
-        \draw [edge_style] (7) -- (5);
-        \draw [edge_style] (7) -- (9);
-        \draw [edge_style] (2) -- (10);
-        \draw [edge_style] (9) -- (5);
-        \draw [edge_style] (9) -- (8);
-        \draw [edge_style] (10) -- (8);
-        \draw [edge_style] (5) -- (8);
+    %     \draw [edge_style] (0) -- (1);
+    %     \draw [edge_style] (0) -- (3);
+    %     \draw [edge_style] (1) -- (6);
+    %     \draw [edge_style] (1) -- (7);
+    %     \draw [edge_style] (3) -- (2);
+    %     \draw [edge_style] (3) -- (6);
+    %     \draw [edge_style] (6) -- (2);
+    %     \draw [edge_style] (6) -- (9);
+    %     \draw [edge_style] (7) -- (5);
+    %     \draw [edge_style] (7) -- (9);
+    %     \draw [edge_style] (2) -- (10);
+    %     \draw [edge_style] (9) -- (5);
+    %     \draw [edge_style] (9) -- (8);
+    %     \draw [edge_style] (10) -- (8);
+    %     \draw [edge_style] (5) -- (8);
 
-    \end{tikzpicture}
+    % \end{tikzpicture}
+    \includegraphics[width=\textwidth]{assets/dag_explicit_final.pdf}
     \caption{Example of a node-weighted DAG. Each node $v$ contains its weight $w(v)$. The label associated with each node represents its calculated $\mathcal{O}$-set, $\mathcal{O}_v$, considered as a sorted sequence.}
     \label{fig:dag_example}
 \end{figure}

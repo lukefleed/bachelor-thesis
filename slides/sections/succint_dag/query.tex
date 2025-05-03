@@ -1,0 +1,62 @@
+% --- SLIDE 26: Reconstructing O-Set Elements: The Idea ---
+% \begin{frame}{Reconstructing $\mathcal{O}$-Set Elements}
+%     \framesubtitle{Finding $\mathcal{O}_v[k]$ for Implicit Nodes}
+
+%     \begin{alertblock}{How?}
+%         Follow the designated successor path $\sigma(v) \to \sigma(\sigma(v)) \to \dots \to e$ until an explicit node $e$ is reached.
+%     \end{alertblock}
+
+
+%     \begin{itemize}
+%         \item Use the stored offset sequences $\mathcal{I}$ to find the corresponding index at each step.
+%         \item Accumulate the weights $w(\cdot)$ along the path.
+%         \item Retrieve the value from the explicit node's $\mathcal{O}_e$ and subtract the accumulated weight.
+%     \end{itemize}
+
+%     \vspace{3ex}
+%     \pause
+%     Let's see an example for $\mathcal{O}_7[0]$
+
+% \end{frame}
+
+
+% % --- SLIDE 28: Computing the Rank Query (RankG) (Columns Layout) ---
+% \begin{frame}{Computing the Rank Query for a Node $N$}
+%     \framesubtitle{High-Level Steps}
+
+%     \begin{columns}[c] % T aligns tops
+%         % Colonna sinistra: Diagramma di flusso
+%         \begin{column}{0.65\textwidth}
+%             \centering % Center the diagram within the column
+%             \begin{tikzpicture}[node distance=1cm, auto, >=latex,
+%                     box/.style={rectangle, draw, thick, text centered, minimum height=2em, minimum width=4.5cm, font=\sffamily}, % Slightly wider boxes
+%                     arrow/.style={->, thick}]
+
+%                 % Overlay on nodes to make them appear one by one
+%                 \node<1-> [box] (step1) {1. Compute $\mathcal{O}_N$};
+%                 \node<2-> [box, below=of step1] (step2) {2. Generate Intervals $I_x$};
+%                 \node<3-> [box, below=of step2] (step3) {3. Sort Intervals};
+%                 \node<4-> [box, below=of step3] (step4) {4. Merge Intervals};
+%                 % Result node appears with the last arrow
+%                 \node<5-> [right=1.5cm of step4] (result) {\alert{$\textsf{rank}_G(N)$}};
+
+%                 % Overlay on arrows to match the next step appearing
+%                 \draw<2-> [arrow] (step1) -- (step2);
+%                 \draw<3-> [arrow] (step2) -- (step3);
+%                 \draw<4-> [arrow] (step3) -- (step4);
+%                 \draw<5-> [arrow] (step4) -- (result);
+%             \end{tikzpicture}
+%         \end{column}
+
+%         % Colonna destra: Reminder
+%         \begin{column}{0.35\textwidth}
+%             \uncover<2->{ % This block appears at step 4
+%                 \begin{alertblock}{Reminder}
+%                     Intervals are
+%                     $$I_x = [\max(0, x - w(N) + 1), x]$$
+%                 \end{alertblock}
+%             }
+%         \end{column}
+%     \end{columns}
+
+% \end{frame}

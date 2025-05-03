@@ -1,0 +1,17 @@
+% --- SLIDE 23: Future Direction: Bounded Query Time ---
+\begin{frame}{Future Direction: Bounded Query Time}
+    \framesubtitle{Guaranteeing Predictable Performance}
+    \begin{block}<1->{Performance Consideration}
+        Query time for implicit node $v$ depends on the length of the successor path
+        \vspace{-0.3em}
+        \[v \to \sigma(v) \to \sigma(\sigma(v)) \to \dots \to e \in V_E\]
+        \textbf{Problem:} Can be large/variable in deep DAGs $\implies$ slow worst-case query time.
+    \end{block}
+    \begin{alertblock}<2->{Solution, Challenges \& Trade-offs}
+        \begin{itemize}
+            \item \textbf{Solution:} Ensure every implicit node can reach an explicit node within \alert{$k$ steps}.
+            \item \textbf{Challenges:} Finding the smallest possible $V'_E$ that satisfies this condition is NP-hard (\emph{minimum distance-k dominating set}).
+            \item \textbf{Trade-off:} More explicit nodes $\implies$ faster queries, but larger space.
+        \end{itemize}
+    \end{alertblock}
+\end{frame}

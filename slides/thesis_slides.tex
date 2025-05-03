@@ -1,0 +1,102 @@
+\documentclass{beamer}
+\usepackage{amsfonts,amsmath,oldgerm, mathtools}
+\usepackage{bm}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usetikzlibrary{calc, positioning, arrows.meta, overlay-beamer-styles, shapes.misc, decorations.pathreplacing, backgrounds}
+\usetheme{dmpisa}
+
+\renewcommand{\thefootnote}{\arabic{footnote}} % Use numeric footnote markers
+
+\newcommand{\testcolor}[1]{\colorbox{#1}{\textcolor{#1}{test}}~\texttt{#1}}
+\usefonttheme[onlymath]{serif}
+\titlebackground*{assets/background} % Assicurati che il path sia corretto
+\newcommand{\hrefcol}[2]{\textcolor{cyan}{\href{#1}{#2}}}
+
+\title{Efficient Succinct Data Structures on Directed Acyclic Graphs}
+\course{Tesi Triennale in Matematica}
+\author{\href{mailto:l.lombardo11@studenti.unipi.it}{Luca Lombardo}} % Modifica email se necessario
+\date{9 Maggio 2025}
+
+\begin{document}
+
+% --- SLIDE 1: Title Slide ---
+\maketitle
+
+% \section{Succinct Data structures}
+\include{sections/introduction}
+
+% \section{Rank \& Select}
+
+\include{sections/rank_select/bitvectors}
+
+% \subsection{Strings}
+
+\include{sections/rank_select/wt}
+
+% \subsection{Degenerate Strings}
+
+\include{sections/rank_select/degenerate}
+
+% \section{Path Queries on DAGs}
+% \subsection{Path Queries}
+\include{sections/succint_dag/dag_path}
+
+% \subsection{Succinct Structure and Queries}
+\include{sections/succint_dag/succint}
+
+% \subsection{Querying}
+% \include{sections/succint_dag/query}
+
+% \subsection{Compression}
+\include{sections/succint_dag/compression}
+
+% \subsection{Achieving Sub-Entropy Space for Path Queries}
+\include{sections/succint_dag/entropy}
+
+% \section{Conclusion and Next Steps}
+\include{sections/conclusion}
+\backmatter
+
+% QUESTIONS?
+\begin{frame}[noframenumbering]{Worst-Case $\mathcal{O}$-Set Size: Is Exponential Growth Possible?}
+    \framesubtitle{Understanding the $\mathcal{O}$-set Size}
+
+    \begin{block}{Exponential Growth Can Occur}
+        The cardinality of an $\mathcal{O}$-set, $|\mathcal{O}_v|$, is not generally bounded by a polynomial in the number of vertices $|V|$. It can grow exponentially.
+    \end{block}
+
+    \begin{block}{Underlying Reason: Path Count}
+        The number of distinct paths from a source $s$ to a vertex $v$, denoted $|Path(s, v)|$, can itself be exponential in certain DAG structures. Since $|\mathcal{O}_v| \le |Path(s, v)|$, the potential for exponential size exists.
+    \end{block}
+
+    \pause % Optional pause
+
+    \begin{alertblock}{Key Condition for Exponential Growth}
+        The exponential potential is realized if the vertex weights $w(v)$ are assigned such that distinct paths $P_1 \neq P_2$ almost always lead to distinct cumulative weights $W(P_1) \neq W(P_2)$.
+    \end{alertblock}
+
+\end{frame}
+
+\begin{frame}[noframenumbering]{Achieving Exponential $\mathcal{O}$-Set Size}
+    \framesubtitle{A Strategy for Path Weight Uniqueness}
+
+    Start with a DAG structure that naturally admits an exponential number of paths between two nodes. An example is a layered graph with multiple choices at each layer transition.
+
+    \begin{alertblock}{Strategic Weight Assignment}
+        Assign vertex weights $w(v)$ carefully to ensure path weight uniqueness.
+        \[ w(v) = 2^k \quad \text{(using a unique exponent } k \text{ for each node)} \]
+    \end{alertblock}
+
+    \pause
+
+    \begin{block}{Mechanism: Unique Binary Representation}
+        With power-of-2 weights, the cumulative path weight $W(P) = \sum_{v \in P \setminus \{s\}} w(v)$ becomes a sum of distinct powers of 2.
+        Due to the uniqueness of binary representation, different sets of nodes (i.e., different paths) produce different sums.
+        Therefore, $|Path(s, v)|$ distinct paths yield $|\mathcal{O}_v| = |Path(s, v)|$ distinct weights.
+    \end{block}
+
+\end{frame}
+
+\end{document}

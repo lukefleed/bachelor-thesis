@@ -1,0 +1,61 @@
+% --- SLIDE 9: Degenerate Strings ---
+\begin{frame}{Representing Sequence Variation: Degenerate Strings}
+    \framesubtitle{Definitions and Core Operations}
+    \begin{block}{Definition and Rank \& Select Adaptation}
+        A \textbf{degenerate string} is a sequence $X = X_1 X_2 \dots X_n$, where each $X_i$ is a \emph{subset} of the alphabet $\Sigma$ with cardinality $\sigma$. We can define the following operations:
+        \begin{itemize}
+            \item \textsf{subset-rank}$_X(i, c)$: Counts sets $X_k$ ($k \le i$) where $c \in X_k$.
+            \item \textsf{subset-select}$_X(j, c)$: Finds index $k$ of the $j$-th set $X_k$ where $c \in X_k$.
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{figure}[h!] % Nota: [h!] può essere problematico, [htbp] è più sicuro
+        \centering
+        \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
+            $X = $                                                               & $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{C}\\\texttt{G}\end{matrix}\,\Bigg\}$ &
+            $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{T}\end{matrix}\,\Bigg\}$ &
+            $\Bigg\{\,\begin{matrix}\texttt{C}\end{matrix}\,\Bigg\}$             &
+            $\Bigg\{\,\begin{matrix}\texttt{T}\\\texttt{G}\end{matrix}\,\Bigg\}$                                                                                                            \\
+                                                                                 & $X_1$                                                                            & $X_2$ & $X_3$ & $X_4$
+        \end{tabular}
+        \uncover<2->{\qquad
+            \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
+                $S =$  & \texttt{ACG} & \texttt{AT} & \texttt{C} & \texttt{TG} &            \\
+                $R = $ & \texttt{100} & \texttt{10} & \texttt{1} & \texttt{10} & \texttt{1} \\
+                       & $S_1$        & $S_2$       & $S_3$      & $S_4$
+            \end{tabular}
+        }
+    \end{figure}
+    % --- Paragrafo Riscritto ---
+    \uncover<3->{% Potrebbe essere utile per far apparire il testo solo al terzo step
+        To compute \textsf{subset-rank}$_X(i, c)$: Let $p$ be the end position in $S$ for prefix $X_1..X_i$, found using $\textsf{select}_1(R, i+1)$. The result is $\textsf{rank}_c(S, p)$.
+    }
+\end{frame}
+
+% % --- SLIDE 10: Degenerate Strings: Space Complexity Results ---
+% \begin{frame}{Degenerate Strings: Space Complexity}
+%     \framesubtitle{Reduction-Based Approach}
+
+%     % Recall the reduction converts $X$ (length $n$, size $N$) into $S$ (length $N$) and $R$ (length $N+1$).
+
+%     % Blocco 1: Componenti Spazio
+%     \begin{block}<1->{Space Components}
+%         % The total space depends on:
+%         \begin{itemize}
+%             \item Storing string $S$: Requires a structure $\mathcal{D}$ supporting \textsf{rank}$_c$/\textsf{select}$_c$.
+%             \item Storing bitvector $R$: Requires a structure $\mathcal{V}$ supporting \textsf{rank}/\textsf{select}
+%         \end{itemize}
+%     \end{block}
+
+%     % Blocco 2: Risultato Generale (Caso n0=0)
+%     \begin{block}<2->{Upper Bound (No Empty Sets)}
+%         % If $X$ has no empty sets ($n_0 = 0$):
+%         \begin{itemize}
+%             \item Total Space: $\underbrace{\mathcal{D}_b(N, \sigma)}_{\text{Space for } S} + \underbrace{N + o(N)}_{\text{Space for } R \text{ (succinct)}}$ bits.
+%             \item Using standard succinct structures (e.g., Wavelet Tree for $S$, RRR for $R$): Space becomes $\approx N \log \sigma + N + o(N \log \sigma)$ bits.
+%         \end{itemize}
+%     \end{block}
+
+%     \uncover<3->{\textbf{Lower Bound}: Any structure supporting \texttt{subset-rank} or \texttt{subset-select} requires at least $N \log \sigma - o(N \log \sigma)$ bits in the worst case.}
+
+% \end{frame}
