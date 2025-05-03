@@ -224,56 +224,69 @@
 % --- SLIDE 14: O-Set Construction Example ---
 \begin{frame}{$\mathcal{O}$-Set Construction Example}
     \framesubtitle{Visualizing the Recursive Definition}
-
-    \begin{figure}[h!]
-        \centering
-        \resizebox{0.9\textwidth}{!}{% Reduced size slightly to make space for labels
-            \begin{tikzpicture}[
-                node distance=1.5cm and 1cm,
-                base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
-                root_node/.style={base_node, fill=red!60, text=black},
-                % Definizione stile per label O-set
-                data_label/.style={font=\tiny\ttfamily, text=blue!80!black, anchor=north},
-                edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black}
-                ]
-
-                % Nodes (pesi dentro)
-                \node[root_node] (0) at (0, 2) {0};
-                \node[base_node] (1) at (1.5, 0) {1};
-                \node[base_node] (3) at (1.5, 4) {3};
-                \node[base_node] (6) at (3.5, 1.5) {6};
-                \node[base_node] (7) at (4.5, 0) {7};
-                \node[base_node] (2) at (5.5, 4) {2};
-                \node[base_node] (9) at (6.5, 2) {9};
-                \node[base_node] (5) at (9, 0.5) {5};
-                \node[base_node] (10) at (8.5, 5) {10};
-                \node[base_node] (8) at (11, 3) {8};
-
-                % Edges
-                \draw [edge_style] (0) -- (1); \draw [edge_style] (0) -- (3);
-                \draw [edge_style] (1) -- (6); \draw [edge_style] (1) -- (7);
-                \draw [edge_style] (3) -- (2); \draw [edge_style] (3) -- (6);
-                \draw [edge_style] (6) -- (2); \draw [edge_style] (6) -- (9);
-                \draw [edge_style] (7) -- (5); \draw [edge_style] (7) -- (9);
-                \draw [edge_style] (2) -- (10);
-                \draw [edge_style] (9) -- (5); \draw [edge_style] (9) -- (8);
-                \draw [edge_style] (10) -- (8); \draw [edge_style] (5) -- (8);
-
-                % O-Set Labels appearing step-by-step
-                \node<1->[data_label, red] at (0.south) {\{0\}};
-                \node<2->[data_label] at (1.south) {\{1\}};
-                \node<2->[data_label] at (3.south) {\{3\}};
-                \node<3->[data_label] at (7.south) {\{8\}};
-                \node<4->[data_label] at (6.south) {\{7, 9\}};
-                \node<5->[data_label] at ([xshift=0.3cm]2.south) {\{5, 9, 11\}};
-                \node<6->[data_label] at ([yshift=-0.1cm, xshift=0.2cm]9.south) {\{16, 17, 18\}};
-                \node<7->[data_label] at (10.south) {\{15, 19, 21\}};
-                \node<8->[data_label] at (5.south) {\{13, 21, 22, 23\}};
-                \node<9->[data_label, align=center] at ([yshift=-0.2cm, xshift=0.4cm]8.south) {\{21, 23, 24, 25, \\ 26, 27, 29, 30, 31\}};
-
-            \end{tikzpicture}
-        } % End resizebox
+    \vspace{-0.5em}
+    \begin{figure}[hbtp]
+        % \centering
+        % Replace TikZ with sequential images
+        \only<1>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit1.pdf}}
+        \only<2>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit2.pdf}}
+        \only<3>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit3.pdf}}
+        \only<4>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit4.pdf}}
+        \only<5>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit5.pdf}}
+        \only<6>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit6.pdf}}
+        \only<7>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit7.pdf}}
+        \only<8>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit8.pdf}}
+        \only<9>{\includegraphics[width=0.9\textwidth]{assets/dag_explicit_final.pdf}}
     \end{figure}
+    % \begin{figure}[h!]
+    %     \centering
+    %     % \resizebox{0.9\textwidth}{!}{% Reduced size slightly to make space for labels
+    %     %     \begin{tikzpicture}[
+    %     %         node distance=1.5cm and 1cm,
+    %     %         base_node/.style={circle, draw=black, thick, minimum size=8mm, inner sep=0pt, font=\sffamily},
+    %     %         root_node/.style={base_node, fill=red!60, text=black},
+    %     %         % Definizione stile per label O-set
+    %     %         data_label/.style={font=\tiny\ttfamily, text=blue!80!black, anchor=north},
+    %     %         edge_style/.style={->, >={Stealth[length=2mm]}, thick, draw=black}
+    %     %         ]
+
+    %     %         % Nodes (pesi dentro)
+    %     %         \node[root_node] (0) at (0, 2) {0};
+    %     %         \node[base_node] (1) at (1.5, 0) {1};
+    %     %         \node[base_node] (3) at (1.5, 4) {3};
+    %     %         \node[base_node] (6) at (3.5, 1.5) {6};
+    %     %         \node[base_node] (7) at (4.5, 0) {7};
+    %     %         \node[base_node] (2) at (5.5, 4) {2};
+    %     %         \node[base_node] (9) at (6.5, 2) {9};
+    %     %         \node[base_node] (5) at (9, 0.5) {5};
+    %     %         \node[base_node] (10) at (8.5, 5) {10};
+    %     %         \node[base_node] (8) at (11, 3) {8};
+
+    %     %         % Edges
+    %     %         \draw [edge_style] (0) -- (1); \draw [edge_style] (0) -- (3);
+    %     %         \draw [edge_style] (1) -- (6); \draw [edge_style] (1) -- (7);
+    %     %         \draw [edge_style] (3) -- (2); \draw [edge_style] (3) -- (6);
+    %     %         \draw [edge_style] (6) -- (2); \draw [edge_style] (6) -- (9);
+    %     %         \draw [edge_style] (7) -- (5); \draw [edge_style] (7) -- (9);
+    %     %         \draw [edge_style] (2) -- (10);
+    %     %         \draw [edge_style] (9) -- (5); \draw [edge_style] (9) -- (8);
+    %     %         \draw [edge_style] (10) -- (8); \draw [edge_style] (5) -- (8);
+
+    %     %         % O-Set Labels appearing step-by-step
+    %     %         \node<1->[data_label, red] at (0.south) {\{0\}};
+    %     %         \node<2->[data_label] at (1.south) {\{1\}};
+    %     %         \node<2->[data_label] at (3.south) {\{3\}};
+    %     %         \node<3->[data_label] at (7.south) {\{8\}};
+    %     %         \node<4->[data_label] at (6.south) {\{7, 9\}};
+    %     %         \node<5->[data_label] at ([xshift=0.3cm]2.south) {\{5, 9, 11\}};
+    %     %         \node<6->[data_label] at ([yshift=-0.1cm, xshift=0.2cm]9.south) {\{16, 17, 18\}};
+    %     %         \node<7->[data_label] at (10.south) {\{15, 19, 21\}};
+    %     %         \node<8->[data_label] at (5.south) {\{13, 21, 22, 23\}};
+    %     %         \node<9->[data_label, align=center] at ([yshift=-0.2cm, xshift=0.4cm]8.south) {\{21, 23, 24, 25, \\ 26, 27, 29, 30, 31\}};
+
+    %     %     \end{tikzpicture}
+    %     % } % End resizebox
+    % \end{figure}
 \end{frame}
 
 % --- SLIDE 15: The Rank Query - Concept ---
