@@ -1,0 +1,64 @@
+name: Build Slides & Thesis and Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 1) Build slides
+      - uses: xu-cheng/latex-action@v2
+        with:
+          working_directory: slides
+          root_file: thesis_slides.tex
+
+      # 2) Build thesis
+      - uses: xu-cheng/latex-action@v2
+        with:
+          working_directory: thesis
+          root_file: main.tex
+
+      # 3) Prepara la directory di deploy con entrambi i PDF
+      - name: Gather artifacts
+        run: |
+          mkdir -p github_deploy
+          mv slides/thesis_slides.pdf github_deploy/
+          mv thesis/main.pdf         github_deploy/
+
+      # 4) Pubblica su branch 'build'
+      - name: Deploy on orphan branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./github_deploy
+          publish_branch: build
+          force_orphan: true
+
+      # 5) Aggiorna il sito (come prima)
+      - name: Checkout website
+        uses: actions/checkout@v3
+        with:
+          repository: lukefleed/website
+          path: website
+          token: ${{ secrets.PAT }}
+
+      - name: Copy PDFs to Website
+        run: |
+          cp github_deploy/thesis_slides.pdf website/public/thesis/thesis_slides.pdf
+          cp github_deploy/main.pdf         website/public/thesis/main.pdf
+
+      - name: Commit & Push to Website
+        run: |
+          cd website
+          git config user.name  "GitHub Actions"
+          git config user.email "<>"
+          git add public/thesis/thesis_slides.pdf public/thesis/main.pdf
+          git commit -m "Update PDFs"
+          git push
