@@ -1,16 +1,16 @@
 ## Slide 1/21: Titolo
 
-Buongiorno a tutti. L'obiettivo di questa ricerca è stato esplorare e sviluppare metodi per rappresentare e interrogare grafi aciclici diretti in modo efficiente, sia in termini di occupazione di spazio che di tempo di calcolo.
+Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare metodi per rappresentare e interrogare grafi aciclici diretti in modo efficiente, sia in termini di occupazione di spazio che di tempo di calcolo.
 
 [ *pausa breve* ]
 
 ## Slide 2/21: Why Succinct?
 
-Il contesto motivazionale è quello della gestione di dati su vasta scala. L'analisi efficace di questi dati richiede spesso un accesso rapido, il che favorirebbe la loro collocazione nella memoria RAM. Tuttavia, il volume dei dati stessi, aggravato dallo spazio richiesto dalle strutture dati ausiliarie, eccede spesso la capacità della RAM, costituendo un significativo collo di bottiglia prestazionale.
+Il contesto motivazionale è quello della gestione di dati su vasta scala. L'analisi efficace di questi dati richiede spesso un accesso rapido, il che favorirebbe la loro collocazione nella memoria RAM. Tuttavia per studiare questi dati (spesso già di grosse dimensioni) andiamo ad utilizzare strutture dati ausiliarie, come alberi o indici, che a loro volta richiedono uno spazio addizionale che spesso è ben superiore a quello dei dati stessi
 
 [*click*]
 
-Ci troviamo quindi di fronte a un classico trade-off: le tecniche di compressione standard minimizzano lo spazio, ma impongono tipicamente una fase di decompressione che preclude l'accesso diretto e rapido. D'altro canto, le strutture dati convenzionali offrono query veloci, ma a fronte di un considerevole overhead spaziale.
+Ci troviamo quindi di fronte a un classico trade-off: da un lato possiamo utilizzare le classiche tecniche di compressione, minimizzando lo spazio. Ma queste tipicamente impongono una fase di decompressione che preclude l'accesso diretto e rapido. Dall'altro lato, le strutture dati convenzionali offrono query veloci, ma a fronte di un considerevole overhead spaziale come abbiamo detto prima
 
 [*click*]
 
