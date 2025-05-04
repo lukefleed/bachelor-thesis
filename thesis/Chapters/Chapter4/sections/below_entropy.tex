@@ -21,7 +21,7 @@ Combining these components gives us a formal definition for the $0^{th}$-order e
 \begin{definition}[$0^{th}$-Order Weighted DAG Entropy]
     \label{def:dag_entropy}
     For a weighted DAG $G = (V, E, w)$ with $n=|V|$ vertices and $m=|E|$ edges, its $0^{th}$-order entropy $\mathcal{H}_0(G)$ is defined as the sum of the information content required for the weights and the topology:
-    \[ \mathcal{H}_0(G) = \sum_{v \in V} \underbrace{\lceil \log_2 (w(v)+1) \rceil}_{\mathcal{H}_W(G)} + \underbrace{\log_2 \binom{n(n-1)}{m}}_{\mathcal{H}_E(G)} \quad \text{bits}. \]
+    \[ \mathcal{H}_0(G) = \underbrace{\sum_{v \in V} \lceil \log_2 (w(v)+1) \rceil}_{\mathcal{H}_W(G)} + \underbrace{\log_2 \binom{n(n-1)}{m}}_{\mathcal{H}_E(G)} \quad \text{bits}. \]
 \end{definition}
 
 The value $\mathcal{H}_0(G)$ represents a theoretical lower bound on the space required by any lossless encoding of the graph $(V, E, w)$ based solely on its zero-order statistics.
@@ -34,9 +34,9 @@ We compare this theoretical lower bound $\mathcal{H}_0(G)$ against theoretical e
 
 For sequences composed of general non-negative integers $x$, such as the vertex weights $\mathcal{W}$, the successor identifiers $\Sigma$, or the interval endpoints in baseline precomputation results, the space estimation is based on summing the minimal binary representation cost for each integer independently. This cost is calculated as $\lceil \log_2(x+1) \rceil$ bits per integer $x$.
 
-When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity. \autoref{thm:ef_space} guarantees an upper bound of
+When representing strictly monotonic sequences, like the run start values in RLE or interval endpoints compressed using Elias-Fano (\autoref{sec:elias_fano_code}), our space estimation relies on its established theoretical complexity, that guarantees an upper bound of
 \[n \log_2(u/n) + 2n\]
-bits for encoding $n$ integers within the range $[0, u)$ using Elias-Fano.
+bits for encoding $n$ integers within the range $[0, u)$.
 
 Finally, the space for the offset sequences $\mathcal{I}_v$ when stored using the Run-Length Encoding (RLE) scheme described in \autoref{sec:compression_strategies} is estimated by combining the previous principles. It requires the sum of the space estimate for the strictly monotonic sequence of run start values (using the Elias-Fano estimation) and the space estimate for the sequence of corresponding run lengths (using the minimal binary representation cost for each length).
 

@@ -37,14 +37,13 @@ A naive solution involves storing a bitvector $B_c$ of length $n$ for each $c \i
 
 To address the space issue, Alanko et al. \cite{SubsetWT} introduced the \emph{Subset Wavelet Tree (SWT)}, generalizing the standard Wavelet Tree (\autoref{sec:wavelet_trees}) to degenerate strings.
 
-\paragraph{Structure} The SWT is a balanced binary tree over $\Sigma$. Each node $v$ represents an alphabet partition $A_v$ (root is $\Sigma$), with children representing halves of $A_v$. A sequence $Q_v$ at node $v$ contains subsets $X_k$ from the original string that intersect with $A_v$ (plus empty sets at the root). Each node $v$ stores two bitvectors, $L_v$ and $R_v$, of length $|Q_v|$, preprocessed for rank/select:
+The SWT is a balanced binary tree over $\Sigma$. Each node $v$ represents an alphabet partition $A_v$ (root is $\Sigma$), with children representing halves of $A_v$. A sequence $Q_v$ at node $v$ contains subsets $X_k$ from the original string that intersect with $A_v$ (plus empty sets at the root). Each node $v$ stores two bitvectors, $L_v$ and $R_v$, of length $|Q_v|$, preprocessed for rank/select:
 \begin{itemize}
     \item $L_v[k] = 1 \iff$ the $k$-th set in $Q_v$ intersects the \emph{first} half of $A_v$.
     \item $R_v[k] = 1 \iff$ the $k$-th set in $Q_v$ intersects the \emph{second} half of $A_v$.
 \end{itemize}
 Often, $L_v$ and $R_v$ are combined into a base-4/base-3 sequence requiring specialized rank support.
 
-\paragraph{Queries}
 $\Drank_X(i, c)$ is answered by traversing from the root to the leaf for $c$. At node $v$, if $c$ is in the left partition, update $i \leftarrow \textsf{rank}_1(L_v, i)$ and go left; otherwise, update $i \leftarrow \textsf{rank}_1(R_v, i)$ and go right. The final $i$ is the result (Algorithm~\ref{alg:subset-rank-SWT}).
 
 $\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the root. Moving from child $v$ to parent $u$, if $v$ is the left child, update $j \leftarrow \textsf{select}_1(L_u, j)$; otherwise, update $j \leftarrow \textsf{select}_1(R_u, j)$. The final $j$ is the result (Algorithm~\ref{alg:subset-select-SWT}).
@@ -100,7 +99,7 @@ $\Dselect_X(j, c)$ is answered by traversing from the leaf for $c$ up to the roo
     \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Complexity} With constant-time rank/select on node bitvectors, SWT queries take $O(\log \sigma)$ time. The space complexity depends on the structure of the sets. A key case highlighted in \cite{SubsetWT} is that of \emph{balanced} degenerate strings, where the total size $N$ equals the length $n$ (implicitly, each non-empty set has size 1, relevant for SBWT applications).
+With constant-time rank/select on node bitvectors, SWT queries take $O(\log \sigma)$ time. The space complexity depends on the structure of the sets. A key case highlighted in \cite{SubsetWT} is that of \emph{balanced} degenerate strings, where the total size $N$ equals the length $n$ (implicitly, each non-empty set has size 1, relevant for SBWT applications).
 
 \begin{theorem}[SWT Space Complexity for Balanced Strings {\cite{SubsetWT}}] \label{thm:swt_space_balanced}
     The subset wavelet tree of a balanced degenerate string takes $2n \log \sigma + o(n \log \sigma)$ bits of space and supports $\Drank$ and $\Dselect$ queries in $O(\log \sigma)$ time.
