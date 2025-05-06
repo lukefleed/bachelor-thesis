@@ -1,66 +1,122 @@
-% --- SLIDE 2: The Data Deluge \ Memory Bottleneck ---
-% \begin{frame}{The Memory Bottleneck}
-%     \framesubtitle{Why Space Efficiency Matters}
-%     \begin{block}{Data is Exploding}
-%         Massive datasets from Science, Web, AI, IoT... (Petabytes, Exabytes). Fast analysis needs data in Main Memory (RAM).
-%     \end{block}
-%     \pause % Step 1
-%     \begin{alertblock}{The Bottleneck: RAM vs. Storage}
-%         \begin{itemize}
-%             \item RAM: \alert{Fast}, but \alert{Small} (GBs).
-%             \item Disk/Cloud: \alert{Slow}, but \alert{Huge} (TBs/PBs).
-%             \item Speed Difference: Factor of $\sim \mathbf{10^5}$!
-%         \end{itemize}
-%     \end{alertblock}
-%     \pause % Step 3
-%     \begin{block}{The Structure Overhead Problem}
-%         Often, the \emph{auxiliary data structure} (index, tree, etc.) needed for queries is \textbf{much larger} than the data itself.
-%         \vspace{0.5em}
-%         $\implies$ Fitting data + structures in RAM is hard.
-%     \end{block}
-% \end{frame}
+% --- SLIDE 1: Titolo (Non mostrata, ma è la tua slide di titolo) ---
 
-% % --- SLIDE 3: The Promise of Succinct Data Structures ---
-% \begin{frame}{The Promise of Succinct Data Structures}
-%     \framesubtitle{Getting the Best of Both Worlds}
-%     We face a classic trade-off:
-%     \begin{columns}[T]
-%         % Colonna Sinistra: Compression
-%         \begin{column}{0.5\textwidth}
-%             \begin{block}{Standard Compression}
-%                 \centering
-%                 \textbf{Pro:} \alert{Minimal Space} \\
-%                 \textbf{Con:} Slow / No Direct Queries
-%             \end{block}
-%         \end{column}
-%         \begin{column}{0.5\textwidth}
-%             \begin{block}{Traditional Data Structures}
-%                 \centering
-%                 \textbf{Pro:} \alert{Fast Queries} \\
-%                 \textbf{Con:} Often Large Space Overhead
-%             \end{block}
-%         \end{column}
-%     \end{columns}
-%     % Introduce Succinct goal
-%     \begin{alertblock}<2->{The Succinct Goal}
-%         Can we achieve \textbf{both} simultaneously?
-%         \begin{itemize}
-%             \item Space usage \alert{close to the information-theoretic lower bound} of the data.
-%             \item Support efficient queries \alert{directly} on this compact representation.
-%         \end{itemize}
-%     \end{alertblock}
-% \end{frame}
+% --- SLIDE 2: The Subset Membership Problem ---
+\begin{frame}{The Subset Membership Problem}
+    \framesubtitle{Querying Collections Efficiently and Compactly}
 
-% --- SLIDE 2 (Combined): The Need for Space Efficiency & Succinct Structures ---
+    % Problema centrale introdotto in modo diretto e semplice
+    Consider a large universe of items $U = \{1, \dots, n\}$, and a specific subset $S \subseteq U$ of $m$ items.
+
+    \begin{alertblock}{Core Task \& Desired Properties}
+        \begin{itemize}
+            \item Quickly answer: "Is item $x$ in $S$?" (\textbf{Membership Query})
+            \item Store $S$ using minimal space (\textbf{Compact Representation})
+        \end{itemize}
+    \end{alertblock}
+    \pause % Pausa prima del ponte a Shannon
+
+    To understand "minimal space", we turn to Information Theory.
+    \textit{What is the least number of bits needed to uniquely identify $S$?}
+    \begin{definition}[Shannon Entropy $H(X)$]
+        The average uncertainty, or information content, per symbol of source $X$:
+        \[ H(X) = E_{P_X}[-\log_2 P_X(x)] = -\sum_{x \in \mathcal{X}} P_X(x) \log_2 P_X(x) \quad [\text{bits/symbol}] \]
+    \end{definition}
+\end{frame}
+
+% --- SLIDE 3: Information-Theoretic Limits for Subsets ---
+\begin{frame}{Information-Theoretic Limits for Subsets}
+    \framesubtitle{From General Entropy to Specific Subsets}
+    We usually don't know the true source $P_X$. We only have the data sequence $S$.
+    \pause
+    \begin{definition}[Zero-Order Empirical Entropy $\mathcal{H}_0(S)$]
+        Information content of sequence $S$ based on its symbol counts ($n_s$):
+        \[ \mathcal{H}_0(S) = \sum_{s \in \Sigma} \frac{n_s}{n} \log_2 \frac{n}{n_s} \quad [\text{bits/symbol}] \]
+        \vspace{-0.2em}
+        Uses observed frequencies $\frac{n_s}{n}$ instead of unknown $P_X(x)$.
+    \end{definition}
+
+    \pause % Pausa 2
+    For our subset $S$ of $m$ items from $n$:
+    \begin{itemize}
+        \item There are $\binom{n}{m}$ such distinct subsets.
+        \item To uniquely identify one, we need at least $\lceil \log_2 \binom{n}{m} \rceil$ bits. This is the \alert{information content} of specifying the subset.
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 4: Bitvectors: Querying the Implicit Representation ---
+\begin{frame}{Bitvectors: Querying the Implicit Representation}
+    \framesubtitle{From Compact Storage to Element Access}
+
+    We can represent our subset $S$ as a \textbf{bitvector} $B[1..n]$ ($B[i]=1 \iff i \in S$). We are \textbf{encoding the choice of $m$ positions for the '1's}, allowing us to store $B$ using $\approx \lceil \log_2 \binom{n}{m} \rceil$ bits. \textit{This means $B$ is not stored as an explicit array of $n$ bits.}
+
+    % Immagine: gestita con \only per cambiare con le pause del testo
+    \begin{figure}[htbp]
+        \centering
+        \only<1-3>{\includegraphics[width=0.95\textwidth]{assets/rank_select_1.pdf}} % Stati 1, 2, 3
+        \only<4-5>{\includegraphics[width=0.95\textwidth]{assets/rank_select_2.pdf}}   % Stati 4, 5
+        \only<6->{\includegraphics[width=0.95\textwidth]{assets/rank_select_3.pdf}}  % Stato 6 in poi
+        \vspace{-0.5em} % Leggero aggiustamento verticale se necessario dopo l'immagine
+    \end{figure}
+
+    \pause % STATO 1 -> STATO 2 (appare la domanda)
+
+    \uncover<2->{If $B$ is not explicit, how do we access $B[i]$? We use two foundational queries:}
+
+    \pause % STATO 2 -> STATO 3 (appare def. rank)
+
+    \begin{columns}[T, totalwidth=\textwidth] % Le colonne esistono, ma il contenuto appare in fasi
+        \begin{column}{0.52\textwidth}
+            \uncover<7->{ % Il blocco "Access Queries" appare per ultimo (STATO 7)
+                \begin{block}{\textsf{Access} Queries}
+                    $B[i] = 1 \iff \textsf{rank}_1(B, i) > \textsf{rank}_1(B, i-1)$
+                \end{block}
+            }
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \begin{itemize}
+                \item<3-> \textbf{\textsf{rank}}$_b(B, i)$: How many bits $b$ are in the prefix $B[1..i]$?
+                    \pause % STATO 3 -> STATO 4 (immagine rank_select_2)
+                \item<5-> \textbf{\textsf{select}}$_b(B, j)$: What is the position of the $j$-th occurrence of bit $b$?
+                    \pause % STATO 5 -> STATO 6 (immagine rank_select_3)
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- SLIDE 5: RRR Structure: The Bitvector Solution ---
+% QUESTA È LA TUA SLIDE 6 ORIGINALE, ORA SLIDE 5, con stile rivisto in precedenza
+\begin{frame}{RRR Structure: The Bitvector Solution}
+    \framesubtitle{$n\mathcal{H}_0(B)$ Space \& $O(1)$ Queries}
+    \begin{block}{Succinct Data Structure for Bitvectors}
+        \begin{itemize}
+            \item \textbf{Goal:} Support $\textsf{rank}$ and $\textsf{select}$ in $O(1)$ time.
+            \item \textbf{Space:} Close to the information-theoretic minimum for the bitvector.
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{theorem}[RRR Structure]
+        A bitvector $B[1..n]$ with $m$ set bits can be represented using
+        \[ B(n, m) + o(n) + O(\log \log n) \quad \text{bits}, \]
+        where $B(n, m) = \lceil \log_2 \binom{n}{m} \rceil$, while supporting \textsf{rank} and \textsf{select} queries in $O(1)$ time.
+    \end{theorem}
+    \pause
+    \begin{alertblock}{A Cornerstone Result}
+        RRR shows that \textbf{optimal space} \emph{and} \textbf{efficient queries} are possible for subsets.
+    \end{alertblock}
+\end{frame}
+
+% --- SLIDE 6: Why Succinct Data Structures? ---
+% QUESTA È LA TUA SLIDE 2 ORIGINALE (COMBINATA), ORA SLIDE 6, con stile rivisto in precedenza
 \begin{frame}{Why Succinct Data Structures?}
-    \framesubtitle{Massive Data and Structure Overhead}
+    \framesubtitle{The General Challenge \& Goal}
 
-    \begin{block}<1->{The Challenge: Massive Data \& Query Needs}
-        Modern datasets (Science, Web, AI...) are enormous.
-        Complex analysis demands data in RAM, but auxiliary structures (indexes, trees) needed for queries often \textbf{occupy more space than the data itself}.
+    RRR is a specific solution to a general problem:
+    \begin{block}{Massive Data \& Auxiliary Structures Overhead}
+        Modern datasets (Science, Web, AI...) are enormous. Complex analysis demands data in RAM, but auxiliary structures (indexes, trees) needed for queries often \textbf{occupy more space than the data itself}.
         $\implies$ Fitting everything in RAM is a major bottleneck.
     \end{block}
-
+    \pause
     \begin{columns}[T]
         \begin{column}<2->{0.45\textwidth}
             \textbf{Classic Trade-off:}
@@ -79,92 +135,4 @@
             \end{alertblock}
         \end{column}
     \end{columns}
-\end{frame}
-
-% \begin{frame}{Standard Compression vs. Succinct Data Structures}
-%     \framesubtitle{Accessing Compressed Data}
-%     \begin{figure}[htbp]
-%         \centering
-%         \only<1>{\includegraphics[width=0.8\textwidth]{assets/succint-pipeline1.pdf}}
-%         \only<2>{\includegraphics[width=0.8\textwidth]{assets/succint-pipeline.pdf}}
-%     \end{figure}
-% \end{frame}
-
-% \begin{frame}{Information Theory \& Compression Limits}
-%     \framesubtitle{The Role of Probability}
-%     Consider a data source modeled as a random variable $X$ taking values in $\mathcal{X}$. \newline
-%     \textbf{Question:} What is the minimum \emph{average} number of bits per symbol needed for a lossless representation of $X$?
-%     \begin{alertblock}{Fundamental Insight (Shannon)}
-%         The answer depends intrinsically on the \textbf{probability distribution} $P_X(x) = \text{Pr}\{X=x\}$.
-%     \end{alertblock}
-%     \begin{itemize}
-%         \item<2-> Uniform Distribution ($P_X(x) = 1/|\mathcal{X}|$): High uncertainty. Requires $\approx \log_2 |\mathcal{X}|$ bits/symbol.
-%         \item<3-> Non-Uniform Distribution: Lower average uncertainty. Allows for compression by assigning shorter codes to more probable symbols.
-%     \end{itemize}
-%     \uncover<4->{We need a precise measure of this "average uncertainty"...}
-% \end{frame}
-
-% \begin{frame}{Shannon Entropy: The Lower Bound}
-%     \framesubtitle{Quantifying Average Information}
-%     \begin{definition}[Shannon Entropy $H(X)$]
-%         The average uncertainty (information content) of source $X$ with distribution $P_X$:
-%         \[ H(X) = E_{P_X}[-\log_2 P_X(x)] = -\sum_{x \in \mathcal{X}} P_X(x) \log_2 P_X(x) \quad [\text{bits/symbol}] \] % Units in brackets
-%     \end{definition}
-%     \begin{alertblock}{Fundamental Result (Shannon)} % Changed title from Theorem
-%         The Shannon Entropy $H(X)$ establishes the theoretical \textbf{minimum average number of bits per symbol} required to represent the output of source $X$ without loss of information.
-%         \vspace{0.5em} % Small space inside block
-%         \\ No representation can achieve, on average, fewer than $H(X)$ bits per symbol.
-%     \end{alertblock}
-%     $\implies$ $H(X)$ is the ultimate benchmark for space efficiency that Succinct Data Structures aim to approach.
-% \end{frame}
-
-% --- SLIDE 4: Information Theory and Shannon Entropy ---
-\begin{frame}{Shannon Entropy}
-    \framesubtitle{Fundamental Limits of Lossless Compression}
-
-    % Passo 1: Obiettivo
-    \textbf{Goal:} Determine the minimum average number of bits per symbol required for a lossless representation of data from a source $X$.
-    \pause % Pausa 1
-
-    % % Passo 2: Principio Fondamentale
-    % \begin{block}{Fundamental Principle (Shannon, 1948)}
-    %     This minimum is intrinsically linked to the source's \textbf{probability distribution} $P_X(x) = \text{Pr}\{X=x\}$.
-    %     % Non-uniform distributions imply lower average uncertainty and allow for greater compression compared to uniform distributions ($\approx \log_2 |\mathcal{X}|$ bits/symbol).
-    % \end{block}
-    % \pause % Pausa 2
-
-    % Passo 3: Definizione dell'Entropia
-    % The measure quantifying this average information content is the \emph{Shannon Entropy}:
-    % \vspace{0.5em} % Piccolo spazio
-    \begin{definition}[Shannon Entropy $H(X)$]
-        The average uncertainty, or information content, per symbol of source $X$:
-        \[ H(X) = E_{P_X}[-\log_2 P_X(x)] = -\sum_{x \in \mathcal{X}} P_X(x) \log_2 P_X(x) \quad [\text{bits/symbol}] \]
-    \end{definition}
-    \pause % Pausa 3
-
-    % Passo 4: Teorema del Limite Inferiore e Rilevanza
-    \begin{alertblock}{Source Coding Theorem (Lower Bound)}
-        Shannon proved that $H(X)$ constitutes the \textbf{theoretical lower bound} on the average number of bits per symbol required to represent the output of source $X$ without loss of information.
-    \end{alertblock}
-
-    % \uncover<5->{
-    %     $\implies$ $H(X)$ serves as the fundamental benchmark for evaluating the space efficiency of data representations, including Succinct Data Structures.
-    % }
-
-\end{frame}
-
-% --- SLIDE 5: Zero-Order Empirical Entropy ---
-\begin{frame}{Zero-Order Empirical Entropy}
-    \framesubtitle{A Practical Bound Based on Data}
-    We usually don't know the true source $P_X$. We only have the data sequence $S$.
-    \pause
-    \begin{definition}[Zero-Order Empirical Entropy $\mathcal{H}_0(S)$]
-        Information content of sequence $S$ based on its symbol counts ($n_s$):
-        \[ \mathcal{H}_0(S) = \sum_{s \in \Sigma} \frac{n_s}{n} \log_2 \frac{n}{n_s} \quad [\text{bits/symbol}] \]
-        Uses observed frequencies $\frac{n_s}{n}$ instead of unknown $P_X(x)$.
-    \end{definition}
-    \pause
-    \begin{alertblock}{Relevance for Succinct Structures}
-        $n \cdot \mathcal{H}_0(S)$ is a practical space benchmark. Succinct data structures often target space close to this value (or higher-order versions $\mathcal{H}_k$) for the \textbf{given sequence S}.
-    \end{alertblock}
 \end{frame}

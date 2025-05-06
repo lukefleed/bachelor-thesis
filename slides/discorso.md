@@ -1,6 +1,6 @@
 ## Slide 1/21: Titolo
 
-Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare metodi per rappresentare e interrogare grafi aciclici diretti in modo efficiente, sia in termini di occupazione di spazio che di tempo di calcolo.
+Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare nuovi metodi per eseguire query sui cammini in grafi aciclici diretti pesati, con un focus particolare sull'efficienza in termini di spazio.
 
 [ *pausa breve* ]
 
@@ -58,7 +58,7 @@ La richiesta di spazio $n+o(n)$ è già efficiente. Quello che ci chiediamo è s
 
 [*click*]
 
-La risposta è si. Esistono strutture dati, come la **struttura RRR**, che comprimono il bitvector stesso, portando lo spazio occupato ad avvicinarsi al limite entropico $n H_0(B)$, calcolato sulla base delle frequenze dei bit 0 e 1 nel bitvector. Notevolmente, queste strutture preservano la capacità di eseguire le operazioni **rank e select in tempo costante**, $O(1)$. Si ottiene così una compressione adattiva che sfrutta la distribuzione statistica del bitvector senza compromettere l'efficienza delle interrogazioni fondamentali.
+La risposta è si. Esistono strutture dati, come la **struttura RRR**, che comprimono il bitvector stesso, portando lo spazio occupato ad avvicinarsi al limite entropico $n H_0(B)$, calcolato sulla base delle frequenze dei bit 0 e 1 nel bitvector. Notevolmente, questa struttura preservano la capacità di eseguire le operazioni **rank e select in tempo costante**, $O(1)$.
 
 ## Slide 7/21: Beyond Bitvectors: General Alphabets (Wavelet Trees)
 
