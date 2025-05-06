@@ -2,63 +2,97 @@
 
 Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare nuovi metodi per eseguire query sui cammini in grafi aciclici diretti pesati, con un focus particolare sull'efficienza in termini di spazio.
 
-[ *pausa breve* ]
+## Slide 2: The Subset Membership Problem
 
-## Slide 2/21: Why Succinct?
+Immaginiamo uno scenario tipico: abbiamo un vasto universo di elementi $U$, per semplicità gli interi da 1 a $n$, e da questo universo abbiamo selezionato un particolare sottoinsieme $S$, che contiene $m$ di questi elementi.
 
-Il contesto motivazionale è quello della gestione di dati su vasta scala. L'analisi efficace di questi dati richiede spesso un accesso rapido, il che favorirebbe la loro collocazione nella memoria RAM. Tuttavia per studiare questi dati (spesso già di grosse dimensioni) andiamo ad utilizzare strutture dati ausiliarie, come alberi o indici, che a loro volta richiedono uno spazio addizionale che spesso è ben superiore a quello dei dati stessi
+_(Click per far apparire l'alertblock)_
 
-[*click*]
+Il nostro compito principale è duplice. Primo, data questa collezione, vogliamo poter rispondere molto rapidamente alla domanda: "Un certo elemento $x$ fa parte del nostro sottoinsieme $S$?". Questa è la classica **query di appartenenza**. Secondo, e altrettanto importante, specialmente quando $n$ ed $m$ sono grandi, vogliamo che la struttura dati che usiamo per memorizzare le informazioni su $S$ occupi la minor quantità di spazio possibile: cerchiamo una **rappresentazione compatta**.
 
-Ci troviamo quindi di fronte a un classico trade-off: da un lato possiamo utilizzare le classiche tecniche di compressione, minimizzando lo spazio. Ma queste tipicamente impongono una fase di decompressione che preclude l'accesso diretto e rapido. Dall'altro lato, le strutture dati convenzionali offrono query veloci, ma a fronte di un considerevole overhead spaziale come abbiamo detto prima
+_(Click, Pausa 1)_
 
-[*click*]
+Per capire cosa significhi "spazio minimo", ci viene in aiuto la Teoria dell'Informazione. La domanda che ci poniamo è: qual è il numero minimo assoluto di bit di cui abbiamo bisogno per distinguere il nostro specifico sottoinsieme $S$ da tutti gli altri possibili sottoinsiemi di $m$ elementi che avremmo potuto scegliere? Questo concetto di contenuto informativo minimo ci porta naturalmente all'Entropia di Shannon, $H(X)$, che vedete definita qui. Essa misura, per una sorgente generica $X$, l'incertezza media, o il contenuto informativo medio, associato a ciascun simbolo emesso.
 
-In questo scenario, le **strutture dati succinte** rappresentano un paradigma promettente. Il loro scopo è duplice: rappresentare i dati impiegando uno spazio vicino al **minimo teorico** definito dalla teoria dell'informazione, e contemporaneamente supportare **query efficienti direttamente sulla rappresentazione compatta**, bypassando la necessità di una decompressione completa o parziale.
+---
 
-## Slide 3/21: Shannon Entropy
+## Slide 3: Information-Theoretic Limits for Subsets
 
-Per definire il concetto di "minimo teorico", introduciamo il concetto di'**Entropia di Shannon**. Questa misura quantifica l'incertezza media, o il contenuto informativo medio, associato a ciascun simbolo emesso da una sorgente di dati. L'entropia è intrinsecamente legata alla distribuzione di probabilità dei simboli generati: sorgenti più prevedibili hanno entropia minore, indicando una maggiore ridondanza e quindi un potenziale di compressione più elevato.
+Il Teorema della Codifica di Sorgente di Shannon, che qui richiamiamo, ci dice che l'entropia $H(X)$ costituisce un limite teorico inferiore invalicabile per qualsiasi rappresentazione _lossless_ dei dati provenienti da una sorgente $X$.
 
-[*click*]
+_(Click, Pausa 1)_
 
-Il Source Coding Theorem di Shannon stabilisce che l'entropia rappresenta un **limite inferiore** che qualsiasi rappresentazione lossless di una sorgente deve rispettare. In altre parole, non è possibile comprimere i dati al di sotto di questo limite senza perdere informazioni
+Tuttavia, nella pratica, raramente conosciamo la vera distribuzione di probabilità $P_X$ della "sorgente" che genera i nostri dati o i nostri sottoinsiemi. Più comunemente, abbiamo a disposizione una sequenza finita di dati $S$ che abbiamo osservato. Per questa specifica sequenza, possiamo calcolare l'Entropia Empirica di Ordine Zero, $\mathcal{H}_0(S)$. Questa, come vedete dalla formula, si basa sulle frequenze $n_s/n$ con cui i simboli $s$ appaiono effettivamente nella sequenza, fornendoci un benchmark pratico sulla sua comprimibilità.
 
-## Slide 4/21: Zero-Order Empirical Entropy
+_(Click, Pausa 2)_
 
-Nelle applicazioni reali, tuttavia, la distribuzione di probabilità della sorgente è raramente nota a priori. Disponiamo invece di una **sequenza finita** di dati osservati.
+Ora, colleghiamo questo al nostro problema del sottoinsieme $S$ di $m$ elementi scelti da $n$. Il numero di modi distinti per scegliere $m$ elementi da un insieme di $n$ è dato dal coefficiente binomiale $\binom{n}{m}$. Per specificare univocamente quale di queste $\binom{n}{m}$ scelte abbiamo fatto, la teoria dell'informazione ci dice che sono necessari almeno $\lceil \log_2 \binom{n}{m} \rceil$ bit. Questo perché ogni bit raddoppia il numero di possibilità che possiamo distinguere; quindi, per distinguere $N$ possibilità, servono $\log_2 N$ bit. Questa quantità, $\lceil \log_2 \binom{n}{m} \rceil$, è proprio il contenuto informativo intrinseco della scelta del nostro particolare sottoinsieme.
 
-[*click*]
+---
 
-Per ottenere un benchmark pratico di comprimibilità in questo scenario, introduciamo l'**Entropia Empirica di Ordine Zero**. Anziché basarsi su probabilità teoriche, questa misura utilizza le **frequenze relative** con cui ciascun simbolo appare effettivamente all'interno della sequenza data.
+## Slide 4: Bitvectors: Querying the Implicit Representation
 
-[*click*]
+Un modo naturale e diretto per rappresentare il nostro sottoinsieme $S$ è attraverso un **bitvector** $B$ di lunghezza $n$: semplicemente, il bit $B[i]$ è 1 se l'elemento $i$ appartiene a $S$, e 0 altrimenti. Il punto cruciale qui è _come_ lo memorizziamo. Invece di un array esplicito di $n$ bit, stiamo essenzialmente **codificando la scelta delle $m$ posizioni che contengono gli '1'**. Questo approccio, come visto, ci permette di memorizzare l'informazione sul bitvector $B$ utilizzando uno spazio di circa $\lceil \log_2 \binom{n}{m} \rceil$ bit. Sottolineo: il bitvector $B$ _non è memorizzato come un array esplicito di $n$ bit_.
 
-Il prodotto tra la lunghezza della sequenza e la sua entropia empirica di ordine zero fornisce una stima concreta dello spazio minimo richiesto, basata esclusivamente sulle statistiche osservate nella sequenza stessa. Le strutture dati succinte spesso si prefiggono di raggiungere uno spazio vicino a questo valore empirico.
+_(Click, Pausa 1. Appare l'immagine `rank_select_1.pdf`.)_
 
-## Slide 5/21: Bitvectors and Fundamental Queries
+Questo che vedete è il bitvector _concettuale_. La sua rappresentazione in memoria è invece implicita e molto più compatta.
 
-Avendo delineato l'obiettivo, procediamo con la costruzione degli strumenti fondamentali, partendo dal caso più elementare: le sequenze binarie, o **bitvector**.
+_(Click, Pausa 2. Appare la domanda "If B is not explicit...".)_
 
-[*click*]
+Se $B$ non è memorizzato esplicitamente, come facciamo ad accedere a un suo elemento $B[i]$? Per farlo, introduciamo due query fondamentali:
 
-Su queste strutture, due operazioni primitive rivestono un'importanza cruciale: **rank** e **select**. L'operazione `rank` permette di contare le occorrenze di un bit specifico (0 o 1) fino a una data posizione.
+_(Click, Pausa 3. Appare la definizione di `rank`.)_
 
-[*click*]
+La prima è **`rank`$_b(B, i)$**. Questa operazione conta quante volte il bit $b$ (0 o 1) appare nel prefisso del bitvector (quello implicito) fino alla posizione $i$.
 
-Ad esempio, il rank degli 'uno' fino alla posizione 15 nel bitvector illustrato è 9. L'operazione `select`, invece, permette di localizzare la posizione della $j$-esima occorrenza di un bit specifico.
+_(Click, Pausa 4. L'immagine cambia in `rank_select_2.pdf`.)_
 
-[*click*]
+Ad esempio, come illustrato, `rank`$_1(B,15)$ ci dice quanti '1' ci sono fino alla posizione 15.
 
-Ad esempio, la select del settimo 'uno' restituisce la posizione 12. Queste due operazioni sono inverse l'una dell'altra. Un obiettivo primario nella progettazione di strutture succinte è supportare rank e select in tempo computazionale costante, $O(1)$, utilizzando uno spazio addizionale (overhead) sublineare rispetto alla lunghezza della sequenza.
+_(Click, Pausa 5. Appare la definizione di `select`.)_
 
-## Slide 6/21: RRR Structure: Entropy-Compressed Bitvectors
+La seconda operazione è **`select`$_b(B, j)$**, che ci fornisce la posizione (l'indice) del $j$-esimo bit $b$ nel bitvector.
 
-La richiesta di spazio $n+o(n)$ è già efficiente. Quello che ci chiediamo è se sia possibile fare di meglio quando il bitvector stesso presenta una struttura interna sfruttabile, come nel caso di sequenze molto sparse.
+_(Click, Pausa 6. L'immagine cambia in `rank_select_3.pdf`.)_
 
-[*click*]
+Ad esempio, `select`$_1(B,7)$ ci indica la posizione del settimo '1', che qui è 12.
 
-La risposta è si. Esistono strutture dati, come la **struttura RRR**, che comprimono il bitvector stesso, portando lo spazio occupato ad avvicinarsi al limite entropico $n H_0(B)$, calcolato sulla base delle frequenze dei bit 0 e 1 nel bitvector. Notevolmente, questa struttura preservano la capacità di eseguire le operazioni **rank e select in tempo costante**, $O(1)$.
+_(Click, Pausa 7. Appare il blocco "Access Queries".)_
+
+Ora, come usiamo `rank` per la query di appartenenza? Per sapere se $B[i]$ è '1', confrontiamo il numero di '1' fino a $i$ con il numero di '1' fino a $i-1$. Se `rank`$_1(B,i)$ è maggiore di `rank`$_1(B,i-1)$, significa che esattamente in posizione $i$ deve esserci un '1' che prima non c'era. Altrimenti, $B[i]$ è '0'. Semplice ma potente!
+
+---
+
+## Slide 5: RRR Structure: The Bitvector Solution
+
+Abbiamo quindi visto che, per interrogare un bitvector memorizzato in forma compatta e rispondere a query di appartenenza, le operazioni di `rank` e `select` sono il nostro pane quotidiano. Nelle Strutture Dati Succinte per Bitvector, l'obiettivo è chiaro: vogliamo supportare `rank` e `select` in tempo costante, $O(1)$, e fare ciò utilizzando uno spazio che sia il più vicino possibile al minimo teorico per il bitvector, cioè $\lceil \log_2 \binom{n}{m} \rceil$ bit.
+
+_(Click, Pausa 1)_
+
+Un risultato fondamentale, quasi un punto di arrivo per questo problema specifico, è la struttura RRR. Il teorema che la definisce afferma che un bitvector $B$ con $m$ bit impostati a '1' può essere rappresentato utilizzando esattamente $B(n,m)$ bit (che è il nostro $\lceil \log_2 \binom{n}{m} \rceil$) più alcuni termini additivi di ordine inferiore, $o(n)$ e $O(\log \log n)$, che per $n$ grandi diventano trascurabili. E, cosa cruciale, questa rappresentazione ultra-compatta supporta le query di `rank` e `select` in tempo costante.
+
+_(Click, Pausa 2)_
+
+Questo è un risultato di grande impatto. La struttura RRR dimostra che non c'è necessariamente un trade-off tra estrema compattezza e velocità di interrogazione per il problema dei sottoinsiemi. È possibile ottenere uno spazio di memorizzazione ottimale _e contemporaneamente_ la capacità di eseguire query efficienti. Questo risultato incarna perfettamente la filosofia delle Strutture Dati Succinte.
+
+---
+
+## Slide 6: Why Succinct Data Structures?
+
+La struttura RRR, che abbiamo appena visto risolvere elegantemente il problema della rappresentazione compatta e interrogabile dei bitvector, è in realtà una soluzione specifica a un problema molto più generale che affligge chiunque lavori con grandi moli di dati.
+
+_(Click, testo del blocco "Massive Data & Auxiliary Structures Overhead" appare)_
+
+I dataset con cui abbiamo a che fare oggi, in campi che vanno dalla ricerca scientifica al web, fino all'intelligenza artificiale, sono di dimensioni spesso gigantesche. Per analizzarli in modo complesso e interattivo, idealmente vorremmo che risiedessero nella memoria RAM, per un accesso il più rapido possibile. Tuttavia, le strutture dati ausiliarie – pensiamo a indici, alberi di ricerca, e simili – che costruiamo sopra i dati per poterli interrogare efficientemente, finiscono spesso per occupare uno spazio addizionale che può superare, a volte anche di molto, la dimensione dei dati originali stessi. Il risultato è che far stare tutto in RAM diventa un serio ostacolo, un vero e proprio collo di bottiglia prestazionale.
+
+_(Click, appaiono le due colonne del "Classic Trade-off")_
+
+Questo ci pone di fronte a un classico dilemma, un trade-off. Da un lato, potremmo ricorrere a tecniche di compressione dati tradizionali per minimizzare lo spazio occupato. Queste tecniche sono efficaci nel ridurre le dimensioni, ma tipicamente rendono le query dirette sui dati lenti o impossibili, perché richiedono una fase di decompressione, che sia essa totale o parziale. Dall'altro lato, le strutture dati classiche, che non usano compressione spinta, offrono query veloci ma, come abbiamo appena detto, lo fanno al costo di un considerevole overhead di spazio.
+
+_(Click, appare il blocco "The Succinct Goal")_
+
+L'obiettivo delle Strutture Dati Succinte, e il filo conduttore di questa tesi, è proprio quello di tentare di superare questo dilemma, cercando di ottenere il meglio da entrambi i mondi. La domanda che ci poniamo è: possiamo raggiungere entrambi questi obiettivi apparentemente contrastanti? Vogliamo, cioè, uno spazio di memorizzazione per i nostri dati e le nostre strutture che sia il più vicino possibile al minimo teorico dettato dalla teoria dell'informazione – quindi massima compattezza – e, allo stesso tempo, vogliamo poter eseguire query efficienti direttamente su questi dati mantenuti in forma compatta, senza la necessità di decomprimerli.
 
 ## Slide 7/21: Beyond Bitvectors: General Alphabets (Wavelet Trees)
 
