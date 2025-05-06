@@ -133,3 +133,69 @@
         \end{column}
     \end{columns}
 \end{frame}
+
+% --- SLIDE 7: Beyond Bits: General Alphabets ---
+\begin{frame}{Beyond Bitvectors: General Alphabets}
+    \framesubtitle{Wavelet Trees}
+    \vspace{-0.2em}
+    What about sequences $S[1..n]$ over larger alphabets $\Sigma = \{1, \dots, \sigma\}$?
+    \begin{figure}[hbtp]
+        \centering
+        \only<2>{\includegraphics[width=0.6\textwidth]{assets/wt1.pdf}} % Visible only on slide 2
+        \only<3>{\includegraphics[width=0.7\textwidth]{assets/wt2.pdf}} % Visible only on slide 3
+        \only<4>{\includegraphics[width=\textwidth]{assets/wt3.pdf}} % Visible only on slide 4
+        \only<5>{\includegraphics[width=0.7\textwidth]{assets/wt4.pdf}} % Visible ONLY on slide 5
+    \end{figure}
+    \only<6->{
+        \begin{columns}[T] % Align columns at the top
+            \begin{column}{0.55\textwidth} % Adjust width as needed
+                \centering % Center the image in the column
+                \includegraphics[width=\textwidth]{assets/wt4.pdf} % Show from slide 6 onwards
+            \end{column}
+            \begin{column}{0.45\textwidth} % Adjust width as needed
+                \begin{block}{$\mathcal{H}_0$-Compressed Wavelet Tree} % Ref Thm 3.8 in thesis
+                    Using RRR for bitvectors:
+                    \begin{itemize}
+                        \item \textbf{Space}: $n \mathcal{H}_0(S) + o(n \log \sigma)$ bits.
+                        \item \textbf{Query Time}: $O(\log \sigma)$ for \textsf{access}, \textsf{rank}$_c$, \textsf{select}$_c$.
+                    \end{itemize}
+                    Adapts space to the sequence's zero-order entropy.
+                \end{block}
+            \end{column}
+        \end{columns}
+    }
+\end{frame}
+
+% --- SLIDE 9: Degenerate Strings ---
+\begin{frame}{Representing Sequence Variation: Degenerate Strings}
+    \framesubtitle{Definitions and Core Operations}
+    \begin{block}{Definition and Rank \& Select Adaptation}
+        A \textbf{degenerate string} is a sequence $X = X_1 X_2 \dots X_n$, where each $X_i$ is a \emph{subset} of the alphabet $\Sigma$ with cardinality $\sigma$. We can define the following operations:
+        \begin{itemize}
+            \item \textsf{subset-rank}$_X(i, c)$: Counts sets $X_k$ ($k \le i$) where $c \in X_k$.
+            \item \textsf{subset-select}$_X(j, c)$: Finds index $k$ of the $j$-th set $X_k$ where $c \in X_k$.
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{figure}[h!] % Nota: [h!] può essere problematico, [htbp] è più sicuro
+        \centering
+        \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
+            $X = $                                                               & $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{C}\\\texttt{G}\end{matrix}\,\Bigg\}$ &
+            $\Bigg\{\,\begin{matrix}\texttt{A}\\\texttt{T}\end{matrix}\,\Bigg\}$ &
+            $\Bigg\{\,\begin{matrix}\texttt{C}\end{matrix}\,\Bigg\}$             &
+            $\Bigg\{\,\begin{matrix}\texttt{T}\\\texttt{G}\end{matrix}\,\Bigg\}$                                                                                                            \\
+                                                                                 & $X_1$                                                                            & $X_2$ & $X_3$ & $X_4$
+        \end{tabular}
+        \uncover<2->{\qquad
+            \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
+                $S =$  & \texttt{ACG} & \texttt{AT} & \texttt{C} & \texttt{TG} &            \\
+                $R = $ & \texttt{100} & \texttt{10} & \texttt{1} & \texttt{10} & \texttt{1} \\
+                       & $S_1$        & $S_2$       & $S_3$      & $S_4$
+            \end{tabular}
+        }
+    \end{figure}
+    % --- Paragrafo Riscritto ---
+    \uncover<3->{% Potrebbe essere utile per far apparire il testo solo al terzo step
+        To compute \textsf{subset-rank}$_X(i, c)$: Let $p$ be the end position in $S$ for prefix $X_1..X_i$, found using $\textsf{select}_1(R, i+1)$. The result is $\textsf{rank}_c(S, p)$.
+    }
+\end{frame}
