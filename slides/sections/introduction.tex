@@ -139,7 +139,7 @@
 \begin{frame}{Beyond Bitvectors: General Alphabets}
     \framesubtitle{Wavelet Trees}
     \vspace{-0.2em}
-    What about sequences $S[1..n]$ over larger alphabets $\Sigma = \{1, \dots, \sigma\}$?
+    Consider a sequence $S[1..n]$ over a \textbf{general alphabet} $\Sigma = \{1, \dots, \sigma\}$. How can we answer \emph{succinctly} queries like \textsf{rank}$_c(i)$, \textsf{select}$_c(j)$, and \textsf{access}$(i)$?
     \begin{figure}[hbtp]
         \centering
         \only<2>{\includegraphics[width=0.6\textwidth]{assets/wt1.pdf}} % Visible only on slide 2
@@ -151,7 +151,7 @@
         \begin{columns}[T] % Align columns at the top
             \begin{column}{0.55\textwidth} % Adjust width as needed
                 \centering % Center the image in the column
-                \includegraphics[width=\textwidth]{assets/wt4.pdf} % Show from slide 6 onwards
+                \includegraphics[width=\textwidth]{assets/wt4.pdf}
             \end{column}
             \begin{column}{0.45\textwidth} % Adjust width as needed
                 \begin{block}{$\mathcal{H}_0$-Compressed Wavelet Tree} % Ref Thm 3.8 in thesis
