@@ -1,19 +1,17 @@
 ## Slide 1/21: Titolo
 
-Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare nuovi metodi per eseguire query sui cammini in grafi aciclici diretti pesati, con un focus particolare sull'efficienza in termini di spazio. Prima di entrare nei dettagli di questo problema, consideriamone uno molto più semplice:
+Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare nuovi metodi per eseguire query sui presi cumulativi di cammini in grafi aciclici diretti pesati. Prima di entrare nei dettagli di questo problema, consideriamone uno molto più semplice:
 
 ## Slide 2: The Subset Membership Problem
 
-Consideriamo un universo di elementi $U$, ad esempio gli interi da 1 a $n$, e da questo universo abbiamo selezionato un particolare sottoinsieme $S$, che contiene $m$ di questi elementi
+Consideriamo un universo di $n$ elementi e da questo universo selezioniamo un particolare sottoinsieme $S$, che contiene $m$ di questi elementi
 _(Click per far apparire l'alertblock)_
 
-Il nostro obbiettivo è duplice. In primo luogo, data questa collezione, vogliamo poter verificare rapidamente se un certo elemento fa parte del nostro sottoinsieme $S$". Secondo, e altrettanto importante, specialmente quando $n$ ed $m$ sono grandi, vogliamo che la struttura dati che usiamo per memorizzare le informazioni su $S$ occupi la minor quantità di spazio possibile: cerchiamo una **rappresentazione compatta**.
-
-_(Click, Pausa 1)_
+Il nostro obbiettivo è duplice. Vogliamo poter verificare rapidamente se un certo elemento fa parte del nostro sottoinsieme $S$. Allo stesso tempo, e molto importante, specialmente quando $n$ ed $m$ sono grandi, vogliamo che la struttura dati che usiamo per memorizzare le informazioni su $S$ occupi la minor quantità di spazio possibile. _(Click, Pausa 1)_
 
 Per capire cosa significhi "spazio minimo", ci viene in aiuto la Teoria dell'Informazione. La domanda che ci poniamo è: qual è il numero minimo assoluto di bit di cui abbiamo bisogno per distinguere il nostro specifico sottoinsieme $S$ da tutti gli altri possibili sottoinsiemi di $m$ elementi che avremmo potuto scegliere? Questo concetto di contenuto informativo minimo ci porta naturalmente all'Entropia di Shannon, $H(X)$, che vedete definita qui. Essa misura, per una sorgente generica $X$, l'incertezza media, o il contenuto informativo medio, associato a ciascun simbolo emesso.
 
-## Il Source coding theorem di Shannon, ci dice che l'entropia $H(X)$ costituisce un limite teorico inferiore per qualsiasi rappresentazione _lossless_ dei dati provenienti da una sorgente $X$.
+Il Source coding theorem di Shannon, ci dice che l'entropia $H(X)$ costituisce un limite teorico inferiore per qualsiasi rappresentazione _lossless_ dei dati provenienti da una sorgente $X$.
 
 ## Slide 3: Information-Theoretic Limits for Subsets
 
@@ -27,11 +25,9 @@ _(Click, Pausa 2)_
 
 Ora, colleghiamo questo al nostro problema del sottoinsieme $S$ di $m$ elementi scelti da $n$. Il numero di modi distinti per scegliere $m$ elementi da un insieme di $n$ è dato dal coefficiente binomiale $\binom{n}{m}$. Per specificare univocamente quale di queste $\binom{n}{m}$ scelte abbiamo fatto, la teoria dell'informazione ci dice che sono necessari almeno $\lceil \log_2 \binom{n}{m} \rceil$ bit. Questo perché ogni bit raddoppia il numero di possibilità che possiamo distinguere; quindi, per distinguere $N$ possibilità, servono $\log_2 N$ bit.
 
----
-
 ## Slide 4: Bitvectors: Querying the Implicit Representation
 
-Un modo naturale e diretto per rappresentare il nostro sottoinsieme $S$ è attraverso un **bitvector** $B$ di lunghezza $n$: semplicemente, il bit $B[i]$ è 1 se l'elemento $i$ appartiene a $S$, e 0 altrimenti. Il punto cruciale qui è _come_ lo memorizziamo. Invece di un array esplicito di $n$ bit, stiamo essenzialmente **codificando la scelta delle $m$ posizioni che contengono gli '1'**. Questo approccio, come visto, ci permette di memorizzare l'informazione sul bitvector $B$ utilizzando uno spazio di circa $\lceil \log_2 \binom{n}{m} \rceil$ bit. Sottolineo: il bitvector $B$ _non è memorizzato come un array esplicito di $n$ bit_.
+Un modo naturale e diretto per rappresentare il nostro sottoinsieme $S$ è attraverso un **bitvector** $B$ di lunghezza $n$: semplicemente, il bit $B[i]$ è 1 se l'elemento $i$ appartiene a $S$, e 0 altrimenti. Il punto cruciale qui è _come_ lo memorizziamo. Invece di un array esplicito di $n$ bit, stiamo essenzialmente **codificando la scelta delle $m$ posizioni che contengono gli '1'**. Questo approccio, come visto, ci permette di memorizzare l'informazione sul bitvector $B$ utilizzando uno spazio di circa $\lceil \log_2 \binom{n}{m} \rceil$ bit. **cioè, come abbiamo visto, lo spazio corrispondente alla sua entropia empirica di ordine zero, $n \mathcal{H}_0(B)$**. È fondamentale capire che questo significa che il bitvector $B$ _non è memorizzato come un array esplicito di $n$ bit_ a cui possiamo accedere direttamente indicizzando.
 
 _(Click, Pausa 1. Appare l'immagine `rank_select_1.pdf`.)_
 
@@ -73,7 +69,7 @@ Un risultato fondamentale, quasi un punto di arrivo per questo problema specific
 
 _(Click, Pausa 2)_
 
-## Questo è un risultato di grande impatto. La struttura RRR dimostra che non c'è necessariamente un trade-off tra estrema compattezza e velocità di interrogazione per il problema dei sottoinsiemi. È possibile ottenere uno spazio di memorizzazione ottimale _e contemporaneamente_ la capacità di eseguire query efficienti.
+Questo è un risultato di grande impatto. La struttura RRR dimostra che non c'è necessariamente un trade-off tra estrema compattezza e velocità di interrogazione per il problema dei sottoinsiemi. È possibile ottenere uno spazio di memorizzazione ottimale _e contemporaneamente_ la capacità di eseguire query efficienti.
 
 ## Slide 6: Why Succinct Data Structures?
 

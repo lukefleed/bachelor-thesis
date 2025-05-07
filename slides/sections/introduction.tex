@@ -16,6 +16,7 @@
 
     To understand "minimal space", we turn to Information Theory.
     \textit{What is the least number of bits needed to uniquely identify $S$?}
+    \pause
     \begin{definition}[Shannon Entropy $H(X)$]
         The average uncertainty, or information content, per symbol of source $X$:
         \[ H(X) = E_{P_X}[-\log_2 P_X(x)] = -\sum_{x \in \mathcal{X}} P_X(x) \log_2 P_X(x) \quad [\text{bits/symbol}] \]
@@ -47,7 +48,7 @@
 \begin{frame}{Bitvectors: Querying the Implicit Representation}
     \framesubtitle{From Compact Storage to Element Access}
 
-    We can represent our subset $S$ as a \textbf{bitvector} $B[1..n]$ ($B[i]=1 \iff i \in S$). We are \textbf{encoding the choice of $m$ positions for the '1's}, allowing us to store $B$ using $\approx \lceil \log_2 \binom{n}{m} \rceil$ bits. \textit{This means $B$ is not stored as an explicit array of $n$ bits.}
+    We can represent our subset $S$ as a \textbf{bitvector} $B[1..n]$ ($B[i]=1 \iff i \in S$). We are \textbf{encoding the choice of $m$ positions for the '1's}, allowing us to store $B$ using $\approx \lceil \log_2 \binom{n}{m} \rceil$ bits (i.e., $\approx n \mathcal{H}_0(B)$ bits). \textit{This means $B$ is not stored as an explicit array of $n$ bits.}
 
     % Immagine: gestita con \only per cambiare con le pause del testo
     \begin{figure}[htbp]
@@ -86,17 +87,17 @@
 % --- SLIDE 5: RRR Structure: The Bitvector Solution ---
 \begin{frame}{RRR Structure: The Bitvector Solution}
     \framesubtitle{$n\mathcal{H}_0(B)$ Space \& $O(1)$ Queries}
-    \begin{block}{Succinct Data Structure for Bitvectors}
-        \begin{itemize}
-            \item \textbf{Goal:} Support $\textsf{rank}$ and $\textsf{select}$ in $O(1)$ time.
-            \item \textbf{Space:} Close to the information-theoretic minimum for the bitvector.
-        \end{itemize}
-    \end{block}
+    % \begin{block}{Succinct Data Structure for Bitvectors}
+    \begin{itemize}
+        \item \textbf{Goal:} Support $\textsf{rank}$ and $\textsf{select}$ in $O(1)$ time.
+        \item \textbf{Space:} Close to the information-theoretic minimum for the bitvector.
+    \end{itemize}
+    % \end{block}
     \pause
     \begin{theorem}[RRR Structure]
         A bitvector $B[1..n]$ with $m$ set bits can be represented using
         \[ B(n, m) + o(n) + O(\log \log n) \quad \text{bits}, \]
-        where $B(n, m) = \lceil \log_2 \binom{n}{m} \rceil$, while supporting \textsf{rank} and \textsf{select} queries in $O(1)$ time.
+        where $B(n, m) = \lceil \log_2 \binom{n}{m} \rceil \approx n \cdot \mathcal{H}_0(B)$, while supporting \textsf{rank} and \textsf{select} in $O(1)$ time.
     \end{theorem}
     \pause
     \begin{alertblock}{A Cornerstone Result}
@@ -176,7 +177,6 @@
             \item \textsf{subset-select}$_X(j, c)$: Finds index $k$ of the $j$-th set $X_k$ where $c \in X_k$.
         \end{itemize}
     \end{block}
-    \pause
     \begin{figure}[h!] % Nota: [h!] può essere problematico, [htbp] è più sicuro
         \centering
         \begin{tabular}{c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c@{\hskip 0.5em}c}
