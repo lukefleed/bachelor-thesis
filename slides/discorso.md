@@ -1,32 +1,31 @@
 ## Slide 1/21: Titolo
 
-Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare nuovi metodi per eseguire query sui cammini in grafi aciclici diretti pesati, con un focus particolare sull'efficienza in termini di spazio.
+Buongiorno a tutti. L'obiettivo di questa tesi è stato esplorare e sviluppare nuovi metodi per eseguire query sui cammini in grafi aciclici diretti pesati, con un focus particolare sull'efficienza in termini di spazio. Prima di entrare nei dettagli di questo problema, consideriamone uno molto più semplice:
 
 ## Slide 2: The Subset Membership Problem
 
-Immaginiamo uno scenario tipico: abbiamo un vasto universo di elementi $U$, per semplicità gli interi da 1 a $n$, e da questo universo abbiamo selezionato un particolare sottoinsieme $S$, che contiene $m$ di questi elementi.
-
+Consideriamo un universo di elementi $U$, ad esempio gli interi da 1 a $n$, e da questo universo abbiamo selezionato un particolare sottoinsieme $S$, che contiene $m$ di questi elementi
 _(Click per far apparire l'alertblock)_
 
-Il nostro compito principale è duplice. Primo, data questa collezione, vogliamo poter rispondere molto rapidamente alla domanda: "Un certo elemento $x$ fa parte del nostro sottoinsieme $S$?". Questa è la classica **query di appartenenza**. Secondo, e altrettanto importante, specialmente quando $n$ ed $m$ sono grandi, vogliamo che la struttura dati che usiamo per memorizzare le informazioni su $S$ occupi la minor quantità di spazio possibile: cerchiamo una **rappresentazione compatta**.
+Il nostro obbiettivo è duplice. In primo luogo, data questa collezione, vogliamo poter verificare rapidamente se un certo elemento fa parte del nostro sottoinsieme $S$". Secondo, e altrettanto importante, specialmente quando $n$ ed $m$ sono grandi, vogliamo che la struttura dati che usiamo per memorizzare le informazioni su $S$ occupi la minor quantità di spazio possibile: cerchiamo una **rappresentazione compatta**.
 
 _(Click, Pausa 1)_
 
 Per capire cosa significhi "spazio minimo", ci viene in aiuto la Teoria dell'Informazione. La domanda che ci poniamo è: qual è il numero minimo assoluto di bit di cui abbiamo bisogno per distinguere il nostro specifico sottoinsieme $S$ da tutti gli altri possibili sottoinsiemi di $m$ elementi che avremmo potuto scegliere? Questo concetto di contenuto informativo minimo ci porta naturalmente all'Entropia di Shannon, $H(X)$, che vedete definita qui. Essa misura, per una sorgente generica $X$, l'incertezza media, o il contenuto informativo medio, associato a ciascun simbolo emesso.
 
----
+## Il Source coding theorem di Shannon, ci dice che l'entropia $H(X)$ costituisce un limite teorico inferiore per qualsiasi rappresentazione _lossless_ dei dati provenienti da una sorgente $X$.
 
 ## Slide 3: Information-Theoretic Limits for Subsets
 
-Il Teorema della Codifica di Sorgente di Shannon, che qui richiamiamo, ci dice che l'entropia $H(X)$ costituisce un limite teorico inferiore invalicabile per qualsiasi rappresentazione _lossless_ dei dati provenienti da una sorgente $X$.
+Tuttavia, nella pratica, raramente conosciamo la vera distribuzione di probabilità $P_X$ della "sorgente" che genera i nostri dati o i nostri sottoinsiemi. Più comunemente, abbiamo a disposizione una sequenza finita di dati $S$ che abbiamo osservato.
 
 _(Click, Pausa 1)_
 
-Tuttavia, nella pratica, raramente conosciamo la vera distribuzione di probabilità $P_X$ della "sorgente" che genera i nostri dati o i nostri sottoinsiemi. Più comunemente, abbiamo a disposizione una sequenza finita di dati $S$ che abbiamo osservato. Per questa specifica sequenza, possiamo calcolare l'Entropia Empirica di Ordine Zero, $\mathcal{H}_0(S)$. Questa, come vedete dalla formula, si basa sulle frequenze $n_s/n$ con cui i simboli $s$ appaiono effettivamente nella sequenza, fornendoci un benchmark pratico sulla sua comprimibilità.
+Per questa specifica sequenza, possiamo calcolare l'Entropia Empirica di Ordine Zero, $\mathcal{H}_0(S)$. Questa, come vedete dalla formula, si basa sulle frequenze $n_s/n$ con cui i simboli $s$ appaiono effettivamente nella sequenza, fornendoci un benchmark pratico sulla sua comprimibilità.
 
 _(Click, Pausa 2)_
 
-Ora, colleghiamo questo al nostro problema del sottoinsieme $S$ di $m$ elementi scelti da $n$. Il numero di modi distinti per scegliere $m$ elementi da un insieme di $n$ è dato dal coefficiente binomiale $\binom{n}{m}$. Per specificare univocamente quale di queste $\binom{n}{m}$ scelte abbiamo fatto, la teoria dell'informazione ci dice che sono necessari almeno $\lceil \log_2 \binom{n}{m} \rceil$ bit. Questo perché ogni bit raddoppia il numero di possibilità che possiamo distinguere; quindi, per distinguere $N$ possibilità, servono $\log_2 N$ bit. Questa quantità, $\lceil \log_2 \binom{n}{m} \rceil$, è proprio il contenuto informativo intrinseco della scelta del nostro particolare sottoinsieme.
+Ora, colleghiamo questo al nostro problema del sottoinsieme $S$ di $m$ elementi scelti da $n$. Il numero di modi distinti per scegliere $m$ elementi da un insieme di $n$ è dato dal coefficiente binomiale $\binom{n}{m}$. Per specificare univocamente quale di queste $\binom{n}{m}$ scelte abbiamo fatto, la teoria dell'informazione ci dice che sono necessari almeno $\lceil \log_2 \binom{n}{m} \rceil$ bit. Questo perché ogni bit raddoppia il numero di possibilità che possiamo distinguere; quindi, per distinguere $N$ possibilità, servono $\log_2 N$ bit.
 
 ---
 
@@ -48,7 +47,7 @@ La prima è **`rank`$_b(B, i)$**. Questa operazione conta quante volte il bit $b
 
 _(Click, Pausa 4. L'immagine cambia in `rank_select_2.pdf`.)_
 
-Ad esempio, come illustrato, `rank`$_1(B,15)$ ci dice quanti '1' ci sono fino alla posizione 15.
+Ad esempio, come illustrato, la rank dei primi 15 '1' restituisce 9
 
 _(Click, Pausa 5. Appare la definizione di `select`.)_
 
@@ -56,31 +55,29 @@ La seconda operazione è **`select`$_b(B, j)$**, che ci fornisce la posizione (l
 
 _(Click, Pausa 6. L'immagine cambia in `rank_select_3.pdf`.)_
 
-Ad esempio, `select`$_1(B,7)$ ci indica la posizione del settimo '1', che qui è 12.
+Ad esempio, la select del settimo '1' restituisce la posizione 12.
 
 _(Click, Pausa 7. Appare il blocco "Access Queries".)_
 
-Ora, come usiamo `rank` per la query di appartenenza? Per sapere se $B[i]$ è '1', confrontiamo il numero di '1' fino a $i$ con il numero di '1' fino a $i-1$. Se `rank`$_1(B,i)$ è maggiore di `rank`$_1(B,i-1)$, significa che esattamente in posizione $i$ deve esserci un '1' che prima non c'era. Altrimenti, $B[i]$ è '0'. Semplice ma potente!
+Ora, come rispondiamo alle query di accesso utilizzando queste operazioni? In realtà, ce ne serve solo una. Per sapere se $B[i]$ è '1', confrontiamo il numero di '1' fino a $i$ con il numero di '1' fino a $i-1$. Se `rank`$_1(B,i)$ è maggiore di `rank`$_1(B,i-1)$, significa che esattamente in posizione $i$ deve esserci un '1' che prima non c'era. Altrimenti, $B[i]$ è '0'.
 
 ---
 
 ## Slide 5: RRR Structure: The Bitvector Solution
 
-Abbiamo quindi visto che, per interrogare un bitvector memorizzato in forma compatta e rispondere a query di appartenenza, le operazioni di `rank` e `select` sono il nostro pane quotidiano. Nelle Strutture Dati Succinte per Bitvector, l'obiettivo è chiaro: vogliamo supportare `rank` e `select` in tempo costante, $O(1)$, e fare ciò utilizzando uno spazio che sia il più vicino possibile al minimo teorico per il bitvector, cioè $\lceil \log_2 \binom{n}{m} \rceil$ bit.
+Abbiamo quindi visto che, per fare query su un bitvector memorizzato in forma compatta e rispondere a query di appartenenza, le operazioni di `rank` e `select` sono essenziali. Idealmente quindi quello che vorremo è poter supportare `rank` e `select` in tempo costante, $O(1)$, e fare ciò utilizzando uno spazio che sia il più vicino possibile al minimo teorico per il bitvector
 
 _(Click, Pausa 1)_
 
-Un risultato fondamentale, quasi un punto di arrivo per questo problema specifico, è la struttura RRR. Il teorema che la definisce afferma che un bitvector $B$ con $m$ bit impostati a '1' può essere rappresentato utilizzando esattamente $B(n,m)$ bit (che è il nostro $\lceil \log_2 \binom{n}{m} \rceil$) più alcuni termini additivi di ordine inferiore, $o(n)$ e $O(\log \log n)$, che per $n$ grandi diventano trascurabili. E, cosa cruciale, questa rappresentazione ultra-compatta supporta le query di `rank` e `select` in tempo costante.
+Un risultato fondamentale, quasi un punto di arrivo per questo problema specifico, è la struttura RRR. Il teorema che la definisce afferma che un bitvector $B$ con $m$ bit impostati a '1' può essere rappresentato utilizzando esattamente $B(n,m)$ bit (che è il nostro $\lceil \log_2 \binom{n}{m} \rceil$) più alcuni termini additivi di ordine inferiore, $o(n)$ e $O(\log \log n)$, che per $n$ grandi diventano trascurabili. E, cosa cruciale, questa rappresentazione supporta le query di `rank` e `select` in tempo costante.
 
 _(Click, Pausa 2)_
 
-Questo è un risultato di grande impatto. La struttura RRR dimostra che non c'è necessariamente un trade-off tra estrema compattezza e velocità di interrogazione per il problema dei sottoinsiemi. È possibile ottenere uno spazio di memorizzazione ottimale _e contemporaneamente_ la capacità di eseguire query efficienti. Questo risultato incarna perfettamente la filosofia delle Strutture Dati Succinte.
-
----
+## Questo è un risultato di grande impatto. La struttura RRR dimostra che non c'è necessariamente un trade-off tra estrema compattezza e velocità di interrogazione per il problema dei sottoinsiemi. È possibile ottenere uno spazio di memorizzazione ottimale _e contemporaneamente_ la capacità di eseguire query efficienti.
 
 ## Slide 6: Why Succinct Data Structures?
 
-La struttura RRR, che abbiamo appena visto risolvere elegantemente il problema della rappresentazione compatta e interrogabile dei bitvector, è in realtà una soluzione specifica a un problema molto più generale che affligge chiunque lavori con grandi moli di dati.
+La struttura RRR, che abbiamo appena visto risolvere elegantemente il problema della rappresentazione compatta e interrogabile dei bitvector, è in realtà una soluzione specifica a un problema molto più generale che ci troviamo ad affrontare in molti contesti dove si manipolano dati di grandi dimensioni.
 
 _(Click, testo del blocco "Massive Data & Auxiliary Structures Overhead" appare)_
 
@@ -92,7 +89,7 @@ Questo ci pone di fronte a un classico dilemma, un trade-off. Da un lato, potrem
 
 _(Click, appare il blocco "The Succinct Goal")_
 
-L'obiettivo delle Strutture Dati Succinte, e il filo conduttore di questa tesi, è proprio quello di tentare di superare questo dilemma, cercando di ottenere il meglio da entrambi i mondi. La domanda che ci poniamo è: possiamo raggiungere entrambi questi obiettivi apparentemente contrastanti? Vogliamo, cioè, uno spazio di memorizzazione per i nostri dati e le nostre strutture che sia il più vicino possibile al minimo teorico dettato dalla teoria dell'informazione – quindi massima compattezza – e, allo stesso tempo, vogliamo poter eseguire query efficienti direttamente su questi dati mantenuti in forma compatta, senza la necessità di decomprimerli.
+L'obiettivo delle Strutture Dati Succinte, e il filo conduttore di questa tesi, è proprio quello di tentare di superare questo dilemma, cercando di ottenere il meglio da entrambi i mondi. Vogliamo, cioè, uno spazio di memorizzazione per i nostri dati e le nostre strutture che sia il più vicino possibile al minimo teorico dettato dalla teoria dell'informazione e, allo stesso tempo, vogliamo poter eseguire query efficienti direttamente su questi dati mantenuti in forma compatta, senza la necessità di decomprimerli.
 
 ## Slide 7/21: Beyond Bitvectors: General Alphabets (Wavelet Trees)
 
